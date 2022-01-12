@@ -1,5 +1,5 @@
 # DTOA
-Implementation of the DecTree algorithm from the paper from Cicalese, Later, Saettler
+Implementation of the DecTree algorithm presented in the paper from Cicalese, Later, Saettler
 
 ## Author
 Mattia Zorzan - *VR464472*
