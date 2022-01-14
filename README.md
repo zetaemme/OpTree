@@ -1,4 +1,4 @@
-# DTOA
+# Decision Tree Opt Algorithm
 Implementation of the DecTree algorithm presented in the paper from Cicalese, Later, Saettler
 
 ## Author
