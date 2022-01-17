@@ -3,11 +3,13 @@ from typing import Iterator, Type
 
 from node import Node, TestNode
 
+NodeType: Type['Node']
+
 
 @dataclass
 class DecTree:
     """Represents a Decision Tree"""
-    root: Type['Node']
+    root: NodeType
 
     def __iter__(self) -> Iterator[Node]:
         self.current = self.root
