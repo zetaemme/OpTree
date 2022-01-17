@@ -74,3 +74,29 @@ class Test:
             return self.__outcome
 
         return self.__generate_outcome(is_direct=False)
+
+    def cost(self, cost_fn: Callable[['Test'], int]) -> int:
+        return cost_fn(self)
+
+    @staticmethod
+    def evaluate(test: str) -> 'Test':
+        splitted = test.split()
+
+        if isinstance(splitted[0], Integral):
+            lhs = int(splitted[0])
+        elif isinstance(splitted[0], Rational):
+            lhs = float(splitted[0])
+        else:
+            lhs = splitted[0]
+
+        if isinstance(splitted[2], Integral):
+            rhs = int(splitted[2])
+        elif isinstance(splitted[2], Rational):
+            rhs = float(splitted[2])
+        else:
+            rhs = splitted[2]
+
+        return Test(lhs, splitted[1], rhs)
+
+    def __str__(self) -> str:
+        return f'{self.lhs} {self.test_type} {self.rhs}'
