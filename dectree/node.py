@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Union
 
 from dectree.test import Test
@@ -9,8 +9,8 @@ from dectree.test import Test
 class Node(ABC):
     """An Abstract Base Class for the Node class"""
     label: str
-    r_child: Union['TestNode', 'LeafNode']
-    l_child: Union['TestNode', 'LeafNode']
+    r_child: Union['TestNode', 'LeafNode'] = field(init=True, default=None)
+    l_child: Union['TestNode', 'LeafNode'] = field(init=True, default=None)
 
     @abstractmethod
     def outcome(self) -> bool: pass
@@ -19,7 +19,10 @@ class Node(ABC):
 @dataclass
 class TestNode(Node):
     """Concretization of the Node class. Represents an intermediate Node"""
-    __test: Test
+    __test: Test = field(init=False)
+
+    def __post_init__(self) -> None:
+        assert self.l_child is not None and self.r_child is not None, 'Tests must have children!'
 
     @property
     def outcome(self) -> bool:
