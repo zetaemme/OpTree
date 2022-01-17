@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Union
 
-from test import Test
+from dectree.test import Test
 
 
 @dataclass
