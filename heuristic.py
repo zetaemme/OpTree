@@ -1,7 +1,5 @@
 from typing import Callable, NewType, TypeAlias
 
-from pandas import DataFrame
-
 from dectree.test import Test
 
 uint = NewType('uint', int)
@@ -9,7 +7,7 @@ TestList: TypeAlias = list[Test]
 
 
 def adapted_greedy(
-        objects: DataFrame,
+        # FIXME: Sul paper qui c'è S, che però viene utilizzato solo da f
         tests: TestList,
         f: Callable,
         cost_fn: Callable[[Test], uint],
