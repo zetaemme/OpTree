@@ -2,7 +2,7 @@ from typing import Callable, NewType, TypeAlias
 
 from pandas import DataFrame
 
-from test import Test
+from dectree.test import Test
 
 uint = NewType('uint', int)
 TestList: TypeAlias = list[Test]

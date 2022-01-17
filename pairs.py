@@ -1,13 +1,16 @@
 from dataclasses import dataclass, field
+from typing import TypeAlias
 
 from pandas import DataFrame
+
+TupleList: TypeAlias = list[tuple]
 
 
 @dataclass
 class Pairs:
     __dataset: DataFrame = field(repr=False)
     number: int = field(init=False)
-    pair_list: list[tuple] = field(init=False, default_factory=list)
+    pair_list: TupleList = field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
         """Inits the number and pair_list fields"""
