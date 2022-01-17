@@ -1,14 +1,16 @@
 from dataclasses import dataclass
 from enum import Enum, unique
-from numbers import Number
-from typing import TypeVar
+from numbers import Number, Integral, Rational
+from typing import Callable, Type, TypeVar
 
 T1 = TypeVar('T1')
 T2 = TypeVar('T2')
 
+Numeric: Type[Number]
+
 
 @unique
-class Type(Enum):
+class TestType(Enum):
     """Represents the various types of tests"""
     LESS_THAN = '<'
     GREATER_THAN = '>'
@@ -22,47 +24,49 @@ class Type(Enum):
 class Test:
     """Represents a generic test for the DT"""
     lhs: T1
-    test_type: Type
+    test_type: TestType
     rhs: T2
     __outcome: bool = None
 
     def __init__(self, lhs: T1, test_type: str, rhs: T2) -> None:
         self.lhs = lhs
-        self.test_type = Type[test_type]
+        self.test_type = TestType[test_type]
         self.rhs = rhs
 
     def __generate_outcome(self, is_direct=True) -> bool:
         if not is_direct:
             match self.test_type:
-                case Type.LESS_THAN:
+                case TestType.LESS_THAN:
                     assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'<\' comparison'
                     assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'<\' comparison'
 
                     return self.lhs < self.rhs
 
-                case Type.GREATER_THAN:
+                case TestType.GREATER_THAN:
                     assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'>\' comparison'
                     assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'>\' comparison'
 
                     return self.lhs > self.rhs
 
-                case Type.EQUAL:
+                case TestType.EQUAL:
                     return self.lhs == self.rhs
 
-                case Type.NOT_EQUAL:
+                case TestType.NOT_EQUAL:
                     return self.lhs != self.rhs
 
-                case Type.LESS_OR_EQUAL:
+                case TestType.LESS_OR_EQUAL:
                     assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'<=\' comparison'
                     assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'<=\' comparison'
 
                     return self.lhs <= self.rhs
 
-                case Type.GREATER_OR_EQUAL:
+                case TestType.GREATER_OR_EQUAL:
                     assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'>=\' comparison'
                     assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'>=\' comparison'
 
                     return self.lhs >= self.rhs
+        else:
+            raise Exception('Can\'t directly invoke the __generate_outcome method.')
 
     @property
     def outcome(self) -> bool:
