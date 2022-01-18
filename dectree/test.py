@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, unique
 from numbers import Number, Integral, Rational
-from typing import Callable, Type, TypeVar
+from typing import Iterable, Type, TypeVar, Union
 
 T1 = TypeVar('T1')
 T2 = TypeVar('T2')
@@ -28,12 +28,37 @@ class Test:
     rhs: T2
     __outcome: bool = None
 
-    def __init__(self, lhs: T1, test_type: str, rhs: T2) -> None:
-        self.lhs = lhs
-        self.test_type = TestType[test_type]
-        self.rhs = rhs
+    def __init__(self, *args: Union[str, Iterable[T1, str, T2]]):
+        if len(args) > 3:
+            raise ValueError('Too many arguments!')
+
+        if len(args) == 1:
+            assert isinstance(args[0], str), 'A string should be provided as param!'
+            splitted = args[0].split()
+
+            self.test_type = TestType[splitted[1]]
+
+            if isinstance(splitted[0], Integral):
+                self.lhs = int(splitted[0])
+            elif isinstance(splitted[0], Rational):
+                self.lhs = float(splitted[0])
+            else:
+                self.lhs = splitted[0]
+
+            if isinstance(splitted[2], Integral):
+                self.rhs = int(splitted[2])
+            elif isinstance(splitted[2], Rational):
+                self.rhs = float(splitted[2])
+            else:
+                self.rhs = splitted[2]
+
+        if len(args) == 3:
+            self.lhs = args[0]
+            self.test_type = TestType[args[1]]
+            self.rhs = args[2]
 
     def __generate_outcome(self, is_direct=True) -> bool:
+        """Generates the outcome of a test"""
         if not is_direct:
             match self.test_type:
                 case TestType.LESS_THAN:
@@ -70,33 +95,12 @@ class Test:
 
     @property
     def outcome(self) -> bool:
+        """Wraps __generate_outcome() to return the corresponding boolean value"""
         if self.__outcome is not None:
             return self.__outcome
 
         return self.__generate_outcome(is_direct=False)
 
-    def cost(self, cost_fn: Callable[['Test'], int]) -> int:
-        return cost_fn(self)
-
-    @staticmethod
-    def evaluate(test: str) -> 'Test':
-        splitted = test.split()
-
-        if isinstance(splitted[0], Integral):
-            lhs = int(splitted[0])
-        elif isinstance(splitted[0], Rational):
-            lhs = float(splitted[0])
-        else:
-            lhs = splitted[0]
-
-        if isinstance(splitted[2], Integral):
-            rhs = int(splitted[2])
-        elif isinstance(splitted[2], Rational):
-            rhs = float(splitted[2])
-        else:
-            rhs = splitted[2]
-
-        return Test(lhs, splitted[1], rhs)
-
     def __str__(self) -> str:
+        """Returns the string corresponding to the test"""
         return f'{self.lhs} {self.test_type} {self.rhs}'

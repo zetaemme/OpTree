@@ -2,6 +2,7 @@ from sys import argv
 
 import pandas as pd
 
+from cost import Cost
 from dectree.dectree import DecTree
 from dectree.node import LeafNode, TestNode
 from dectree.test import Test
@@ -26,14 +27,14 @@ def main(tests_filepath: str):
 
     with open(tests_filepath, 'r', encoding='UTF-8') as f:
         raw_tests = [line.rstrip() for line in f]
-        tests = [Test.evaluate(test) for test in raw_tests]
+        tests = [Test(test) for test in raw_tests]
 
     if pairs.number == 0:
         return DecTree(LeafNode(dataset[0]['class']))
 
     if pairs.number == 1:
-        # FIXME: Creare una cost function da usare come parametro per cost()
-        test_costs = [test.cost() for test in tests]
+        # FIXME: Completare la definizione della classe Cost
+        test_costs = [Cost.calculate(test) for test in tests]
         minimum_cost_test = min(test_costs)
 
         # FIXME: L'init di LeafNode è osceno
