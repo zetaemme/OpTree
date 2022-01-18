@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, unique
 from numbers import Number, Integral, Rational
-from typing import Iterable, Type, TypeVar, Union
+from typing import Sequence, Type, TypeVar, Union
 
 T1 = TypeVar('T1')
 T2 = TypeVar('T2')
@@ -28,7 +28,7 @@ class Test:
     rhs: T2
     __outcome: bool = None
 
-    def __init__(self, *args: Union[str, Iterable[T1, str, T2]]):
+    def __init__(self, *args: Union[str, Sequence[T1, str, T2]]):
         if len(args) > 3:
             raise ValueError('Too many arguments!')
 
@@ -57,7 +57,7 @@ class Test:
             self.test_type = TestType[args[1]]
             self.rhs = args[2]
 
-    def __generate_outcome(self, is_direct=True) -> bool:
+    def __generate_outcome(self, is_direct: bool = True) -> bool:
         """Generates the outcome of a test"""
         if not is_direct:
             match self.test_type:
