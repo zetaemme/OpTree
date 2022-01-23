@@ -9,7 +9,7 @@ from dectree.test import Test
 from pairs import Pairs
 
 
-def main(tests_filepath: str, classes_filepath: str):
+def main(tests_filepath: str):
     """The main function"""
     dataset = pd.DataFrame(
         # The "dataset" at page 3 of the paper
@@ -23,22 +23,28 @@ def main(tests_filepath: str, classes_filepath: str):
         columns=['t1', 't2', 't3', 'class', 'probability']
     )
 
+    # Creates a Pairs object that holds the pairs for the given dataset
     pairs = Pairs(dataset)
 
+    # Extracts all the class names from the dataset
+    classes = {class_name for class_name in dataset[['class']]}
+
+    # Reads the tests from an input file
     with open(tests_filepath, 'r', encoding='UTF-8') as f:
         raw_tests = [line.rstrip() for line in f]
         tests = [Test(test) for test in raw_tests]
 
-    with open(classes_filepath, 'r', encoding='UTF-8') as f:
-        raw_classes = [line.rstrip() for line in f]
-        classes = [class_str for class_str in raw_classes]
-
     # FIXME: Completare la definizione della classe Cost
     test_costs = [calculate_cost(test) for test in tests]
 
+    # Base case.
+    # All objects in the dataset have the same class. A single leaf is returned.
     if pairs.number == 0:
         return DecTree(LeafNode(dataset[0]['class']))
 
+    # Base case.
+    # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
+    # test as root.
     if pairs.number == 1:
         minimum_cost_test = min(test_costs)
 
@@ -65,4 +71,4 @@ def main(tests_filepath: str, classes_filepath: str):
 
 
 if __name__ == '__main__':
-    main(argv[1], argv[2])
+    main(argv[1])

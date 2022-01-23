@@ -8,6 +8,7 @@ TupleList: TypeAlias = list[tuple]
 
 @dataclass
 class Pairs:
+    """A tuple of items having different classes"""
     __dataset: DataFrame = field(repr=False)
     number: int = field(init=False)
     pair_list: TupleList = field(init=False, default_factory=list)
@@ -17,6 +18,7 @@ class Pairs:
         # We suppose to have a 'class' column in the dataset
         assert 'class' in self.__dataset.columns, 'Dataset should contain a \'class\' column'
 
+        # If item1 and item2 have a different class, they constitute a pair
         self.pair_list = [
             (i1, i2)
             for i1, d1 in self.__dataset.iterrows()

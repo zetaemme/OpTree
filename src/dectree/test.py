@@ -22,13 +22,14 @@ class TestType(Enum):
 
 @dataclass(init=False)
 class Test:
-    """Represents a generic test for the DT"""
+    """Represents a generic test for the Decision Tree"""
     lhs: T1
     test_type: TestType
     rhs: T2
     __outcome: bool = None
 
     def __init__(self, *args: Union[str, Sequence[T1, str, T2]]):
+        """Test class constructor"""
         if len(args) > 3:
             raise ValueError('Too many arguments!')
 
