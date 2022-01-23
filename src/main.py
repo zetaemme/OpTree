@@ -40,7 +40,7 @@ def main(tests_filepath: str):
     # Base case.
     # All objects in the dataset have the same class. A single leaf is returned.
     if pairs.number == 0:
-        return DecTree(LeafNode(dataset[0]['class']))
+        return DecTree(LeafNode(utils.extract_object_class(dataset, 0)))
 
     # Base case.
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
