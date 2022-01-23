@@ -46,8 +46,7 @@ def main(tests_filepath: str):
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
     # test as root.
     if pairs.number == 1:
-        # FIXME: Devo utilizzare sepcost come da definizione, non cost e basta
-        min_cost_max_separability_test = min(test_costs)
+        min_cost_max_separability_test = utils.extract_cheapest_test(tests, (dataset[0], dataset[1]))
 
         return DecTree(
             TestNode(
