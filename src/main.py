@@ -7,6 +7,7 @@ from dectree.dectree import DecTree
 from dectree.node import LeafNode, TestNode
 from dectree.test import Test
 from pairs import Pairs
+from utils import utils
 
 
 def main(tests_filepath: str):
@@ -34,7 +35,6 @@ def main(tests_filepath: str):
         raw_tests = [line.rstrip() for line in f]
         tests = [Test(test) for test in raw_tests]
 
-    # FIXME: Completare la definizione della classe Cost
     test_costs = [calculate_cost(test) for test in tests]
 
     # Base case.
@@ -46,15 +46,14 @@ def main(tests_filepath: str):
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
     # test as root.
     if pairs.number == 1:
-        minimum_cost_test = min(test_costs)
+        # FIXME: Devo utilizzare sepcost come da definizione, non cost e basta
+        min_cost_max_separability_test = min(test_costs)
 
-        # FIXME: L'init di LeafNode è osceno
         return DecTree(
             TestNode(
-                # FIXME: Dovrebbe essere il test con costro minimo che separa le classi
-                str(minimum_cost_test),
-                LeafNode(dataset[pairs.pair_list[0]]['class']),
-                LeafNode(dataset[pairs.pair_list[1]]['class'])
+                str(min_cost_max_separability_test),
+                LeafNode(utils.extract_object_class(dataset, 0)),
+                LeafNode(utils.extract_object_class(dataset, 1))
             )
         )
 
