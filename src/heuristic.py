@@ -1,8 +1,7 @@
-from typing import Callable, NewType, TypeAlias
+from typing import Callable, TypeAlias
 
 from dectree.test import Test
 
-uint = NewType('uint', int)
 TestList: TypeAlias = list[Test]
 
 
@@ -10,8 +9,9 @@ def adapted_greedy(
         # FIXME: Sul paper qui c'è S, che però viene utilizzato solo da f
         tests: TestList,
         f: Callable,
-        cost_fn: Callable[[Test], uint],
-        budget: uint
+        # FIXME: cost_fn dovrebbe tornare int, per comodità è temporaneamente float
+        cost_fn: Callable[[Test], float],
+        budget: int
 ) -> TestList:
     """Implementation of the Adapted-Greedy heuristic"""
     assert budget >= 0, 'Bound should be a positive integer!'
