@@ -23,6 +23,7 @@ class TestNode(Node):
 
     def __post_init__(self) -> None:
         assert self.l_child is not None and self.r_child is not None, 'Tests must have children!'
+        self.__test = Test(self.label)
 
     @property
     def outcome(self) -> bool:
