@@ -26,7 +26,6 @@ class Test:
     lhs: T1
     test_type: TestType
     rhs: T2
-    __outcome: bool = None
 
     def __init__(self, *args: Union[str, Sequence[T1, str, T2]]):
         """Test class constructor"""
@@ -58,49 +57,39 @@ class Test:
             self.test_type = TestType[args[1]]
             self.rhs = args[2]
 
-    def __generate_outcome(self, is_direct: bool = True) -> bool:
-        """Generates the outcome of a test"""
-        if not is_direct:
-            match self.test_type:
-                case TestType.LESS_THAN:
-                    assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'<\' comparison'
-                    assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'<\' comparison'
-
-                    return self.lhs < self.rhs
-
-                case TestType.GREATER_THAN:
-                    assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'>\' comparison'
-                    assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'>\' comparison'
-
-                    return self.lhs > self.rhs
-
-                case TestType.EQUAL:
-                    return self.lhs == self.rhs
-
-                case TestType.NOT_EQUAL:
-                    return self.lhs != self.rhs
-
-                case TestType.LESS_OR_EQUAL:
-                    assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'<=\' comparison'
-                    assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'<=\' comparison'
-
-                    return self.lhs <= self.rhs
-
-                case TestType.GREATER_OR_EQUAL:
-                    assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'>=\' comparison'
-                    assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'>=\' comparison'
-
-                    return self.lhs >= self.rhs
-        else:
-            raise Exception('Can\'t directly invoke the __generate_outcome method.')
-
     @property
     def outcome(self) -> bool:
-        """Wraps __generate_outcome() to return the corresponding boolean value"""
-        if self.__outcome is not None:
-            return self.__outcome
+        """Generates the outcome of a test"""
+        match self.test_type:
+            case TestType.LESS_THAN:
+                assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'<\' comparison'
+                assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'<\' comparison'
 
-        return self.__generate_outcome(is_direct=False)
+                return self.lhs < self.rhs
+
+            case TestType.GREATER_THAN:
+                assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'>\' comparison'
+                assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'>\' comparison'
+
+                return self.lhs > self.rhs
+
+            case TestType.EQUAL:
+                return self.lhs == self.rhs
+
+            case TestType.NOT_EQUAL:
+                return self.lhs != self.rhs
+
+            case TestType.LESS_OR_EQUAL:
+                assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'<=\' comparison'
+                assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'<=\' comparison'
+
+                return self.lhs <= self.rhs
+
+            case TestType.GREATER_OR_EQUAL:
+                assert isinstance(self.lhs, Number), 'lhs should be numeric in order to execute \'>=\' comparison'
+                assert isinstance(self.rhs, Number), 'rhs should be numeric in order to execute \'>=\' comparison'
+
+                return self.lhs >= self.rhs
 
     def __str__(self) -> str:
         """Returns the string corresponding to the test"""
