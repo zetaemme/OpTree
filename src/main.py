@@ -7,7 +7,7 @@ from dectree.dectree import DecTree
 from dectree.node import LeafNode, TestNode
 from dectree.test import Test
 from pairs import Pairs
-from utils import utils
+from src import utils
 
 
 def main(tests_filepath: str):
