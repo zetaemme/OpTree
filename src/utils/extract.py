@@ -29,5 +29,14 @@ def test_structure(test: str) -> Test:
     """Extracts the test structure (lhs, type, rhs) from a given string"""
     structure = test.split()
 
-    # FIXME: Usare tipo corretto per lhs e rhs
-    return Test(structure[0], structure[1], structure[2])
+    if float(structure[0]).is_integer():
+        lhs = int(structure[0])
+    else:
+        lhs = float(structure[0])
+
+    if float(structure[2]).is_integer():
+        rhs = int(structure[2])
+    else:
+        rhs = float(structure[2])
+
+    return Test(lhs, structure[1], rhs)
