@@ -5,9 +5,8 @@ import pandas as pd
 from cost import calculate_cost, find_budget
 from dectree.dectree import DecTree
 from dectree.node import LeafNode, TestNode
-from dectree.test import Test
 from pairs import Pairs
-from src import utils
+from src.utils import extract
 
 
 def main(tests_filepath: str):
@@ -33,26 +32,26 @@ def main(tests_filepath: str):
     # Reads the tests from an input file
     with open(tests_filepath, 'r', encoding='UTF-8') as f:
         raw_tests = [line.rstrip() for line in f]
-        tests = [Test(test) for test in raw_tests]
+        tests = [extract.test_structure(test) for test in raw_tests]
 
     test_costs = [calculate_cost(test) for test in tests]
 
     # Base case.
     # All objects in the dataset have the same class. A single leaf is returned.
     if pairs.number == 0:
-        return DecTree(LeafNode(utils.extract_object_class(dataset, 0)))
+        return DecTree(LeafNode(extract.object_class(dataset, 0)))
 
     # Base case.
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
     # test as root.
     if pairs.number == 1:
-        min_cost_max_separability_test = utils.extract_cheapest_test(tests, (dataset[0], dataset[1]))
+        min_cost_test = extract.cheapest_test(tests)
 
         return DecTree(
             TestNode(
-                str(min_cost_max_separability_test),
-                LeafNode(utils.extract_object_class(dataset, 0)),
-                LeafNode(utils.extract_object_class(dataset, 1))
+                str(min_cost_test),
+                LeafNode(extract.object_class(dataset, 0)),
+                LeafNode(extract.object_class(dataset, 1))
             )
         )
 
