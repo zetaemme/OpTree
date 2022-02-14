@@ -9,8 +9,7 @@ def adapted_greedy(
         # FIXME: Sul paper qui c'è S, che però viene utilizzato solo da f
         tests: TestList,
         f: Callable,
-        # FIXME: cost_fn dovrebbe tornare int, per comodità è temporaneamente float
-        cost_fn: Callable[[Test], float],
+        cost_fn: Callable[[Test], int],
         budget: int
 ) -> TestList:
     """Implementation of the Adapted-Greedy heuristic"""
