@@ -50,8 +50,7 @@ def main(tests_filepath: str):
         return DecTree(
             TestNode(
                 str(min_cost_test),
-                LeafNode(extract.object_class(dataset, 0)),
-                LeafNode(extract.object_class(dataset, 1))
+                [LeafNode(extract.object_class(dataset, 0)), LeafNode(extract.object_class(dataset, 1))]
             )
         )
 
