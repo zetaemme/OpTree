@@ -1,12 +1,10 @@
 from dataclasses import dataclass
 from enum import Enum, unique
-from numbers import Number, Integral, Rational
-from typing import Sequence, Type, TypeVar, Union
+from numbers import Number
+from typing import TypeVar
 
 T1 = TypeVar('T1')
 T2 = TypeVar('T2')
-
-Numeric: Type[Number]
 
 
 @unique
@@ -27,35 +25,11 @@ class Test:
     test_type: TestType
     rhs: T2
 
-    def __init__(self, *args: Union[str, Sequence[T1, str, T2]]):
+    def __init__(self, lhs: T1, test_type: str, rhs: T2):
         """Test class constructor"""
-        if len(args) > 3:
-            raise ValueError('Too many arguments!')
-
-        if len(args) == 1:
-            assert isinstance(args[0], str), 'A string should be provided as param!'
-            splitted = args[0].split()
-
-            self.test_type = TestType[splitted[1]]
-
-            if isinstance(splitted[0], Integral):
-                self.lhs = int(splitted[0])
-            elif isinstance(splitted[0], Rational):
-                self.lhs = float(splitted[0])
-            else:
-                self.lhs = splitted[0]
-
-            if isinstance(splitted[2], Integral):
-                self.rhs = int(splitted[2])
-            elif isinstance(splitted[2], Rational):
-                self.rhs = float(splitted[2])
-            else:
-                self.rhs = splitted[2]
-
-        if len(args) == 3:
-            self.lhs = args[0]
-            self.test_type = TestType[args[1]]
-            self.rhs = args[2]
+        self.lhs = lhs
+        self.test_type = TestType[test_type]
+        self.rhs = rhs
 
     @property
     def outcome(self) -> bool:
