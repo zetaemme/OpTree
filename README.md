@@ -5,4 +5,4 @@ Implementation of the DecTree algorithm presented in the paper from Cicalese, La
 Mattia Zorzan - *VR464472*
 
 ## References
-- https://www.di.univr.it/?ent=pubbdip&id=882204
+F. Cicalese, E. Laber, A. Saettler "Decision Trees for Function Evaluation: Simultaneous Optimization of Worst and Expected Cost", 2016: [[pdf]](https://link.springer.com/content/pdf/10.1007/s00453-016-0225-9.pdf)
