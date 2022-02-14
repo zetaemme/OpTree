@@ -7,11 +7,9 @@ from dectree.test import Test
 TestList: TypeAlias = list[Test]
 
 
-# FIXME: Modificare con una funzione di costo accettabile.
-#        Per ora è stata utilizzata la variante con costo 1/2 del paper (testing), dovrebbe tornare int
-def calculate_cost(test: Test) -> float:
+def calculate_cost(test: Test) -> int:
     """Calculates the cost of a given test"""
-    return 0.5
+    return 1
 
 
 # FIXME: Dovrebbe tornare int, ma si adatta ll'attuale cost_fn
