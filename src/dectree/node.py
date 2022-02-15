@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Union
+from numbers import Number
+from typing import Optional, Union
 
 from src.dectree.test import Test
 from src.utils import extract
@@ -13,7 +14,7 @@ class Node(ABC):
     children: list[Union['TestNode', 'LeafNode']] = field(default=None)
 
     @abstractmethod
-    def outcome(self) -> bool: pass
+    def outcome(self, lhs_value: Optional[Number]) -> Union[int, str]: pass
 
 
 @dataclass
@@ -26,9 +27,8 @@ class TestNode(Node):
         assert self.children, 'TestNodes must have children!'
         self.__test = extract.test_structure(self.label)
 
-    @property
-    def outcome(self) -> bool:
-        return self.__test.outcome
+    def outcome(self, lhs_value: Number) -> int:
+        return self.__test.outcome(lhs_value)
 
 
 @dataclass
@@ -38,6 +38,6 @@ class LeafNode(Node):
     def __post_init__(self) -> None:
         assert not self.children, 'LeafNodes shouldn\'t have any child!'
 
-    def outcome(self) -> str:
+    def outcome(self, lhs_value: Optional[Number]) -> str:
         """Returns the string associated with the class ot the leaf"""
         return self.label
