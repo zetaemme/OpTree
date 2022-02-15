@@ -31,10 +31,18 @@ def main(tests_filepath: str):
 
     # Reads the tests from an input file
     with open(tests_filepath, 'r', encoding='UTF-8') as f:
-        raw_tests = [line.rstrip() for line in f]
-        tests = [extract.test_structure(test) for test in raw_tests]
+        test_strings = [line.rstrip() for line in f]
+        tests = [extract.test_structure(test) for test in test_strings]
 
+    # Inits a list with all the costs of the tests
     test_costs = [calculate_cost(test) for test in tests]
+
+    # Inits a dictionary containing the S^{i}_{t}
+    items_separated_by_test = {
+        test: test.evaluate_dataset_for_class(dataset, index)
+        for test in tests
+        for index, _ in enumerate(classes)
+    }
 
     # Base case.
     # All objects in the dataset have the same class. A single leaf is returned.
@@ -45,11 +53,11 @@ def main(tests_filepath: str):
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
     # test as root.
     if pairs.number == 1:
-        min_cost_test = extract.cheapest_test(tests)
+        minimum_cost_test = extract.cheapest_test(tests)
 
         return DecTree(
             TestNode(
-                str(min_cost_test),
+                str(minimum_cost_test),
                 [LeafNode(extract.object_class(dataset, 0)), LeafNode(extract.object_class(dataset, 1))]
             )
         )
