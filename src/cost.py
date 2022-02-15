@@ -14,7 +14,6 @@ def calculate_cost(test: Test) -> int:
     return 1
 
 
-# TODO: Implementare come da paper
 def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_fn: Callable[[Test], float]) -> int:
     """Implementation of the FindBudget procedure of the referenced paper"""
 
