@@ -38,6 +38,7 @@ def main(tests_filepath: str):
     test_costs = [calculate_cost(test) for test in tests]
 
     # Inits a dictionary containing the S^{i}_{t}
+    # In this case we use i (index) to obtain the ariety of the set
     items_separated_by_test = {
         test: test.evaluate_dataset_for_class(dataset, index)
         for test in tests
@@ -65,8 +66,10 @@ def main(tests_filepath: str):
     budget = find_budget(dataset, tests, classes, calculate_cost)
     spent = 0
     spent2 = 0
+
     # U <- S
     universe = dataset
+
     k = 1
 
     while any([test for index, test in enumerate(tests) if test_costs[index] <= budget - spent]):
