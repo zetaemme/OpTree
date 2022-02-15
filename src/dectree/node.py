@@ -23,9 +23,10 @@ class TestNode(Node):
     __test: Test = field(init=False)
 
     def __post_init__(self) -> None:
-        # TODO: Aggiungere calcolo degli oggetti separati per ogni classe
-        assert self.children, 'TestNodes must have children!'
+        assert 0 < len(self.children) <= 2, 'TestNodes must have 1 or 2 children!'
         self.__test = extract.test_structure(self.label)
+        # Removes the outcomes from the node label after initializing the test
+        self.label = self.label[:-4]
 
     def outcome(self, lhs_value: Number) -> int:
         return self.__test.outcome(lhs_value)
