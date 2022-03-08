@@ -79,8 +79,27 @@ def main(tests_filepath: str):
 
     # While there's a test t with cost(t) <= budget - spent
     while any([test for index, test in enumerate(tests) if test_costs[index] <= budget - spent]):
-        # TODO: Continuare da 'Let tk be a test...'
-        pass
+        probability_maximizing_tests = {}
+
+        for test in tests:
+            all_objects_covered_by_test = {
+                test.evaluate_dataset_for_class(dataset, index)
+                for index in range(len(classes))
+            }
+
+            universe_probability = sum(universe['probability'])
+            sub_universe_probability = sum(set(universe).intersection(all_objects_covered_by_test))
+
+            probability_maximizing_tests[test] = (universe_probability - sub_universe_probability) / calculate_cost(
+                test)
+
+        if max(probability_maximizing_tests, key=probability_maximizing_tests.get) == tests[0]:
+            # FIXME: Dovrebbe già esserci una struttura ad albero a cui aggiungere nodi, ma io non la ho :^)
+            # TODO: "Make test[0] the root of the tree D"
+            pass
+        else:
+            # TODO: "Make test[k] child of test t[k - 1]"
+            pass
 
 
 if __name__ == '__main__':
