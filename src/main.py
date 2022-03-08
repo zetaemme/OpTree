@@ -74,6 +74,10 @@ def main(tests_filepath: str):
 
     k = 1
 
+    # Remove from tests all tests with cost > budget
+    tests = [test for test in tests if calculate_cost(test) <= budget]
+
+    # While there's a test t with cost(t) <= budget - spent
     while any([test for index, test in enumerate(tests) if test_costs[index] <= budget - spent]):
         # TODO: Continuare da 'Let tk be a test...'
         pass
