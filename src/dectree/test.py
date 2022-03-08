@@ -43,7 +43,10 @@ class Test:
         Evaluates this test for all the rows in the dataset.
         Returns all the rows for which the outcome is class_index
         """
-        return [row for row in dataset.rows if self.outcome(row[self.lhs_label]) == class_index]
+        # NOTE: Doing this assignment avoids the case in which a Generator is returned instead of a list
+        result = [row for row in dataset.rows if self.outcome(row[self.lhs_label]) == class_index]
+
+        return result
 
     def outcome(self, lhs_value: Number) -> int:
         """Generates the outcome of a test"""
