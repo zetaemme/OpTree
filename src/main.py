@@ -63,7 +63,9 @@ def main(tests_filepath: str):
             )
         )
 
+    # Uses the FindBudget procedure to extract the correct cost budget
     budget = find_budget(dataset, tests, classes, calculate_cost)
+
     spent = 0
     spent2 = 0
 
