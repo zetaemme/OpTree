@@ -3,6 +3,7 @@ from typing import Callable, TypeAlias
 from pandas import DataFrame
 
 from src.dectree.test import Test
+from src.heuristic import adapted_greedy
 from src.pairs import Pairs
 
 TestList: TypeAlias = list[Test]
@@ -33,7 +34,19 @@ def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_f
 
         return pairs.number - sep_pairs.number
 
+    # NOTE: In the original paper this is marked as 1 - e^{X}, approximated with 0.35
     alpha = 0.35
 
-    # TODO: Continuare da "Do a binary search..."
-    return 0
+    pairs = Pairs(objects)
+
+    # FIXME: Dovrebbe essere eseguito in BinarySearch, invece che linearmente
+    for b in range(1, sum([calculate_cost(test) for test in tests]) + 1):
+        heuristic_test_list = adapted_greedy(tests, submodular_f1, cost_fn, b)
+
+        heuristic_test_coverage_sum = 0
+        for test in heuristic_test_list:
+            for index in range(len(classes)):
+                heuristic_test_coverage_sum += len(test.evaluate_dataset_for_class(objects, index))
+
+        if heuristic_test_coverage_sum >= (alpha * pairs.number):
+            return b
