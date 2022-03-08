@@ -17,7 +17,7 @@ def calculate_cost(test: Test) -> int:
 def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_fn: Callable[[Test], int]) -> int:
     """Implementation of the FindBudget procedure of the referenced paper"""
 
-    def submod_f1(sub_tests: TestList):
+    def submodular_f1(sub_tests: TestList):
         pairs = Pairs(objects)
 
         items_separated_by_test = [
