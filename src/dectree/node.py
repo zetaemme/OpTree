@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from numbers import Number
-from typing import Optional, Union
+from typing import Optional, Sequence, Union
 
 from src.dectree.test import Test
 from src.utils import extract
@@ -12,6 +12,11 @@ class Node(ABC):
     """An Abstract Base Class for the Node class"""
     label: str = field(init=True)
     children: list[Union['TestNode', 'LeafNode']] = field(default=None)
+
+    @abstractmethod
+    def add_children(self,
+                     children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
+        pass
 
     @abstractmethod
     def outcome(self, lhs_value: Optional[Number]) -> Union[int, str]: pass
@@ -28,6 +33,10 @@ class TestNode(Node):
         # Removes the outcomes from the node label after initializing the test
         self.label = self.label[:-4]
 
+    def add_children(self,
+                     children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
+        self.children.append(children)
+
     def outcome(self, lhs_value: Number) -> int:
         return self.__test.outcome(lhs_value)
 
@@ -42,3 +51,7 @@ class LeafNode(Node):
     def outcome(self, lhs_value: Optional[Number]) -> str:
         """Returns the string associated with the class ot the leaf"""
         return self.label
+
+    def add_children(self,
+                     children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
+        raise RuntimeError('Cannot add children to leaf node!')
