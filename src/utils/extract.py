@@ -34,4 +34,4 @@ def test_structure(test: str) -> Test:
     else:
         rhs = float(structure[2])
 
-    return Test(structure[0], structure[1], rhs, int(structure[3]), int(structure[4]))
+    return Test(structure[0], structure[1], rhs, list(map(int, structure[3:])))
