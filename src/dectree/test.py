@@ -22,16 +22,23 @@ class Test:
     lhs_label: str
     test_type: TestType
     rhs: Number
-    outcomes: dict[bool, int]
+    outcomes: list
 
-    def __init__(self, lhs_label: str, test_type: str, rhs: Number, true_outcome: int, false_outcome: int):
+    def __init__(self, lhs_label: str, test_type: str, rhs: Number, outcomes: list):
         """Test class constructor"""
-        self.lhs_label = lhs_label
-        self.test_type = TestType[test_type]
-        self.rhs = rhs
+        mapping = {
+            '<': TestType.LESS_THAN,
+            '>': TestType.GREATER_THAN,
+            '==': TestType.EQUAL,
+            '!=': TestType.NOT_EQUAL,
+            '<=': TestType.LESS_OR_EQUAL,
+            '>=': TestType.GREATER_OR_EQUAL
+        }
 
-        self.outcomes[True] = true_outcome
-        self.outcomes[False] = false_outcome
+        self.lhs_label = lhs_label
+        self.test_type = mapping[test_type]
+        self.rhs = rhs
+        self.outcomes = outcomes
 
     def __str__(self) -> str:
         """Returns the string corresponding to the test"""
