@@ -3,9 +3,9 @@ from sys import argv
 import pandas as pd
 
 from cost import calculate_cost, find_budget
-from dectree.dectree import DecTree
-from dectree.node import LeafNode, TestNode
 from pairs import Pairs
+from src.dectree.dectree import DecTree
+from src.dectree.node import LeafNode, TestNode
 from src.utils import extract
 
 
@@ -54,14 +54,15 @@ def main(tests_filepath: str):
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
     # test as root.
     if pairs.number == 1:
-        minimum_cost_test = extract.cheapest_test(tests)
+        # NOTE: This set of instructions works since, in this specific case, we're working with a single pair
+        #       The TestNode has been assigned to a variable in order to assign the parent node to each LeafNode
+        root_node = TestNode(label=str(extract.cheapest_test(tests)))
+        root_node.add_children([
+            LeafNode(label=extract.object_class(dataset, 0), parent=root_node),
+            LeafNode(label=extract.object_class(dataset, 1), parent=root_node)
+        ])
 
-        return DecTree(
-            TestNode(
-                str(minimum_cost_test),
-                [LeafNode(extract.object_class(dataset, 0)), LeafNode(extract.object_class(dataset, 1))]
-            )
-        )
+        return DecTree(root_node)
 
     # Uses the FindBudget procedure to extract the correct cost budget
     budget = find_budget(dataset, tests, classes, calculate_cost)
