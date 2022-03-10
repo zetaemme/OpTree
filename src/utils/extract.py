@@ -1,8 +1,7 @@
 from typing import TypeAlias
 
-from pandas import DataFrame
-
 from src.cost import calculate_cost
+from src.data.dataset import Dataset
 from src.dectree.test import Test
 
 TestList: TypeAlias = list[Test]
@@ -19,10 +18,10 @@ def cheapest_test(tests: TestList) -> Test:
     # TODO: Aggiungere return statement per test costs effettivi
 
 
-def object_class(dataset: DataFrame, index: int) -> str:
+def object_class(dataset: Dataset, index: int) -> str:
     """Extracts the class label from the item in position index of a given dataset"""
     assert index >= 0, "Index should be a positive integer"
-    return dataset[index]['class']
+    return dataset.rows[index]['class']
 
 
 def test_structure(test: str) -> Test:

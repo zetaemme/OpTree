@@ -1,9 +1,8 @@
 from sys import argv
 
-import pandas as pd
-
 from cost import calculate_cost, find_budget
 from pairs import Pairs
+from src.data.dataset import Dataset
 from src.dectree.dectree import DecTree
 from src.dectree.node import LeafNode, TestNode
 from src.utils import extract
@@ -11,8 +10,7 @@ from src.utils import extract
 
 def main(tests_filepath: str):
     """The main function"""
-    dataset = pd.DataFrame(
-        # The "dataset" at page 3 of the paper
+    dataset = Dataset(
         data=[
             [1, 1, 2, 'A', 0.1],
             [1, 2, 1, 'A', 0.2],
@@ -25,9 +23,6 @@ def main(tests_filepath: str):
 
     # Creates a Pairs object that holds the pairs for the given dataset
     pairs = Pairs(dataset)
-
-    # Extracts all the class names from the dataset
-    classes = {class_name for class_name in dataset[['class']]}
 
     # Reads the tests from an input file
     with open(tests_filepath, 'r', encoding='UTF-8') as f:
@@ -42,7 +37,7 @@ def main(tests_filepath: str):
     items_separated_by_test = {
         test: test.evaluate_dataset_for_class(dataset, index)
         for test in tests
-        for index, _ in enumerate(classes)
+        for index, _ in enumerate(dataset.classes)
     }
 
     # Base case.
@@ -65,7 +60,7 @@ def main(tests_filepath: str):
         return DecTree(root_node)
 
     # Uses the FindBudget procedure to extract the correct cost budget
-    budget = find_budget(dataset, tests, classes, calculate_cost)
+    budget = find_budget(dataset, tests, dataset.classes, calculate_cost)
 
     spent = 0
     spent2 = 0
@@ -85,11 +80,11 @@ def main(tests_filepath: str):
         for test in tests:
             all_objects_covered_by_test = {
                 test.evaluate_dataset_for_class(dataset, index)
-                for index in range(len(classes))
+                for index in range(len(dataset.classes))
             }
 
-            universe_probability = sum(universe['probability'])
-            sub_universe_probability = sum(set(universe).intersection(all_objects_covered_by_test))
+            universe_probability = sum(universe.get_column('probability'))
+            sub_universe_probability = sum(set(universe.as_data_frame()).intersection(all_objects_covered_by_test))
 
             probability_maximizing_tests[test] = (universe_probability - sub_universe_probability) / calculate_cost(
                 test)

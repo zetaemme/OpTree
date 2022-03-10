@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, unique
 from numbers import Number
 
-from pandas import DataFrame, Series
+from src.data.dataset import Dataset
 
 
 @unique
@@ -44,8 +44,7 @@ class Test:
         """Returns the string corresponding to the test"""
         return f'{self.lhs_label} {self.test_type} {self.rhs}'
 
-    # FIXME: Rimuovere dipendenza strutturale da pandas con un'interfaccia
-    def evaluate_dataset_for_class(self, dataset: DataFrame, class_index: int) -> list[Series]:
+    def evaluate_dataset_for_class(self, dataset: Dataset, class_index: int) -> list:
         """
         Evaluates this test for all the rows in the dataset.
         Returns all the rows for which the outcome is class_index

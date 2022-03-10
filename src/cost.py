@@ -1,7 +1,6 @@
 from typing import Callable, TypeAlias
 
-from pandas import DataFrame
-
+from src.data.dataset import Dataset
 from src.dectree.test import Test
 from src.heuristic import adapted_greedy
 from src.pairs import Pairs
@@ -15,7 +14,7 @@ def calculate_cost(test: Test) -> int:
     return 1
 
 
-def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_fn: Callable[[Test], int]) -> int:
+def find_budget(objects: Dataset, tests: list[Test], classes: set[str], cost_fn: Callable[[Test], int]) -> int:
     """Implementation of the FindBudget procedure of the referenced paper"""
 
     def submodular_f1(sub_tests: TestList):
@@ -30,7 +29,7 @@ def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_f
 
         items_separated_by_test = list(set(items_separated_by_test))
 
-        sep_pairs = Pairs(DataFrame(items_separated_by_test))
+        sep_pairs = Pairs(Dataset(data=items_separated_by_test, columns=None))
 
         return pairs.number - sep_pairs.number
 
