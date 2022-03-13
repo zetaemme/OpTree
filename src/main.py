@@ -34,11 +34,11 @@ def main(tests_filepath: str):
 
     # Inits a dictionary containing the S^{i}_{t}
     # In this case we use i (index) to obtain the ariety of the set
-    items_separated_by_test = {
-        test: test.evaluate_dataset_for_class(dataset, index)
-        for test in tests
-        for index, _ in enumerate(dataset.classes)
-    }
+    # items_separated_by_test = {
+    #     test: test.evaluate_dataset_for_class(dataset, index)
+    #     for test in tests
+    #     for index, _ in enumerate(dataset.classes)
+    # }
 
     # Base case.
     # All objects in the dataset have the same class. A single leaf is returned.
@@ -52,12 +52,14 @@ def main(tests_filepath: str):
         # NOTE: This set of instructions works since, in this specific case, we're working with a single pair
         #       The TestNode has been assigned to a variable in order to assign the parent node to each LeafNode
         root_node = TestNode(label=str(extract.cheapest_test(tests)))
-        root_node.add_children([
+        decision_tree = DecTree(root_node)
+
+        decision_tree.add_children([
             LeafNode(label=extract.object_class(dataset, 0), parent=root_node),
             LeafNode(label=extract.object_class(dataset, 1), parent=root_node)
         ])
 
-        return DecTree(root_node)
+        return decision_tree
 
     # Uses the FindBudget procedure to extract the correct cost budget
     budget = find_budget(dataset, tests, dataset.classes, calculate_cost)
@@ -66,6 +68,7 @@ def main(tests_filepath: str):
     spent2 = 0
 
     # U <- S
+    # NOTE: The U variable is called universe to remark the parallelism of this problem with Set Cover
     universe = dataset
 
     k = 1
@@ -73,29 +76,38 @@ def main(tests_filepath: str):
     # Remove from tests all tests with cost > budget
     tests = [test for test in tests if calculate_cost(test) <= budget]
 
+    # FIXME: Find a more elegant way of representing the empty tree
+    decision_tree = None
+
     # While there's a test t with cost(t) <= budget - spent
     while any([test for index, test in enumerate(tests) if test_costs[index] <= budget - spent]):
         probability_maximizing_tests = {}
 
+        # FIXME: This could be wrapped into a separate function, since it repeats in the future
         for test in tests:
             all_objects_covered_by_test = {
                 test.evaluate_dataset_for_class(dataset, index)
                 for index in range(len(dataset.classes))
             }
 
+            # FIXME: This snippet is the literal translation of the second submodular function of the paper
             universe_probability = sum(universe.get_column('probability'))
             sub_universe_probability = sum(set(universe.as_data_frame()).intersection(all_objects_covered_by_test))
 
             probability_maximizing_tests[test] = (universe_probability - sub_universe_probability) / calculate_cost(
                 test)
 
-        if max(probability_maximizing_tests, key=probability_maximizing_tests.get) == tests[0]:
-            # FIXME: Dovrebbe già esserci una struttura ad albero a cui aggiungere nodi, ma io non la ho :^)
-            # TODO: "Make test[0] the root of the tree D"
-            pass
+        maximum_probability_test = max(probability_maximizing_tests, key=probability_maximizing_tests.get)
+
+        if maximum_probability_test == tests[0]:
+            # Make test[0] the root of the tree D
+            decision_tree = DecTree(TestNode(str(maximum_probability_test)))
         else:
-            # TODO: "Make test[k] child of test t[k - 1]"
-            pass
+            # Make test[k] child of test t[k - 1]
+            # FIXME: This warning can be ignored since this branch will be mandatory executed after the 'True' branch
+            #        Anyway, when line 79 will be fixed, this can be REMOVED
+            assert decision_tree is not None
+            decision_tree.add_children(TestNode(str(maximum_probability_test), parent=decision_tree.last_added_node))
 
 
 if __name__ == '__main__':
