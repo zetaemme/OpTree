@@ -6,7 +6,7 @@ TestList: TypeAlias = list[Test]
 
 
 def adapted_greedy(
-        # FIXME: Sul paper qui c'è S, che però viene utilizzato solo da f
+        # FIXME: In the paper there's S as parameter, but it's never used
         tests: TestList,
         f: Callable,
         cost_fn: Callable[[Test], int],

@@ -10,7 +10,7 @@ TestList: TypeAlias = list[Test]
 
 def calculate_cost(test: Test) -> int:
     """Calculates the cost of a given test"""
-    # FIXME: Settare a vera funzione di costo, 1 messo solo per testing
+    # FIXME: This value is returned for testing purpose, create a real cost function
     return 1
 
 
@@ -38,7 +38,7 @@ def find_budget(objects: Dataset, tests: list[Test], classes: set[str], cost_fn:
 
     pairs = Pairs(objects)
 
-    # FIXME: Dovrebbe essere eseguito in BinarySearch, invece che linearmente
+    # FIXME: This should be implemented as a BinarySearch
     for b in range(1, sum([calculate_cost(test) for test in tests]) + 1):
         heuristic_test_list = adapted_greedy(tests, submodular_f1, cost_fn, b)
 

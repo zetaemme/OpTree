@@ -15,7 +15,7 @@ def cheapest_test(tests: TestList) -> Test:
     if all(calculate_cost(test) == 1 for test in tests):
         return tests[0]
 
-    # TODO: Aggiungere return statement per test costs effettivi
+    # TODO: Add a return statement for the effective test costs
 
 
 def object_class(dataset: Dataset, index: int) -> str:
