@@ -15,6 +15,20 @@ class TestType(Enum):
     LESS_OR_EQUAL = '<='
     GREATER_OR_EQUAL = '>='
 
+    @classmethod
+    def of(cls, operator: str) -> 'TestType':
+        """Converts a given operator into the corrct Enum value"""
+        mapping = {
+            '<': TestType.LESS_THAN,
+            '>': TestType.GREATER_THAN,
+            '==': TestType.EQUAL,
+            '!=': TestType.NOT_EQUAL,
+            '<=': TestType.LESS_OR_EQUAL,
+            '>=': TestType.GREATER_OR_EQUAL
+        }
+
+        return mapping[operator]
+
 
 @dataclass(init=False)
 class Test:
@@ -26,17 +40,8 @@ class Test:
 
     def __init__(self, lhs_label: str, test_type: str, rhs: Number, outcomes: list):
         """Test class constructor"""
-        mapping = {
-            '<': TestType.LESS_THAN,
-            '>': TestType.GREATER_THAN,
-            '==': TestType.EQUAL,
-            '!=': TestType.NOT_EQUAL,
-            '<=': TestType.LESS_OR_EQUAL,
-            '>=': TestType.GREATER_OR_EQUAL
-        }
-
         self.lhs_label = lhs_label
-        self.test_type = mapping[test_type]
+        self.test_type = TestType.of(test_type)
         self.rhs = rhs
         self.outcomes = outcomes
 
