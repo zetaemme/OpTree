@@ -34,11 +34,11 @@ def main(tests_filepath: str):
 
     # Inits a dictionary containing the S^{i}_{t}
     # In this case we use i (index) to obtain the ariety of the set
-    # items_separated_by_test = {
-    #     test: test.evaluate_dataset_for_class(dataset, index)
-    #     for test in tests
-    #     for index, _ in enumerate(dataset.classes)
-    # }
+    items_separated_by_test = {
+        test: test.evaluate_dataset_for_class(dataset, index)
+        for test in tests
+        for index, _ in enumerate(dataset.classes)
+    }
 
     # Base case.
     # All objects in the dataset have the same class. A single leaf is returned.
@@ -108,6 +108,19 @@ def main(tests_filepath: str):
             #        Anyway, when line 79 will be fixed, this can be REMOVED
             assert decision_tree is not None
             decision_tree.add_children(TestNode(str(maximum_probability_test), parent=decision_tree.last_added_node))
+
+        for class_label in dataset.classes:
+            items_separated_by_tk = set(items_separated_by_test[maximum_probability_test][class_label])
+            maximum_separated_class_from_tk = max(items_separated_by_test[maximum_probability_test])
+
+            resulting_intersection = items_separated_by_tk.intersection(set(universe.as_data_frame()))
+
+            if resulting_intersection and items_separated_by_tk != maximum_separated_class_from_tk:
+                # FIXME: Make main() a separated DTOA() function, so it can be called recursively
+                # decision_tree.add_subtree(DTOA(...))
+
+                # TODO: "U <- U intersect S^{*}_{t_k}..."
+                pass
 
 
 if __name__ == '__main__':
