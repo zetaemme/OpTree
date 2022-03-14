@@ -18,6 +18,7 @@ class DecTree:
             pass
 
     def add_children(self, children: Union[Union[LeafNode, TestNode], Sequence[Union[LeafNode, TestNode]]]) -> None:
+        """Adds a children to the last added node of this tree"""
         self.last_added_node.add_children(children)
 
         if isinstance(children, Sequence):
@@ -26,3 +27,8 @@ class DecTree:
             self.last_added_node = children[-1]
         else:
             self.last_added_node = children
+
+    def add_subtree(self, subtree: 'DecTree') -> None:
+        """Adds the DecTree subtree as a child of the last added node"""
+        self.add_children(subtree.root)
+        self.last_added_node = subtree.last_added_node
