@@ -30,5 +30,6 @@ class DecTree:
 
     def add_subtree(self, subtree: 'DecTree') -> None:
         """Adds the DecTree subtree as a child of the last added node"""
+        subtree.root.parent = self.last_added_node
         self.add_children(subtree.root)
         self.last_added_node = subtree.last_added_node
