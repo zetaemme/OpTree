@@ -38,6 +38,12 @@ class TestNode(Node):
 
     def add_children(self,
                      children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
+        if isinstance(children, Sequence):
+            for child in children:
+                child.parent = self
+            else:
+                children.parent = self
+
         self.children.append(children)
 
     def outcome(self, lhs_value: Number) -> int:
