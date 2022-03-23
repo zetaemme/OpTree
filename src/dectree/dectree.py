@@ -86,7 +86,7 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
     # test as root.
     if pairs.number == 1:
-        # NOTE: This set of instructions works since, in this specific case, we're working with a single pair
+        # NOTE: This set of instructions works since, in this specific case, we're working with a single pair.
         #       The TestNode has been assigned to a variable in order to assign the parent node to each LeafNode
         root_node = TestNode(label=str(extract.cheapest_test(tests)))
         decision_tree = DecTree(root_node)
@@ -105,7 +105,7 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
     spent2 = 0
 
     # U <- S
-    # NOTE: The U variable is called universe to remark the parallelism of this problem with Set Cover
+    # NOTE: The U variable is called universe to remark the parallelism of this problem with the Set Cover problem
     universe = objects
 
     k = 1
