@@ -118,20 +118,12 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
 
     # While there's a test t with cost(t) <= budget - spent
     while any([test for index, test in enumerate(tests) if test_costs[index] <= budget - spent]):
-        probability_maximizing_tests = {}
-
-        # FIXME: This could be wrapped into a separate function, since it repeats in the future
-        for test in tests:
-            all_objects_covered_by_test = {
-                test.evaluate_dataset_for_class(objects, index)
-                for index in range(len(objects.classes))
-            }
-
-            # FIXME: This snippet is the literal translation of the second submodular function of the paper
-            universe_probability = sum(universe.get_column('probability'))
-            sub_universe_probability = sum(set(universe.as_data_frame()).intersection(all_objects_covered_by_test))
-
-            probability_maximizing_tests[test] = (universe_probability - sub_universe_probability) / cost_fn(test)
+        # NOTE: Since we need to extract the test t_{k} which maximizes the function:
+        #           (probability(universe) - probability(universe intersect items_separated_by_t_{k}))/cost(t_{k})
+        #       We can simply create a list containing all tests which cost is less than budget - spent.
+        #       Then we can use the cheapest possible test, since it always maximizes the function (?).
+        tests_eligible_for_maximization = extract.tests_costing_less_than(tests, budget - spent)
+        probability_maximizing_test = extract.cheapest_test(tests_eligible_for_maximization)
 
         maximum_probability_test = max(probability_maximizing_tests, key=probability_maximizing_tests.get)
 

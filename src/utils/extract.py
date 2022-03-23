@@ -30,3 +30,10 @@ def test_structure(test: str) -> Test:
         rhs = float(structure[2])
 
     return Test(structure[0], structure[1], rhs, list(map(int, structure[3:])))
+
+
+def tests_costing_less_than(tests: list[Test], cost: int) -> list[Test]:
+    """Extracts all the tests which cost is less than a given cost"""
+    # NOTE: Doing this assignment avoids the case in which a Generator is returned instead of a list
+    result = [test for test in tests if calculate_cost(test) <= cost]
+    return result
