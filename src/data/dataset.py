@@ -22,16 +22,21 @@ class Dataset:
         self.rows = [row for row in self.iterate_rows()]
 
     def __repr__(self) -> str:
+        """Returns a string representing the dataset as a matrix"""
         return self.data_frame.__repr__()
 
     def as_data_frame(self) -> DataFrame:
+        """Returns the dataset as a Pandas DataFrame object"""
         return self.data_frame
 
     def iterate_rows(self) -> Iterable[tuple[Hashable, Series]]:
+        """Wraps the DataFrame iterrows() method"""
         return self.data_frame.iterrows()
 
     def get_column(self, column_name: str) -> list[Any]:
+        """Returns a list containing a list of all the values of a column in the dataset"""
         return list(self.data_frame[column_name])
 
     def slice_from(self, index: Hashable) -> 'Dataset':
+        """Returns a new dataset obtained by slicing the original one ata given index"""
         return Dataset(self.data_frame[index:], self.columns)
