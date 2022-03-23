@@ -120,7 +120,7 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
     while any([test for index, test in enumerate(tests) if test_costs[index] <= budget - spent]):
         # NOTE: Since we need to extract the test t_{k} which maximizes the function:
         #           (probability(universe) - probability(universe intersect items_separated_by_t_{k}))/cost(t_{k})
-        #       We can simply create a list containing all tests which cost is less than budget - spent.
+        #       we can simply create a list containing all tests which cost is less than budget - spent.
         #       Then we can use the cheapest possible test, since it always maximizes the function (?).
         tests_eligible_for_maximization = extract.tests_costing_less_than(tests, budget - spent)
         probability_maximizing_test = extract.cheapest_test(tests_eligible_for_maximization)
@@ -154,15 +154,20 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
 
     if tests:
         while True:
-            # TODO: Let t_k be a test that maximizes...
-            # TODO: Set t_k as a child...
+            # NOTE: Since we need to extract the test t_{k} which maximizes the function:
+            #           (pairs(universe) - pairs(universe intersect items_separated_by_t_{k}))/cost(t_{k})
+            #       we can simply use the cheapest possible test, since it always maximizes the function (?).
+            pairs_maximizing_test = extract.cheapest_test(tests)
+
+            # Set t_{k} as child of t_{k - 1}
+            decision_tree.add_children(TestNode(str(pairs_maximizing_test), parent=decision_tree.last_added_node))
 
             # FIXME: Duplicated code, this 'for loop' should be converted to a function
             for class_label in objects.classes:
-                items_separated_by_tk = set(items_separated_by_test[maximum_pairs_test][class_label])
+                items_separated_by_tk = set(items_separated_by_test[pairs_maximizing_test][class_label])
 
                 # NOTE: Corresponds to S^{*}_{t_k}
-                maximum_separated_class_from_tk = max(items_separated_by_test[maximum_pairs_test])
+                maximum_separated_class_from_tk = max(items_separated_by_test[pairs_maximizing_test])
 
                 resulting_intersection = items_separated_by_tk.intersection(set(universe.as_data_frame()))
 
@@ -171,8 +176,8 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
 
             universe = resulting_intersection
 
-            spent2 += cost_fn(maximum_pairs_test)
-            tests.remove(maximum_pairs_test)
+            spent2 += cost_fn(pairs_maximizing_test)
+            tests.remove(pairs_maximizing_test)
             k += 1
 
             if budget - spent2 < 0 or not tests:
