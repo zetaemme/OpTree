@@ -132,14 +132,53 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
             # Make test[k] child of test t[k - 1]
             decision_tree.add_children(TestNode(str(probability_maximizing_test), parent=decision_tree.last_added_node))
 
+        # FIXME: Duplicated code, this 'for loop' should be converted to a function
         for class_label in objects.classes:
-            items_separated_by_tk = set(items_separated_by_test[maximum_probability_test][class_label])
-            maximum_separated_class_from_tk = max(items_separated_by_test[maximum_probability_test])
+            # FIXME: Handle all types of collection as slices of Dataset type.
+            #        Doing so, it results much easier to prototype the calls to the algorithm.
+            items_separated_by_tk = set(items_separated_by_test[probability_maximizing_test][class_label])
+
+            # NOTE: Corresponds to S^{*}_{t_k}
+            maximum_separated_class_from_tk = max(items_separated_by_test[probability_maximizing_test])
 
             resulting_intersection = items_separated_by_tk.intersection(set(universe.as_data_frame()))
 
             if resulting_intersection and items_separated_by_tk != maximum_separated_class_from_tk:
-                decision_tree.add_subtree(DTOA(objects, tests, cost_fn))
+                decision_tree.add_subtree(DTOA(resulting_intersection, tests, cost_fn))
 
-                # TODO: "U <- U intersect S^{*}_{t_k}..."
-                pass
+        universe = resulting_intersection
+
+        spent += cost_fn(probability_maximizing_test)
+        tests.remove(probability_maximizing_test)
+        k += 1
+
+    if tests:
+        while True:
+            # TODO: Let t_k be a test that maximizes...
+            # TODO: Set t_k as a child...
+
+            # FIXME: Duplicated code, this 'for loop' should be converted to a function
+            for class_label in objects.classes:
+                items_separated_by_tk = set(items_separated_by_test[maximum_pairs_test][class_label])
+
+                # NOTE: Corresponds to S^{*}_{t_k}
+                maximum_separated_class_from_tk = max(items_separated_by_test[maximum_pairs_test])
+
+                resulting_intersection = items_separated_by_tk.intersection(set(universe.as_data_frame()))
+
+                if resulting_intersection and items_separated_by_tk != maximum_separated_class_from_tk:
+                    decision_tree.add_subtree(DTOA(resulting_intersection, tests, cost_fn))
+
+            universe = resulting_intersection
+
+            spent2 += cost_fn(maximum_pairs_test)
+            tests.remove(maximum_pairs_test)
+            k += 1
+
+            if budget - spent2 < 0 or not tests:
+                break
+
+    decision_tree_prime = DTOA(universe, tests, cost_fn)
+    decision_tree.add_subtree(decision_tree_prime)
+
+    return decision_tree
