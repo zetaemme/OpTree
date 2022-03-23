@@ -1,13 +1,9 @@
-from typing import TypeAlias
-
 from src.cost import calculate_cost
 from src.data.dataset import Dataset
 from src.dectree.test import Test
 
-TestList: TypeAlias = list[Test]
 
-
-def cheapest_test(tests: TestList) -> Test:
+def cheapest_test(tests: list[Test]) -> Test:
     """Extracts the cheapest (separation cost) test that separates the two objects"""
     if len(tests) == 1:
         return tests[0]
@@ -15,7 +11,7 @@ def cheapest_test(tests: TestList) -> Test:
     if all(calculate_cost(test) == 1 for test in tests):
         return tests[0]
 
-    # TODO: Add a return statement for the effective test costs
+    # TODO: Add a return statement for the effective test costs, since the calculate_cost function always returns 1
 
 
 def object_class(dataset: Dataset, index: int) -> str:
