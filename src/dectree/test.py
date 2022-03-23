@@ -56,7 +56,6 @@ class Test:
         """
         # NOTE: Doing this assignment avoids the case in which a Generator is returned instead of a list
         result = [row for row in dataset.rows if self.outcome(row[self.lhs_label]) == class_index]
-
         return result
 
     def outcome(self, lhs_value: Number) -> int:
