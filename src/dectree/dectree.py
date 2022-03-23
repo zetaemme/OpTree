@@ -12,10 +12,13 @@ from src.utils import extract
 @dataclass
 class DecTree:
     """Represents a Decision Tree"""
-    root: Union[LeafNode, TestNode]
+    root: Union[LeafNode, TestNode, None]
     last_added_node: Union[LeafNode, TestNode] = field(init=False)
 
     def __post_init__(self) -> None:
+        if self.root is None:
+            return
+
         if not self.root.children:
             self.last_added_node = self.root
         else:
@@ -33,11 +36,28 @@ class DecTree:
         else:
             self.last_added_node = children
 
+    def add_root(self, new_root: Union[LeafNode, TestNode]) -> None:
+        """
+        Adds a node as root, if the root is None.
+        Throws a ValueError otherwise.
+        """
+        assert self.root is None, ValueError('Root is not None!')
+        self.root = new_root
+        self.last_added_node = self.root
+
     def add_subtree(self, subtree: 'DecTree') -> None:
         """Adds the DecTree subtree as a child of the last added node"""
         subtree.root.parent = self.last_added_node
         self.add_children(subtree.root)
         self.last_added_node = subtree.last_added_node
+
+    @classmethod
+    def build_empty_tree(cls) -> 'DecTree':
+        """
+        API to handle the creation of an empty Decision Tree.
+        Needed in order to grant the existence of a tree to start from to add nodes.
+        """
+        return DecTree(None)
 
 
 def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) -> DecTree:
@@ -93,8 +113,8 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
     # Remove from tests all tests with cost > budget
     tests = [test for test in tests if cost_fn(test) <= budget]
 
-    # FIXME: Find a more elegant way of representing the empty tree
-    decision_tree = None
+    # Builds an empty decision tree, the starting point of the recursive procedure
+    decision_tree = DecTree.build_empty_tree()
 
     # While there's a test t with cost(t) <= budget - spent
     while any([test for index, test in enumerate(tests) if test_costs[index] <= budget - spent]):
