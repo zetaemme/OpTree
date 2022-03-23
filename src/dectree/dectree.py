@@ -125,17 +125,12 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
         tests_eligible_for_maximization = extract.tests_costing_less_than(tests, budget - spent)
         probability_maximizing_test = extract.cheapest_test(tests_eligible_for_maximization)
 
-        maximum_probability_test = max(probability_maximizing_tests, key=probability_maximizing_tests.get)
-
-        if maximum_probability_test == tests[0]:
+        if probability_maximizing_test == tests[0]:
             # Make test[0] the root of the tree D
-            decision_tree = DecTree(TestNode(str(maximum_probability_test)))
+            decision_tree.add_root(TestNode(str(probability_maximizing_test)))
         else:
             # Make test[k] child of test t[k - 1]
-            # FIXME: This warning can be ignored since this branch will be mandatory executed after the 'True' branch
-            #        Anyway, when line 79 will be fixed, this can be REMOVED
-            assert decision_tree is not None
-            decision_tree.add_children(TestNode(str(maximum_probability_test), parent=decision_tree.last_added_node))
+            decision_tree.add_children(TestNode(str(probability_maximizing_test), parent=decision_tree.last_added_node))
 
         for class_label in objects.classes:
             items_separated_by_tk = set(items_separated_by_test[maximum_probability_test][class_label])
