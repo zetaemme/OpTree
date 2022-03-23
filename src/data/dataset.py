@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Hashable, Optional, Sequence
 
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, merge
 
 
 @dataclass
@@ -40,3 +40,8 @@ class Dataset:
     def slice_from(self, index: Hashable) -> 'Dataset':
         """Returns a new dataset obtained by slicing the original one ata given index"""
         return Dataset(self.data_frame[index:], self.columns)
+
+    def intersect(self, other: 'Dataset') -> 'Dataset':
+        """Returns the intersection of two datasets"""
+        result = merge(self.data_frame, other.data_frame, how='inner')
+        return Dataset(columns=result.columns, data=result.values)
