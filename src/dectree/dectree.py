@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Callable, Sequence, Union
 
-from pandas import DataFrame
+from pandas import DataFrame, merge
 
 from src.cost import find_budget
 from src.dectree.node import LeafNode, TestNode
@@ -76,7 +76,7 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
     # Inits a dictionary containing the S^{i}_{t}
     # In this case we use i (index) to obtain the ariety of the set
     items_separated_by_test = {
-        test: test.evaluate_dataset_for_class(objects, index)
+        test: DataFrame(test.evaluate_dataset_for_class(objects, index))
         for test in tests
         for index, _ in enumerate(classes)
     }
@@ -127,6 +127,8 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
         #       we can simply create a list containing all tests which cost is less than budget - spent.
         #       Then we can use the cheapest possible test, since it always maximizes the function (?).
         tests_eligible_for_maximization = extract.tests_costing_less_than(tests, budget - spent)
+
+        # NOTE: Corresponds to t_k
         probability_maximizing_test = extract.cheapest_test(tests_eligible_for_maximization)
 
         if probability_maximizing_test == tests[0]:
@@ -136,20 +138,27 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
             # Make test[k] child of test t[k - 1]
             decision_tree.add_children(TestNode(str(probability_maximizing_test), parent=decision_tree.last_added_node))
 
-        # FIXME: Duplicated code, this 'for loop' should be converted to a function
+        # Extracts S^{*}_{t_k}
+        maximum_separated_class_from_tk = extract.maximum_separated_class(
+            items_separated_by_test,
+            probability_maximizing_test,
+            classes
+        )
+
+        # For every i in {1...l}
         for class_label in classes:
-            # FIXME: Handle all types of collection as slices of Dataset type.
-            #        Doing so, it results much easier to prototype the calls to the algorithm.
-            items_separated_by_tk = set(items_separated_by_test[probability_maximizing_test][class_label])
+            items_separated_by_tk = DataFrame(
+                data=set(items_separated_by_test[probability_maximizing_test][class_label]),
+                columns=objects.columns
+            )
 
-            # NOTE: Corresponds to S^{*}_{t_k}
-            maximum_separated_class_from_tk = max(items_separated_by_test[probability_maximizing_test])
+            resulting_intersection = merge(items_separated_by_tk, universe, how='inner')
 
-            resulting_intersection = items_separated_by_tk.intersection(set(universe.as_data_frame()))
-
+            # If U intersect S^{i}_{t_k} is not empty and S^{i}_{t_k} != S^{*}_{t_k}
             if resulting_intersection and items_separated_by_tk != maximum_separated_class_from_tk:
                 decision_tree.add_subtree(DTOA(resulting_intersection, tests, cost_fn))
 
+        # NOTE: The warning can be ignored since resulting_intersection is granted to be assigned during the for loop
         universe = resulting_intersection
 
         spent += cost_fn(probability_maximizing_test)
@@ -166,16 +175,25 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
             # Set t_{k} as child of t_{k - 1}
             decision_tree.add_children(TestNode(str(pairs_maximizing_test), parent=decision_tree.last_added_node))
 
-            # FIXME: Duplicated code, this 'for loop' should be converted to a function
+            # Extracts S^{*}_{t_k}
+            maximum_separated_class_from_tk = extract.maximum_separated_class(
+                items_separated_by_test,
+                pairs_maximizing_test,
+                classes
+            )
+
+            # For every i in {1...l}
             for class_label in classes:
-                items_separated_by_tk = set(items_separated_by_test[pairs_maximizing_test][class_label])
+                items_separated_by_tk = DataFrame(
+                    data=set(items_separated_by_test[pairs_maximizing_test][class_label]),
+                    columns=objects.columns
+                )
 
-                # NOTE: Corresponds to S^{*}_{t_k}
-                maximum_separated_class_from_tk = max(items_separated_by_test[pairs_maximizing_test])
+                resulting_intersection = merge(items_separated_by_tk, universe, how='inner')
 
-                resulting_intersection = items_separated_by_tk.intersection(set(universe.as_data_frame()))
-
+                # If U intersect S^{i}_{t_k} is not empty and S^{i}_{t_k} != S^{*}_{t_k}
                 if resulting_intersection and items_separated_by_tk != maximum_separated_class_from_tk:
+                    # Recursive call on U intersect S^{i}_{t_k}
                     decision_tree.add_subtree(DTOA(resulting_intersection, tests, cost_fn))
 
             universe = resulting_intersection
