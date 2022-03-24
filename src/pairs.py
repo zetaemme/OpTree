@@ -8,7 +8,7 @@ class Pairs:
     """A tuple of items having different classes"""
     __dataset: DataFrame = field(repr=False)
     number: int = field(init=False)
-    pair_list: TupleList = field(init=False, default_factory=list)
+    pair_list: list[tuple] = field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
         """Inits the number and pair_list fields"""

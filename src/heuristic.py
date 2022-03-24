@@ -1,17 +1,15 @@
-from typing import Callable, TypeAlias
+from typing import Callable
 
 from dectree.test import Test
-
-TestList: TypeAlias = list[Test]
 
 
 def adapted_greedy(
         # FIXME: In the paper there's S as parameter, but it's never used
-        tests: TestList,
+        tests: list[Test],
         f: Callable,
         cost_fn: Callable[[Test], int],
         budget: int
-) -> TestList:
+) -> list[Test]:
     """Implementation of the Adapted-Greedy heuristic"""
     assert budget >= 0, 'Bound should be a positive integer!'
 
