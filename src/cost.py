@@ -31,7 +31,7 @@ def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_f
 
         return pairs.number - sep_pairs.number
 
-    # NOTE: In the original paper this is marked as 1 - e^{X}, approximated with 0.35
+    # NOTE: In the original paper alpha is marked as 1 - e^{X}, approximated with 0.35
     alpha = 0.35
 
     # FIXME: This should be implemented as a BinarySearch
