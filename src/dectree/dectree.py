@@ -23,8 +23,16 @@ class DecTree:
         if not self.root.children:
             self.last_added_node = self.root
         else:
-            # TODO: Assign last_added_node to the last added value in the children of root
-            pass
+            current = self.root
+
+            while True:
+                if current.children:
+                    current = current.children[-1]
+                else:
+                    break
+
+            # NOTE: We always pick the rightmost child as last_added_node
+            self.last_added_node = current
 
     def add_children(self, children: Union[Union[LeafNode, TestNode], Sequence[Union[LeafNode, TestNode]]]) -> None:
         """Adds a children to the last added node of this tree"""
@@ -44,7 +52,6 @@ class DecTree:
         """
         assert self.root is None, ValueError('Root is not None!')
         self.root = new_root
-        self.last_added_node = self.root
 
     def add_subtree(self, subtree: 'DecTree') -> None:
         """Adds the DecTree subtree as a child of the last added node"""
