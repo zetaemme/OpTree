@@ -20,6 +20,7 @@ def main(tests_filepath: str):
         columns=['t1', 't2', 't3', 'class', 'probability']
     )
 
+    # NOTE: This way to handle test input is not mandatory
     # Reads the tests from an input file
     with open(tests_filepath, 'r', encoding='UTF-8') as f:
         test_strings = [line.rstrip() for line in f]
