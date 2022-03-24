@@ -13,9 +13,14 @@ def calculate_cost(test: Test) -> int:
     return 1
 
 
-def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_fn: Callable[[Test], int]) -> int:
+def find_budget(
+        objects: DataFrame,
+        tests: list[Test],
+        classes: set[str],
+        cost_fn: Callable[[Test], int],
+        dataset_pairs_number: int
+) -> int:
     """Implementation of the FindBudget procedure of the referenced paper"""
-    pairs = Pairs(objects)
 
     def submodular_f1(sub_tests: list[Test]):
         items_separated_by_test = [
@@ -25,11 +30,14 @@ def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_f
             for item in test.evaluate_dataset_for_class(objects, index)
         ]
 
-        items_separated_by_test = list(set(items_separated_by_test))
+        items_separated_by_test = set(items_separated_by_test)
 
-        sep_pairs = Pairs(DataFrame(items_separated_by_test))
+        sep_pairs = Pairs(DataFrame(
+            data=items_separated_by_test,
+            columns=objects.columns
+        ))
 
-        return pairs.number - sep_pairs.number
+        return dataset_pairs_number - sep_pairs.number
 
     # NOTE: In the original paper alpha is marked as 1 - e^{X}, approximated with 0.35
     alpha = 0.35
@@ -38,10 +46,11 @@ def find_budget(objects: DataFrame, tests: list[Test], classes: set[str], cost_f
     for b in range(1, sum([calculate_cost(test) for test in tests]) + 1):
         heuristic_test_list = adapted_greedy(tests, submodular_f1, cost_fn, b)
 
-        heuristic_test_coverage_sum = 0
-        for test in heuristic_test_list:
-            for class_index in range(len(classes)):
-                heuristic_test_coverage_sum += len(test.evaluate_dataset_for_class(objects, class_index))
+        heuristic_test_coverage_sum = sum([
+            len(test.evaluate_dataset_for_class(objects, class_index))
+            for class_index in range(len(classes))
+            for test in heuristic_test_list
+        ])
 
-        if heuristic_test_coverage_sum >= (alpha * pairs.number):
+        if heuristic_test_coverage_sum >= (alpha * dataset_pairs_number):
             return b

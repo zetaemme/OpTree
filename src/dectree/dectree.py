@@ -103,7 +103,7 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
         return decision_tree
 
     # Uses the FindBudget procedure to extract the correct cost budget
-    budget = find_budget(objects, tests, classes, cost_fn)
+    budget = find_budget(objects, tests, classes, cost_fn, pairs.number)
 
     spent = 0
     spent2 = 0
