@@ -2,6 +2,7 @@ from pandas import DataFrame
 
 from src.cost import calculate_cost
 from src.dectree.test import Test
+from src.pairs import Pairs
 
 
 def cheapest_test(tests: list[Test]) -> Test:
@@ -13,6 +14,32 @@ def cheapest_test(tests: list[Test]) -> Test:
         return tests[0]
 
     # TODO: Add a return statement for the effective test costs, since the calculate_cost function always returns 1
+
+
+def maximum_separated_class(
+        items_separated_by_test: dict[Test, DataFrame],
+        maximizing_test: Test,
+        classes: set[str]
+) -> DataFrame:
+    """Extracts the set S^{*}_{maximizing_test}"""
+    separation_list = {
+        items_separated_by_test[maximizing_test][class_label]:
+            Pairs(items_separated_by_test[maximizing_test][class_label])
+        for class_label in classes
+    }
+
+    # Extracts the target pair value for S^{*}_{t_k}
+    max_pair_number = max([pair.number for pair in separation_list.values()])
+
+    maximum_separated_class_from_tk = None
+
+    for separation_set in separation_list.items():
+        if separation_set[1].number == max_pair_number:
+            # NOTE: Corresponds to S^{*}_{t_k}
+            maximum_separated_class_from_tk = separation_set[0]
+
+    assert maximum_separated_class_from_tk is not None
+    return maximum_separated_class_from_tk
 
 
 def object_class(dataset: DataFrame, index: int) -> str:
