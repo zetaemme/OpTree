@@ -1,14 +1,15 @@
 from sys import argv
 
+from pandas import DataFrame
+
 from cost import calculate_cost
-from src.data.dataset import Dataset
 from src.dectree.dectree import DTOA
 from src.utils import extract
 
 
 def main(tests_filepath: str):
     """Inits dataset and test list in order to pass them to the algorithm"""
-    dataset = Dataset(
+    dataset = DataFrame(
         data=[
             [1, 1, 2, 'A', 0.1],
             [1, 2, 1, 'A', 0.2],

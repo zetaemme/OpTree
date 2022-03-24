@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Callable, Sequence, Union
 
+from pandas import DataFrame
+
 from src.cost import find_budget
-from src.data.dataset import Dataset
 from src.dectree.node import LeafNode, TestNode
 from src.dectree.test import Test
 from src.pairs import Pairs
@@ -60,7 +61,7 @@ class DecTree:
         return DecTree(None)
 
 
-def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) -> DecTree:
+def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) -> DecTree:
     """Recursive function that creates an optimal Decision Tree"""
 
     # Creates a Pairs object that holds the pairs for the given dataset
@@ -69,12 +70,15 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
     # Inits a list with all the costs of the tests
     test_costs = [cost_fn(test) for test in tests]
 
+    # Extracts all the class names from the dataset
+    classes = {class_name for class_name in objects[['class']]}
+
     # Inits a dictionary containing the S^{i}_{t}
     # In this case we use i (index) to obtain the ariety of the set
     items_separated_by_test = {
         test: test.evaluate_dataset_for_class(objects, index)
         for test in tests
-        for index, _ in enumerate(objects.classes)
+        for index, _ in enumerate(classes)
     }
 
     # Base case.
@@ -99,7 +103,7 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
         return decision_tree
 
     # Uses the FindBudget procedure to extract the correct cost budget
-    budget = find_budget(objects, tests, objects.classes, cost_fn)
+    budget = find_budget(objects, tests, classes, cost_fn)
 
     spent = 0
     spent2 = 0
@@ -133,7 +137,7 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
             decision_tree.add_children(TestNode(str(probability_maximizing_test), parent=decision_tree.last_added_node))
 
         # FIXME: Duplicated code, this 'for loop' should be converted to a function
-        for class_label in objects.classes:
+        for class_label in classes:
             # FIXME: Handle all types of collection as slices of Dataset type.
             #        Doing so, it results much easier to prototype the calls to the algorithm.
             items_separated_by_tk = set(items_separated_by_test[probability_maximizing_test][class_label])
@@ -163,7 +167,7 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
             decision_tree.add_children(TestNode(str(pairs_maximizing_test), parent=decision_tree.last_added_node))
 
             # FIXME: Duplicated code, this 'for loop' should be converted to a function
-            for class_label in objects.classes:
+            for class_label in classes:
                 items_separated_by_tk = set(items_separated_by_test[pairs_maximizing_test][class_label])
 
                 # NOTE: Corresponds to S^{*}_{t_k}
@@ -180,6 +184,7 @@ def DTOA(objects: Dataset, tests: list[Test], cost_fn: Callable[[Test], int]) ->
             tests.remove(pairs_maximizing_test)
             k += 1
 
+            # Repeat-until exit condition
             if budget - spent2 < 0 or not tests:
                 break
 

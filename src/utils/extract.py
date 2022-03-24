@@ -1,5 +1,6 @@
+from pandas import DataFrame
+
 from src.cost import calculate_cost
-from src.data.dataset import Dataset
 from src.dectree.test import Test
 
 
@@ -14,7 +15,7 @@ def cheapest_test(tests: list[Test]) -> Test:
     # TODO: Add a return statement for the effective test costs, since the calculate_cost function always returns 1
 
 
-def object_class(dataset: Dataset, index: int) -> str:
+def object_class(dataset: DataFrame, index: int) -> str:
     """Extracts the class label from the item in position index of a given dataset"""
     assert index >= 0, "Index should be a positive integer"
     return dataset.rows[index]['class']

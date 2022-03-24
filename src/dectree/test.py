@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, unique
 from numbers import Number
 
-from src.data.dataset import Dataset
+from pandas import DataFrame, Series
 
 
 @unique
@@ -49,7 +49,7 @@ class Test:
         """Returns the string corresponding to the test"""
         return f'{self.lhs_label} {self.test_type} {self.rhs}'
 
-    def evaluate_dataset_for_class(self, dataset: Dataset, class_index: int) -> list:
+    def evaluate_dataset_for_class(self, dataset: DataFrame, class_index: int) -> list[Series]:
         """
         Evaluates this test for all the rows in the dataset.
         Returns all the rows for which the outcome is class_index
