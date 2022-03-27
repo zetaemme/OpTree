@@ -14,7 +14,7 @@ def cheapest_test(tests: list[Test]) -> Test:
         return tests[0]
 
     # TODO: Add a return statement for the effective test costs, since the calculate_cost function always returns 1.
-    #       Connected to the effective calculate_cost(...) function
+    #       Connected to the future implementation of a real calculate_cost(...) function
 
 
 def maximum_separated_class(

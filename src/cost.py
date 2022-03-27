@@ -9,7 +9,7 @@ from src.pairs import Pairs
 
 def calculate_cost(test: Test) -> int:
     """Calculates the cost of a given test"""
-    # FIXME: This value is returned for testing purpose, create a real cost function
+    # FIXME: This value is returned for testing purpose, a real cost function must be created in the future
     return 1
 
 
