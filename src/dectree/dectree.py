@@ -12,7 +12,14 @@ from src.utils import extract
 
 @dataclass
 class DecTree:
-    """Represents a Decision Tree"""
+    """Represents a Decision Tree
+
+    Attributes:
+        root (Union[LeafNode, TestNode, None]): Represents the root of the Decision Tree.
+                                                Can be empty.
+
+        last_added_node (Union[LeafNode, TestNode]): The last added node of the Decision Tree
+    """
     root: Union[LeafNode, TestNode, None]
     last_added_node: Union[LeafNode, TestNode] = field(init=False)
 
@@ -36,7 +43,12 @@ class DecTree:
             self.last_added_node = current
 
     def add_children(self, children: Union[Union[LeafNode, TestNode], Sequence[Union[LeafNode, TestNode]]]) -> None:
-        """Adds a children to the last added node of this tree"""
+        """Adds a children to the last added node of this tree
+
+        Args:
+            children (Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]):
+                A single child or the list of children to add as children of this node
+        """
         self.last_added_node.add_children(children)
 
         if isinstance(children, Sequence):
@@ -47,30 +59,46 @@ class DecTree:
             self.last_added_node = children
 
     def add_root(self, new_root: Union[LeafNode, TestNode]) -> None:
-        """
-        Adds a node as root, if the root is None.
-        Throws a ValueError otherwise.
+        """Adds a node as root, if the root is None.
+
+        Args:
+            new_root (Union[LeafNode, TestNode]): The new root of the tree
+
+        Raises:
+            ValueError: This operation will block the execution if invoked on a non-empty Decision Tree
         """
         assert self.root is None, ValueError('Root is not None!')
         self.root = new_root
 
     def add_subtree(self, subtree: 'DecTree') -> None:
-        """Adds the DecTree subtree as a child of the last added node"""
+        """Adds the DecTree subtree as a child of the last added node
+
+        Args:
+            subtree (DecTree): The tree to be added as subtree
+        """
         subtree.root.parent = self.last_added_node
         self.add_children(subtree.root)
         self.last_added_node = subtree.last_added_node
 
     @classmethod
     def build_empty_tree(cls) -> 'DecTree':
-        """
-        API to handle the creation of an empty Decision Tree.
+        """API to handle the creation of an empty Decision Tree.
         Needed in order to grant the existence of a tree to start from to add nodes.
         """
         return DecTree(None)
 
 
 def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) -> DecTree:
-    """Recursive function that creates an optimal Decision Tree"""
+    """Recursive function that creates an optimal Decision Tree
+
+    Args:
+        objects (DataFrame): teh dataset containing the objects to classify
+        tests (list[Test]): The test to use in order to classify the objects of the dataset
+        cost_fn (Callable[[Test], int]): A function returning the effective cost of a given test
+
+    Returns:
+        DecTree: An optimal Decision Tree
+    """
 
     # Creates a Pairs object that holds the pairs for the given dataset
     pairs = Pairs(objects)

@@ -10,7 +10,17 @@ def adapted_greedy(
         cost_fn: Callable[[Test], int],
         budget: int
 ) -> list[Test]:
-    """Implementation of the Adapted-Greedy heuristic"""
+    """Implementation of the Adapted-Greedy heuristic
+
+    Args:
+        tests (list[Test]): A list containing all the tests
+        f (Callable): A submodular function
+        cost_fn (Callable[[Test], int]): A function that calculates the effective cost of a given test
+        budget (int): The maximum budget that a test list should not cross
+
+    Returns:
+        list[Test]: The maximum list of tests that can be used without crossing the budget
+    """
     assert budget >= 0, 'Bound should be a positive integer!'
 
     spent = 0

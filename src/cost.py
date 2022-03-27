@@ -8,7 +8,14 @@ from src.pairs import Pairs
 
 
 def calculate_cost(test: Test) -> int:
-    """Calculates the cost of a given test"""
+    """Calculates the cost of a given test
+
+    Args:
+        test (Test): The test of which we want to calculate the cost
+
+    Returns:
+        int: The cost of the given test
+    """
     # FIXME: This value is returned for testing purpose, a real cost function must be created in the future
     return 1
 
@@ -20,7 +27,18 @@ def find_budget(
         cost_fn: Callable[[Test], int],
         dataset_pairs_number: int
 ) -> int:
-    """Implementation of the FindBudget procedure of the referenced paper"""
+    """Implementation of the FindBudget procedure of the referenced paper
+
+    Args:
+        objects (DataFrame): The dataset we want to classify
+        tests (list[Test]): The list of the tests that can be applied to the dataset
+        classes (set[str]): A set containing all the possible classes in the dataset
+        cost_fn (Callable[[Test], int]): A function that computes the effective cost of a given test
+        dataset_pairs_number (int): The number of pairs in the whole dataset
+
+    Returns:
+        int: The maximum budget that the algorithm can use to build the Decision Tree
+    """
 
     def submodular_f1(sub_tests: list[Test]):
         items_separated_by_test = [

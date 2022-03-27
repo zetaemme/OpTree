@@ -28,7 +28,7 @@ class Node(ABC):
 @dataclass
 class TestNode(Node):
     """Concretization of the Node class. Represents an intermediate Node"""
-    __test: Test = field(init=False)
+    _test: Test = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.__test = extract.test_structure(self.label)
@@ -38,6 +38,12 @@ class TestNode(Node):
 
     def add_children(self,
                      children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
+        """Adds children to this node
+
+        Args:
+            children (Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]):
+                A single child or the list of children to add as children of this node
+        """
         if isinstance(children, Sequence):
             for child in children:
                 child.parent = self
@@ -47,6 +53,14 @@ class TestNode(Node):
         self.children.append(children)
 
     def outcome(self, lhs_value: Number) -> int:
+        """Computes the outcome of the node, wrapping Test#outcome()
+
+        Args:
+            lhs_value (str): A string corresponding to the column of the dataset to be used ad left-hand side of the test
+
+        Returns:
+            int: The outcome of the test (as class ariety)
+        """
         return self.__test.outcome(lhs_value)
 
 
@@ -58,9 +72,27 @@ class LeafNode(Node):
         self.depth = self.parent.depth + 1 if self.children else 0
 
     def outcome(self, lhs_value: Optional[Number]) -> str:
-        """Returns the string associated with the class ot the leaf"""
+        """Returns the string associated with the class ot the leaf
+
+        Args:
+            lhs_value (str, optional): A string corresponding to the column of the dataset to be used ad left-hand side
+                                       of the test
+
+        Returns:
+            int: The outcome of the test (as class ariety)
+        """
         return self.label
 
     def add_children(self,
                      children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
+        """Adds children to this node
+
+        Args:
+            children (Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]):
+                A single child or the list of children to add as children of this node
+
+        Raises:
+              RuntimeError: A child cannot be added to a Leaf node, since this type of node represents a leaf of the
+                            Decision Tree
+        """
         raise RuntimeError('Cannot add children to leaf node!')

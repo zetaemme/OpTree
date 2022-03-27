@@ -7,8 +7,13 @@ from src.dectree.dectree import DTOA
 from src.utils import extract
 
 
-def main(tests_filepath: str):
-    """Inits dataset and test list in order to pass them to the algorithm"""
+def main(tests_filepath: str) -> None:
+    """Inits dataset and test list in order to pass them to the algorithm
+
+    Args:
+        tests_filepath (str): The path of the file containing the test string from which the various tests will be
+                              created
+    """
     dataset = DataFrame(
         data=[
             [1, 1, 2, 'A', 0.1],
@@ -20,7 +25,7 @@ def main(tests_filepath: str):
         columns=['t1', 't2', 't3', 'class', 'probability']
     )
 
-    # NOTE: This way to handle test input is not mandatory
+    # NOTE: It is not mandatory to handle test input this way
     # Reads the tests from an input file
     with open(tests_filepath, 'r', encoding='UTF-8') as f:
         test_strings = [line.rstrip() for line in f]
