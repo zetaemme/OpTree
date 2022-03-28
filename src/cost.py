@@ -1,5 +1,3 @@
-from typing import Callable
-
 from pandas import DataFrame
 
 from src.dectree.test import Test
@@ -23,8 +21,12 @@ def calculate_cost(test: Test) -> int:
 def find_budget(
         objects: DataFrame,
         tests: list[Test],
+        test_costs: dict[Test, int],
         classes: set[str],
-        cost_fn: Callable[[Test], int],
+        # NOTE: By computing the test cost at the beginning of the procedure, we can achieve constant lookup time
+        #       extracting the cost of a certain test.
+        #       This holds on the assumption that the cost of a test can't change during the execution.
+        # cost_fn: Callable[[Test], int],
         dataset_pairs_number: int
 ) -> int:
     """Implementation of the FindBudget procedure of the referenced paper
@@ -32,6 +34,7 @@ def find_budget(
     Args:
         objects (DataFrame): The dataset we want to classify
         tests (list[Test]): The list of the tests that can be applied to the dataset
+        test_costs (dict[Test, int]): A dictionary containing, for each test, the corresponding effective cost
         classes (set[str]): A set containing all the possible classes in the dataset
         cost_fn (Callable[[Test], int]): A function that computes the effective cost of a given test
         dataset_pairs_number (int): The number of pairs in the whole dataset
@@ -64,7 +67,7 @@ def find_budget(
         if upper >= lower:
             mid = lower + (upper - lower) / 2
 
-            heuristic_test_list = adapted_greedy(tests, submodular_f1, cost_fn, mid)
+            heuristic_test_list = adapted_greedy(tests, test_costs, submodular_f1, mid)
 
             heuristic_test_coverage_sum = sum([
                 len(test.evaluate_dataset_for_class(objects, class_index))
@@ -81,4 +84,4 @@ def find_budget(
         else:
             raise ValueError
 
-    return heuristic_binary_search(1, sum([calculate_cost(test) for test in tests]))
+    return heuristic_binary_search(1, sum([test_costs[test] for test in tests]))

@@ -6,14 +6,19 @@ from dectree.test import Test
 def adapted_greedy(
         # FIXME: In the paper there's S as parameter, but it's never used
         tests: list[Test],
+        test_costs: dict[Test, int],
         f: Callable,
-        cost_fn: Callable[[Test], int],
+        # NOTE: By computing the test cost at the beginning of the procedure, we can achieve constant lookup time
+        #       extracting the cost of a certain test.
+        #       This holds on the assumption that the cost of a test can't change during the execution.
+        # cost_fn: Callable[[Test], int],
         budget: int
 ) -> list[Test]:
     """Implementation of the Adapted-Greedy heuristic
 
     Args:
         tests (list[Test]): A list containing all the tests
+        test_costs (dict[Test, int]): A dictionary containing, for each test, the corresponding effective cost
         f (Callable): A submodular function
         cost_fn (Callable[[Test], int]): A function that calculates the effective cost of a given test
         budget (int): The maximum budget that a test list should not cross
@@ -28,7 +33,7 @@ def adapted_greedy(
     k = 0
 
     # Remove from T all tests with cost larger than B
-    tests = [t for t in tests if cost_fn(t) <= budget]
+    tests = [test for test in tests if test_costs[test] <= budget]
 
     if not tests:
         while True:
@@ -38,7 +43,7 @@ def adapted_greedy(
             tk = tests.pop(k)
 
             # Calculate the cost of the k-th test and add it to 'spent'
-            cost = cost_fn(tk)
+            cost = test_costs[tk]
             assert cost >= 0, 'Cost should be a positive value!'
             spent += cost
 

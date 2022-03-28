@@ -1,15 +1,15 @@
 from pandas import DataFrame
 
-from src.cost import calculate_cost
 from src.dectree.test import Test
 from src.pairs import Pairs
 
 
-def cheapest_test(tests: list[Test]) -> Test:
+def cheapest_test(tests: list[Test], test_costs: dict[Test, int]) -> Test:
     """Extracts the cheapest (separation cost) test that separates the two objects
 
     Args:
         tests (list[Test]): The list from which the cheapest test will be extracted
+        test_costs (dict[Test, int]): A dictionary containing, for each test, the corresponding effective cost
 
     Returns:
         Test: The minimum cost test in the tests list
@@ -17,7 +17,7 @@ def cheapest_test(tests: list[Test]) -> Test:
     if len(tests) == 1:
         return tests[0]
 
-    if all(calculate_cost(test) == 1 for test in tests):
+    if all(test_costs[test] == 1 for test in tests):
         return tests[0]
 
     # TODO: Add a return statement for the effective test costs, since the calculate_cost function always returns 1.
@@ -93,16 +93,17 @@ def test_structure(test: str) -> Test:
     return Test(structure[0], structure[1], rhs, list(map(int, structure[3:])))
 
 
-def tests_costing_less_than(tests: list[Test], cost: int) -> list[Test]:
+def tests_costing_less_than(tests: list[Test], test_costs: dict[Test, int], cost: int) -> list[Test]:
     """Extracts all the tests which cost is less than a given cost
 
     Args:
         tests (list[Test]): The list in which we need to search
+        test_costs (dict[Test, int]): A dictionary containing, for each test, the corresponding effective cost
         cost (int): The threshold we mustn't cross
 
     Returns:
         list[Test]: A list containing all tests of effective cost less than the given cost
     """
     # NOTE: Doing this assignment avoids the case in which a Generator is returned instead of a list
-    result = [test for test in tests if calculate_cost(test) <= cost]
+    result = [test for test in tests if test_costs[test] <= cost]
     return result
