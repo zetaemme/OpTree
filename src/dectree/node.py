@@ -12,6 +12,8 @@ from src.utils import extract
 class Node(ABC):
     """An Abstract Base Class for the Node class"""
     label: str
+    # NOTE: Are we looking forward to build a Binary Tree?
+    #       Or each node could have n>2 children, so a Non-binary Tree is built?
     children: list[Union['TestNode', 'LeafNode']] = field(default_factory=list)
     depth: int = field(init=False)
     parent: 'TestNode' = None
