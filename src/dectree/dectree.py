@@ -180,7 +180,7 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
             classes
         )
 
-        # For every i in {1...l}
+        # For each i in {1...l}
         for class_label in classes:
             items_separated_by_tk = DataFrame(
                 data=set(items_separated_by_test[probability_maximizing_test][class_label]),
@@ -218,7 +218,7 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
                 classes
             )
 
-            # For every i in {1...l}
+            # For each i in {1...l}
             for class_label in classes:
                 items_separated_by_tk = DataFrame(
                     data=set(items_separated_by_test[pairs_maximizing_test][class_label]),
