@@ -31,11 +31,8 @@ class DecTree:
         else:
             current = self.root
 
-            while True:
-                if current.children:
-                    current = current.children[-1]
-                else:
-                    break
+            while current.children:
+                current = current.children[-1]
 
             # NOTE: We always pick the rightmost child as last_added_node.
             #       This is right most of the time, and it's also as I intended it from the referenced paper.
