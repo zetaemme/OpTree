@@ -1,15 +1,17 @@
-from pandas import DataFrame
+from typing import Callable
 
-from src.dectree.test import Test
+from pandas import DataFrame, Series
+
 from src.pairs import Pairs
 
 
-def cheapest_test(tests: list[Test], test_costs: dict[Test, int]) -> Test:
+def cheapest_test(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> str:
     """Extracts the cheapest (separation cost) test that separates the two objects
 
     Args:
+        objects (DataFrame): The dataset containing the objects to classify
         tests (list[Test]): The list from which the cheapest test will be extracted
-        test_costs (dict[Test, int]): A dictionary containing, for each test, the corresponding effective cost
+        cost_fn(Callable[[Series], int]): A function returning the effective cost of a given test
 
     Returns:
         Test: The minimum cost test in the tests list
@@ -17,7 +19,7 @@ def cheapest_test(tests: list[Test], test_costs: dict[Test, int]) -> Test:
     if len(tests) == 1:
         return tests[0]
 
-    if all(test_costs[test] == 1 for test in tests):
+    if all(cost_fn(objects[test]) == 1 for test in tests):
         return tests[0]
 
     # TODO: Add a return statement for the effective test costs, since the calculate_cost function always returns 1.
@@ -25,8 +27,8 @@ def cheapest_test(tests: list[Test], test_costs: dict[Test, int]) -> Test:
 
 
 def maximum_separated_class(
-        items_separated_by_test: dict[Test, DataFrame],
-        maximizing_test: Test,
+        items_separated_by_test: dict[str, DataFrame],
+        maximizing_test: str,
         classes: set[str]
 ) -> DataFrame:
     """Extracts the set S^{*}_{maximizing_test} from a given dictionary of separated objects
@@ -74,36 +76,23 @@ def object_class(dataset: DataFrame, index: int) -> str:
     return dataset.rows[index]['class']
 
 
-def test_structure(test: str) -> Test:
-    """Extracts the test structure (lhs, type, rhs) from a given string
-
-    Args:
-        test (str): A string representing the test
-
-    Returns:
-        Test: A Test object, created starting from the given string structure
-    """
-    structure = test.split()
-
-    if float(structure[2]).is_integer():
-        rhs = int(structure[2])
-    else:
-        rhs = float(structure[2])
-
-    return Test(structure[0], structure[1], rhs, list(map(int, structure[3:])))
-
-
-def tests_costing_less_than(tests: list[Test], test_costs: dict[Test, int], cost: int) -> list[Test]:
+def tests_costing_less_than(
+        objects: DataFrame,
+        tests: list[str],
+        cost_fn: Callable[[Series], int],
+        cost: int
+) -> list[str]:
     """Extracts all the tests which cost is less than a given cost
 
     Args:
+        objects (DataFrame): The dataset containing the objects to classify
         tests (list[Test]): The list in which we need to search
-        test_costs (dict[Test, int]): A dictionary containing, for each test, the corresponding effective cost
+        cost_fn(Callable[[Series], int]): A function returning the effective cost of a given test
         cost (int): The threshold we mustn't cross
 
     Returns:
         list[Test]: A list containing all tests of effective cost less than the given cost
     """
     # NOTE: Doing this assignment avoids the case in which a Generator is returned instead of a list
-    result = [test for test in tests if test_costs[test] <= cost]
+    result = [test for test in tests if cost_fn(objects[test]) <= cost]
     return result
