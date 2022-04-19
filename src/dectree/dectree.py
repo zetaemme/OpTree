@@ -1,11 +1,10 @@
 from dataclasses import dataclass, field
 from typing import Callable, Sequence, Union
 
-from pandas import DataFrame, merge
+from pandas import DataFrame, Series, merge
 
 from src.cost import find_budget
 from src.dectree.node import LeafNode, TestNode
-from src.dectree.test import Test
 from src.pairs import Pairs
 from src.utils import extract
 
@@ -48,8 +47,6 @@ class DecTree:
         self.last_added_node.add_children(children)
 
         if isinstance(children, Sequence):
-            # NOTE: Since, in this branch, we're assuming you can add multiple children to the last_added_node,
-            #       we use the effectively last added child to update the last_added_node value
             self.last_added_node = children[-1]
         else:
             self.last_added_node = children
@@ -84,11 +81,11 @@ class DecTree:
         return DecTree(None)
 
 
-def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) -> DecTree:
+def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> DecTree:
     """Recursive function that creates an optimal Decision Tree
 
     Args:
-        objects (DataFrame): teh dataset containing the objects to classify
+        objects (DataFrame): The dataset containing the objects to classify
         tests (list[Test]): The test to use in order to classify the objects of the dataset
         cost_fn (Callable[[Test], int]): A function returning the effective cost of a given test
 
@@ -99,15 +96,13 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
     # Creates a Pairs object that holds the pairs for the given dataset
     pairs = Pairs(objects)
 
-    # Inits a list with all the costs of the tests
-    test_costs = {test: cost_fn(test) for test in tests}
-
     # Extracts all the class names from the dataset
     classes = {class_name for class_name in objects[['class']]}
 
     # Inits a dictionary containing the S^{i}_{t}
     # In this case we use i (index) to obtain the ariety of the set
     items_separated_by_test = {
+        # FIXME: How can I calculate the S^{i}_{t} sets?
         test: DataFrame(test.evaluate_dataset_for_class(objects, index))
         for test in tests
         for index, _ in enumerate(classes)
@@ -124,7 +119,7 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
     if pairs.number == 1:
         # NOTE: This set of instructions works since, in this specific case, we're working with a single pair.
         #       The TestNode has been assigned to a variable in order to assign the parent node to each LeafNode
-        root_node = TestNode(label=str(extract.cheapest_test(tests, test_costs)))
+        root_node = TestNode(label=extract.cheapest_test(objects, tests, cost_fn))
         decision_tree = DecTree(root_node)
 
         decision_tree.add_children([
@@ -147,21 +142,21 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
     k = 1
 
     # Remove from tests all tests with cost > budget
-    tests = [test for test in tests if test_costs[test] <= budget]
+    tests = [test for test in tests if cost_fn(objects[test]) <= budget]
 
     # Builds an empty decision tree, the starting point of the recursive procedure
     decision_tree = DecTree.build_empty_tree()
 
     # While there's a test t with cost(t) <= budget - spent
-    while any([test for test in tests if test_costs[test] <= budget - spent]):
+    while any([test for test in tests if cost_fn(objects[test]) <= budget - spent]):
         # NOTE: Since we need to extract the test t_{k} which maximizes the function:
         #           (probability(universe) - probability(universe intersect items_separated_by_t_{k}))/cost(t_{k})
         #       we can simply create a list containing all tests which cost is less than budget - spent.
         #       Then we can use the cheapest possible test, since it always maximizes the function (?).
-        tests_eligible_for_maximization = extract.tests_costing_less_than(tests, test_costs, budget - spent)
+        tests_eligible_for_maximization = extract.tests_costing_less_than(objects, tests, cost_fn, budget - spent)
 
         # NOTE: Corresponds to t_k
-        probability_maximizing_test = extract.cheapest_test(tests_eligible_for_maximization, test_costs)
+        probability_maximizing_test = extract.cheapest_test(objects, tests_eligible_for_maximization, cost_fn)
 
         if probability_maximizing_test == tests[0]:
             # Make test[0] the root of the tree D
@@ -177,7 +172,7 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
             classes
         )
 
-        # For every i in {1...l}
+        # For each i in {1...l}
         for class_label in classes:
             items_separated_by_tk = DataFrame(
                 data=set(items_separated_by_test[probability_maximizing_test][class_label]),
@@ -194,16 +189,16 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
         # NOTE: The warning can be ignored since resulting_intersection is granted to be assigned during the for loop
         universe = resulting_intersection
 
-        spent += test_costs[probability_maximizing_test]
+        spent += cost_fn(objects[probability_maximizing_test])
         tests.remove(probability_maximizing_test)
         k += 1
 
     if tests:
-        while True:
+        while budget - spent2 >= 0 or tests:
             # NOTE: Since we need to extract the test t_{k} which maximizes the function:
             #           (pairs(universe) - pairs(universe intersect items_separated_by_t_{k}))/cost(t_{k})
             #       we can simply use the cheapest possible test, since it always maximizes the function (?).
-            pairs_maximizing_test = extract.cheapest_test(tests, test_costs)
+            pairs_maximizing_test = extract.cheapest_test(objects, tests, cost_fn)
 
             # Set t_{k} as child of t_{k - 1}
             decision_tree.add_children(TestNode(str(pairs_maximizing_test), parent=decision_tree.last_added_node))
@@ -215,7 +210,7 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
                 classes
             )
 
-            # For every i in {1...l}
+            # For each i in {1...l}
             for class_label in classes:
                 items_separated_by_tk = DataFrame(
                     data=set(items_separated_by_test[pairs_maximizing_test][class_label]),
@@ -231,13 +226,9 @@ def DTOA(objects: DataFrame, tests: list[Test], cost_fn: Callable[[Test], int]) 
 
             universe = resulting_intersection
 
-            spent2 += test_costs[pairs_maximizing_test]
+            spent2 += cost_fn(objects[pairs_maximizing_test])
             tests.remove(pairs_maximizing_test)
             k += 1
-
-            # Repeat-until exit condition
-            if budget - spent2 < 0 or not tests:
-                break
 
     # Create a new decision tree to be added as child of decision_tree, created with a recursive call to DTOA
     decision_tree_prime = DTOA(universe, tests, cost_fn)
