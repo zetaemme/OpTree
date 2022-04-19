@@ -46,21 +46,11 @@ class TestNode(Node):
 
         self.children.append(children)
 
-    def outcome(self, lhs_value: Number) -> int:
-        """Computes the outcome of the node, wrapping Test#outcome()
-
-        Args:
-            lhs_value (str): A string corresponding to the column of the dataset to be used ad left-hand side of the test
-
-        Returns:
-            int: The outcome of the test (as class ariety)
-        """
-        return self.__test.outcome(lhs_value)
-
 
 @dataclass
 class LeafNode(Node):
     """Concretization of the Node class. Represents a leaf Node"""
+
     def __post_init__(self) -> None:
         assert not self.children, 'LeafNodes shouldn\'t have any child!'
         self.depth = self.parent.depth + 1 if self.children else 0
