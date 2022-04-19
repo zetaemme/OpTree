@@ -4,9 +4,6 @@ from dataclasses import dataclass, field
 from numbers import Number
 from typing import Optional, Sequence, Union
 
-from src.dectree.test import Test
-from src.utils import extract
-
 
 @dataclass
 class Node(ABC):
@@ -28,12 +25,9 @@ class Node(ABC):
 @dataclass
 class TestNode(Node):
     """Concretization of the Node class. Represents an intermediate Node"""
-    _test: Test = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.__test = extract.test_structure(self.label)
         # Removes the outcomes from the node label after initializing the test using a regex match
-        self.label = re.match('^((?:\S+\s+){2}\S+).*', self.label).group(1)
         self.depth = self.parent.depth + 1 if self.children else 0
 
     def add_children(self,
