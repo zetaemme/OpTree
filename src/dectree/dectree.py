@@ -160,10 +160,10 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
 
         if probability_maximizing_test == tests[0]:
             # Make test[0] the root of the tree D
-            decision_tree.add_root(TestNode(str(probability_maximizing_test)))
+            decision_tree.add_root(TestNode(probability_maximizing_test))
         else:
             # Make test[k] child of test t[k - 1]
-            decision_tree.add_children(TestNode(str(probability_maximizing_test), parent=decision_tree.last_added_node))
+            decision_tree.add_children(TestNode(probability_maximizing_test, parent=decision_tree.last_added_node))
 
         # Extracts S^{*}_{t_k}
         maximum_separated_class_from_tk = extract.maximum_separated_class(
