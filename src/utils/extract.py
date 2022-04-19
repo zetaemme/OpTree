@@ -22,8 +22,8 @@ def cheapest_test(objects: DataFrame, tests: list[str], cost_fn: Callable[[Serie
     if all(cost_fn(objects[test]) == 1 for test in tests):
         return tests[0]
 
-    # TODO: Add a return statement for the effective test costs, since the calculate_cost function always returns 1.
-    #       Connected to the future implementation of a real calculate_cost(...) function
+    # FIXME: Not tested
+    return min({test: cost_fn(objects[test]) for test in tests}, key=dict.get)
 
 
 def maximum_separated_class(
