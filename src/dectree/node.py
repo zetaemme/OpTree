@@ -1,33 +1,34 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from numbers import Number
-from typing import Optional, Sequence, Union
+from typing import Sequence, Union
 
 
-@dataclass
 class Node(ABC):
     """An Abstract Base Class for the Node class"""
-    label: str
-    children: list[Union['TestNode', 'LeafNode']] = field(default_factory=list)
-    depth: int = field(init=False)
-    parent: 'TestNode' = None
+
+    def __init__(self, label: str, children: list[Union['TestNode', 'LeafNode']] = None, *, parent: 'Node' = None):
+        if children is None:
+            children = []
+
+        self.label = label
+        self.children = children
+        self.parent = parent
+
+        self.depth = self._calculate_depth(_user_call=False)
 
     @abstractmethod
     def add_children(self,
                      children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
         pass
 
-    @abstractmethod
-    def outcome(self, lhs_value: Optional[Number]) -> Union[int, str]: pass
+    def _calculate_depth(self, *, _user_call=True):
+        if _user_call:
+            raise RuntimeError('Cannot directly invoke the \'_calculate_depth()\' method!')
+
+        return self.parent.depth + 1 if self.parent else 0
 
 
-@dataclass
 class TestNode(Node):
     """Concretization of the Node class. Represents an intermediate Node"""
-
-    def __post_init__(self) -> None:
-        # Removes the outcomes from the node label after initializing the test using a regex match
-        self.depth = self.parent.depth + 1 if self.children else 0
 
     def add_children(self,
                      children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
@@ -46,25 +47,8 @@ class TestNode(Node):
         self.children.append(children)
 
 
-@dataclass
 class LeafNode(Node):
     """Concretization of the Node class. Represents a leaf Node"""
-
-    def __post_init__(self) -> None:
-        assert not self.children, 'LeafNodes shouldn\'t have any child!'
-        self.depth = self.parent.depth + 1 if self.children else 0
-
-    def outcome(self, lhs_value: Optional[Number]) -> str:
-        """Returns the string associated with the class ot the leaf
-
-        Args:
-            lhs_value (str, optional): A string corresponding to the column of the dataset to be used ad left-hand side
-                                       of the test
-
-        Returns:
-            int: The outcome of the test (as class ariety)
-        """
-        return self.label
 
     def add_children(self,
                      children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
