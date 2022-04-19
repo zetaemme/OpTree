@@ -1,19 +1,11 @@
-from sys import argv
-
 from pandas import DataFrame
 
 from cost import calculate_cost
 from src.dectree.dectree import DTOA
-from src.utils import extract
 
 
-def main(tests_filepath: str) -> None:
-    """Inits dataset and test list in order to pass them to the algorithm
-
-    Args:
-        tests_filepath (str): The path of the file containing the test string from which the various tests will be
-                              created
-    """
+def main() -> None:
+    """Inits dataset and test list in order to pass them to the algorithm"""
     dataset = DataFrame(
         data=[
             [1, 1, 2, 'A', 0.1],
@@ -25,19 +17,13 @@ def main(tests_filepath: str) -> None:
         columns=['t1', 't2', 't3', 'class', 'probability']
     )
 
-    # NOTE: It is not mandatory to handle test input this way
-    # Reads the tests from an input file
-    with open(tests_filepath, 'r', encoding='UTF-8') as f:
-        test_strings = [line.rstrip() for line in f]
-        tests = [extract.test_structure(test) for test in test_strings]
-
     # Runs the recursive algorithm that builds the optimal Decision Tree
     decision_tree = DTOA(
         objects=dataset,
-        tests=tests,
+        tests=dataset.columns[:-2].to_list(),
         cost_fn=calculate_cost
     )
 
 
 if __name__ == '__main__':
-    main(argv[1])
+    main()
