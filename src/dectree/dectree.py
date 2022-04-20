@@ -84,13 +84,15 @@ class DecTree:
 def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> DecTree:
     """Recursive function that creates an optimal Decision Tree
 
-    Args:
-        objects (DataFrame): The dataset containing the objects to classify
-        tests (list[Test]): The test to use in order to classify the objects of the dataset
-        cost_fn (Callable[[Test], int]): A function returning the effective cost of a given test
+    Parameters
+    ----------
+    objects: The dataset containing the objects to classify
+    tests: The test to use in order to classify the objects of the dataset
+    cost_fn: A function returning the effective cost of a given test
 
-    Returns:
-        DecTree: An optimal Decision Tree
+    Returns
+    -------
+    DecTree: An optimal Decision Tree
     """
 
     # Creates a Pairs object that holds the pairs for the given dataset

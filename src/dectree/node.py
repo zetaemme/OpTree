@@ -3,9 +3,15 @@ from typing import Sequence, Union
 
 
 class Node(ABC):
-    """An Abstract Base Class for the Node class"""
+    """An Abstract Base Class representing a Decision Tree Node"""
 
-    def __init__(self, label: str, children: list[Union['TestNode', 'LeafNode']] = None, *, parent: 'Node' = None):
+    def __init__(
+            self,
+            label: str,
+            children: list[Union['TestNode', 'LeafNode']] = None,
+            *, parent: 'Node' = None
+    ) -> None:
+        """Constructor of the Node Abstract Base Class"""
         if children is None:
             children = []
 
@@ -34,9 +40,9 @@ class TestNode(Node):
                      children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
         """Adds children to this node
 
-        Args:
-            children (Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]):
-                A single child or the list of children to add as children of this node
+        Parameters
+        ----------
+        children: A single child or the list of children to add as children of this node
         """
         if isinstance(children, Sequence):
             for child in children:
@@ -54,12 +60,13 @@ class LeafNode(Node):
                      children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]) -> None:
         """Adds children to this node
 
-        Args:
-            children (Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]):
-                A single child or the list of children to add as children of this node
+        Parameters
+        ----------
+        children: A single child or the list of children to add as children of this node
 
-        Raises:
-              RuntimeError: A child cannot be added to a Leaf node, since this type of node represents a leaf of the
-                            Decision Tree
+        Raises
+        ------
+        RuntimeError: A child cannot be added to a Leaf node, since this type of node represents a leaf of the
+                      Decision Tree
         """
         raise RuntimeError('Cannot add children to leaf node!')

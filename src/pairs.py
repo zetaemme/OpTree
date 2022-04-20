@@ -7,9 +7,10 @@ from pandas import DataFrame
 class Pairs:
     """A tuple of items having different classes
 
-    Attributes:
-        number (int): The number of pairs for a given dataset
-        pair_list (list[tuple]): A list containing all the pairs tuples in a given dataset
+    Attributes
+    ----------
+    number: The number of pairs for a given dataset
+    pair_list: A list containing all the pairs tuples in a given dataset
     """
     _dataset: DataFrame = field(repr=False)
     number: int = field(init=False)
