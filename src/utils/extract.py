@@ -37,7 +37,7 @@ def maximum_separated_class(
 
     Parameters
     ----------
-    items_separated_by_test: The dictionary containing, for each test, a DataSet of all the objects separated from a
+    items_separated_by_test: The dictionary containing, for each test, a DataFrame of all the objects separated from a
                              specific test
     maximizing_test: The test t for which we want to calculate the S^{*}_{t} set
     classes: A set containing all the classes in the dataset
