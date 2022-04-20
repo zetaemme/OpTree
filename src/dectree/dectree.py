@@ -13,10 +13,10 @@ from src.utils import evaluate, extract
 class DecTree:
     """Represents a Decision Tree
 
-    Attributes:
-        root (Union[LeafNode, TestNode, None]): Represents the root of the Decision Tree.
-                                                Can be empty.
-        last_added_node (Union[LeafNode, TestNode]): The last added node of the Decision Tree
+    Attributes
+    ----------
+    root: Represents the root of the Decision Tree. Can be empty.
+    last_added_node: The last added node of the Decision Tree
     """
     root: Union[LeafNode, TestNode, None]
     last_added_node: Union[LeafNode, TestNode] = field(init=False)
@@ -40,9 +40,9 @@ class DecTree:
     def add_children(self, children: Union[Union[LeafNode, TestNode], Sequence[Union[LeafNode, TestNode]]]) -> None:
         """Adds a children to the last added node of this tree
 
-        Args:
-            children (Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]):
-                A single child or the list of children to add as children of this node
+        Parameters
+        ----------
+        children: A single child or the list of children to add as children of this node
         """
         self.last_added_node.add_children(children)
 
@@ -54,11 +54,13 @@ class DecTree:
     def add_root(self, new_root: Union[LeafNode, TestNode]) -> None:
         """Adds a node as root, if the root is None.
 
-        Args:
-            new_root (Union[LeafNode, TestNode]): The new root of the tree
+        Parameters
+        ----------
+        new_root: The new root of the tree
 
-        Raises:
-            ValueError: This operation will block the execution if invoked on a non-empty Decision Tree
+        Raises
+        ------
+        ValueError: This operation will block the execution if invoked on a non-empty Decision Tree
         """
         assert self.root is None, ValueError('Root is not None!')
         self.root = new_root
