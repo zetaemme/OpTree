@@ -101,13 +101,10 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     # Extracts all the class names from the dataset
     classes = {ariety: class_name for ariety, class_name in enumerate(set(objects['class']))}
 
-    # Inits a dictionary containing the S^{i}_{t}
-    # In this case we use i (index) to obtain the ariety of the set
+    # Inits a dictionary containing the S^{i}_{test} for each feature in tests
     items_separated_by_test = {
-        # FIXME: How can I calculate the S^{i}_{t} sets?
-        test: DataFrame(test.evaluate_dataset_for_class(objects, index))
+        test: evaluate.dataset_for_test(objects, test)
         for test in tests
-        for index, _ in enumerate(classes)
     }
 
     # Base case.
@@ -176,10 +173,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
 
         # For each i in {1...l}
         for class_label in classes.values():
-            items_separated_by_tk = DataFrame(
-                data=set(items_separated_by_test[probability_maximizing_test][class_label]),
-                columns=objects.columns
-            )
+            items_separated_by_tk = items_separated_by_test[probability_maximizing_test][class_label]
 
             resulting_intersection = merge(items_separated_by_tk, universe, how='inner')
 
@@ -214,10 +208,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
 
             # For each i in {1...l}
             for class_label in classes.values():
-                items_separated_by_tk = DataFrame(
-                    data=set(items_separated_by_test[pairs_maximizing_test][class_label]),
-                    columns=objects.columns
-                )
+                items_separated_by_tk = items_separated_by_test[pairs_maximizing_test][class_label]
 
                 resulting_intersection = merge(items_separated_by_tk, universe, how='inner')
 
