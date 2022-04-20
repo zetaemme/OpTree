@@ -99,7 +99,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     pairs = Pairs(objects)
 
     # Extracts all the class names from the dataset
-    classes = {class_name for class_name in objects[['class']]}
+    classes = {ariety: class_name for ariety, class_name in enumerate(set(objects['class']))}
 
     # Inits a dictionary containing the S^{i}_{t}
     # In this case we use i (index) to obtain the ariety of the set
@@ -132,7 +132,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
         return decision_tree
 
     # Uses the FindBudget procedure to extract the correct cost budget
-    budget = find_budget(objects, tests, classes, cost_fn, pairs.number)
+    budget = find_budget(objects, tests, set(classes.values()), cost_fn, pairs.number)
 
     spent = 0
     spent2 = 0
@@ -171,11 +171,11 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
         maximum_separated_class_from_tk = extract.maximum_separated_class(
             items_separated_by_test,
             probability_maximizing_test,
-            classes
+            set(classes.values())
         )
 
         # For each i in {1...l}
-        for class_label in classes:
+        for class_label in classes.values():
             items_separated_by_tk = DataFrame(
                 data=set(items_separated_by_test[probability_maximizing_test][class_label]),
                 columns=objects.columns
@@ -209,11 +209,11 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
             maximum_separated_class_from_tk = extract.maximum_separated_class(
                 items_separated_by_test,
                 pairs_maximizing_test,
-                classes
+                set(classes.values())
             )
 
             # For each i in {1...l}
-            for class_label in classes:
+            for class_label in classes.values():
                 items_separated_by_tk = DataFrame(
                     data=set(items_separated_by_test[pairs_maximizing_test][class_label]),
                     columns=objects.columns
