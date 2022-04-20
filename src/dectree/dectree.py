@@ -6,7 +6,7 @@ from pandas import DataFrame, Series, merge
 from src.cost import find_budget
 from src.dectree.node import LeafNode, TestNode
 from src.pairs import Pairs
-from src.utils import extract
+from src.utils import evaluate, extract
 
 
 @dataclass

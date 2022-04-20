@@ -1,9 +1,10 @@
 from typing import Callable
 
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, concat
 
 from src.heuristic import adapted_greedy
 from src.pairs import Pairs
+from src.utils import evaluate
 
 
 def calculate_cost(test: Series) -> int:
@@ -17,8 +18,7 @@ def calculate_cost(test: Series) -> int:
     -------
     int: The cost of the given test
     """
-    # FIXME: This value is returned for testing purpose, a real cost function must be created in the future
-    #        For the future implementation consider using ENTROPY as a cost metric
+    # FIXME: Implement a real cost function
     return 1
 
 
