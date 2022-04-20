@@ -33,8 +33,6 @@ class DecTree:
             while current.children:
                 current = current.children[-1]
 
-            # NOTE: We always pick the rightmost child as last_added_node.
-            #       This is right most of the time, and it's also as I intended it from the referenced paper.
             self.last_added_node = current
 
     def add_children(self, children: Union[Union[LeafNode, TestNode], Sequence[Union[LeafNode, TestNode]]]) -> None:
