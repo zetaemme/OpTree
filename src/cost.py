@@ -44,22 +44,19 @@ def find_budget(
     int: The maximum budget that the algorithm can use to build the Decision Tree
     """
 
-    def submodular_f1(sub_tests: list[str]):
+    def submodular_f1(sub_tests: list[str]) -> int:
         items_separated_by_test = [
             item
             for test in sub_tests
-            for class_index, _ in enumerate(classes)
-            for item in test.evaluate_dataset_for_class(objects, class_index)
+            for item in list(evaluate.dataset_for_test(objects, test).values())
         ]
 
-        items_separated_by_test = set(items_separated_by_test)
+        # Merges all the DataFrames in items_separated_by_test into a single one, removing duplicates
+        items_separated_by_test = concat(items_separated_by_test).drop_duplicates().reset_index(drop=True)
 
-        sep_pairs = Pairs(DataFrame(
-            data=items_separated_by_test,
-            columns=objects.columns
-        ))
+        separated_objects_pairs = Pairs(items_separated_by_test)
 
-        return dataset_pairs_number - sep_pairs.number
+        return dataset_pairs_number - separated_objects_pairs.number
 
     # NOTE: In the original paper alpha is marked as 1 - e^{X}, approximated with 0.35
     alpha = 0.35
