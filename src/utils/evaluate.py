@@ -1,7 +1,7 @@
 from pandas import DataFrame
 
 
-def dataset_for_test(objects: DataFrame, test: str) -> dict[str, DataFrame]:
+def dataset_for_test(objects: DataFrame, test: str) -> dict[str, dict[str, DataFrame]]:
     """Calculates the S^{i}_{test} set for a given dataset
 
     Parameters
@@ -14,11 +14,8 @@ def dataset_for_test(objects: DataFrame, test: str) -> dict[str, DataFrame]:
     dict[str, DataFrame]: A dict containing, for each distinct value for the 'test' feature, a sub-DataFrame containing
                           the objects separated by 'test'
     """
-    no_duplicates_feature = objects[test].drop_duplicates()
-
     result = {
-        key: objects[objects[test] == key]
-        for key in no_duplicates_feature
+        test: {key: objects.loc[objects[test] == key] for key in objects[test].unique()}
     }
 
     return result
