@@ -12,11 +12,13 @@ def calculate_cost(test: Series) -> int:
 
     Parameters
     ----------
-    test: The test of which we want to calculate the cost
+    test: Series
+        The test of which we want to calculate the cost
 
     Returns
     -------
-    int: The cost of the given test
+    cost: int
+        The cost of the given test
     """
     # FIXME: Implement a real cost function
     return 1
@@ -33,15 +35,21 @@ def find_budget(
 
     Parameters
     ----------
-    objects: The dataset we want to classify
-    tests: The list of the tests that can be applied to the dataset
-    classes: A set containing all the possible classes in the dataset
-    cost_fn: A function that computes the effective cost of a given test
-    dataset_pairs_number: The number of pairs in the whole dataset
+    objects: DataFrame
+        The dataset we want to classify
+    tests: list[str]
+        The list of the tests that can be applied to the dataset
+    classes: set[str]
+        A set containing all the possible classes in the dataset
+    cost_fn: Callable[[Series], int]
+        A function that computes the effective cost of a given test
+    dataset_pairs_number: int
+        The number of pairs in the whole dataset
 
     Returns
     -------
-    int: The maximum budget that the algorithm can use to build the Decision Tree
+    budget: int
+        The maximum budget that the algorithm can use to build the Decision Tree
     """
 
     def submodular_f1(sub_tests: list[str]) -> int:
@@ -54,11 +62,7 @@ def find_budget(
         # Merges all the DataFrames in items_separated_by_test into a single one, removing duplicates
         items_separated_by_test = concat(items_separated_by_test).drop_duplicates().reset_index(drop=True)
 
-        separated_objects_pairs = Pairs(items_separated_by_test)
-
-        return dataset_pairs_number - separated_objects_pairs.number
-
-    # NOTE: In the original paper alpha is marked as 1 - e^{X}, approximated with 0.35
+    # NOTE: In the original paper alpha is marked as (1 - e^{X}), approximated with 0.35
     alpha = 0.35
 
     def heuristic_binary_search(lower, upper) -> int:
