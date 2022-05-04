@@ -15,8 +15,10 @@ class DecTree:
 
     Attributes
     ----------
-    root: Represents the root of the Decision Tree. Can be empty.
-    last_added_node: The last added node of the Decision Tree
+    root: Union[LeafNode, TestNode, None]
+        Represents the root of the Decision Tree. Can be empty.
+    last_added_node: Union[LeafNode, TestNode]
+        The last added node of the Decision Tree
     """
     root: Union[LeafNode, TestNode, None]
     last_added_node: Union[LeafNode, TestNode] = field(init=False)
@@ -40,7 +42,8 @@ class DecTree:
 
         Parameters
         ----------
-        children: A single child or the list of children to add as children of this node
+        children: Union[Union[LeafNode, TestNode], Sequence[Union[LeafNode, TestNode]]]
+            A single child or the list of children to add as children of this node
         """
         self.last_added_node.add_children(children)
 
@@ -54,7 +57,8 @@ class DecTree:
 
         Parameters
         ----------
-        new_root: The new root of the tree
+        new_root: Union[LeafNode, TestNode]
+            The new root of the tree
 
         Raises
         ------
@@ -66,8 +70,10 @@ class DecTree:
     def add_subtree(self, subtree: 'DecTree') -> None:
         """Adds the DecTree subtree as a child of the last added node
 
-        Args:
-            subtree (DecTree): The tree to be added as subtree
+        Parameters
+        ----------
+        subtree: DecTree
+            The tree to be added as subtree
         """
         subtree.root.parent = self.last_added_node
         self.add_children(subtree.root)
@@ -86,13 +92,17 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
 
     Parameters
     ----------
-    objects: The dataset containing the objects to classify
-    tests: The test to use in order to classify the objects of the dataset
-    cost_fn: A function returning the effective cost of a given test
+    objects: DataFrame
+        The dataset containing the objects to classify
+    tests: list[str]
+        The test to use in order to classify the objects of the dataset
+    cost_fn: Callable[[Series], int]
+        A function returning the effective cost of a given test
 
     Returns
     -------
-    DecTree: An optimal Decision Tree
+    decision_tree: DecTree
+        An optimal Decision Tree
     """
 
     # Creates a Pairs object that holds the pairs for the given dataset

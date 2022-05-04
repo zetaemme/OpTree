@@ -10,13 +10,17 @@ def cheapest_test(objects: DataFrame, tests: list[str], cost_fn: Callable[[Serie
 
     Parameters
     ----------
-    objects: The dataset containing the objects to classify
-    tests: The list from which the cheapest test will be extracted
-    cost_fn: A function returning the effective cost of a given test
+    objects: DataFrame
+        The dataset containing the objects to classify
+    tests: list[str]
+        The list from which the cheapest test will be extracted
+    cost_fn: Callable[[Series], int]
+        A function returning the effective cost of a given test
 
     Returns
     -------
-    str: The minimum cost test in the tests list
+    min_cost_test: str
+        The minimum costing test in the tests list
     """
     if len(tests) == 1:
         return tests[0]
@@ -37,14 +41,17 @@ def maximum_separated_class(
 
     Parameters
     ----------
-    items_separated_by_test: The dictionary containing, for each test, a DataFrame of all the objects separated from a
-                             specific test
-    maximizing_test: The test t for which we want to calculate the S^{*}_{t} set
-    classes: A set containing all the classes in the dataset
+    items_separated_by_test: dict[str, DataFrame]
+        The dictionary containing, for each test, a DataFrame of all the objects separated from a specific test
+    maximizing_test: str
+        The test t for which we want to calculate the S^{*}_{t} set
+    classes: set[str]
+        A set containing all the classes in the dataset
 
     Returns
     -------
-    DataFrame: A Pandas DataFrame representing the S^{*}_{t} set
+    maximum_separated_class_from_tk: DataFrame
+        A Pandas DataFrame representing the S^{*}_{t} set
     """
     # FIXME: This should not be class_label, since we should iterate over the possible values of a feature
     separation_list = {
@@ -72,12 +79,15 @@ def object_class(dataset: DataFrame, index: int) -> str:
 
     Parameters
     ----------
-    dataset: The set of objects containing the object in position the given position
-    index: The index of the item of which we want to extract the class
+    dataset: DataFrame
+        The set of objects containing the object in position the given position
+    index: int
+        The index of the item of which we want to extract the class
 
     Returns
     -------
-    str: A string representing the objects class
+    class: str
+        A string representing the objects class
     """
     assert index >= 0, "Index should be a positive integer"
     return dataset.rows[index]['class']
@@ -93,15 +103,20 @@ def tests_costing_less_than(
 
     Parameters
     ----------
-    objects: The dataset containing the objects to classify
-    tests: The list in which we need to search
-    cost_fn: A function returning the effective cost of a given test
-    cost: The threshold we mustn't cross
+    objects: DataFrame
+        The dataset containing the objects to classify
+    tests: str
+        The list in which we need to search
+    cost_fn: Callable[[Series], int]
+        A function returning the effective cost of a given test
+    cost: int
+        The threshold we mustn't cross
 
     Returns
     -------
-    list[Test]: A list containing all tests of effective cost less than the given cost
+    resulting_tests: list[str]
+        A list containing all tests of effective cost less than the given cost
     """
     # NOTE: Doing this assignment avoids the case in which a Generator is returned instead of a list
-    result = [test for test in tests if cost_fn(objects[test]) <= cost]
-    return result
+    resulting_tests = [test for test in tests if cost_fn(objects[test]) <= cost]
+    return resulting_tests

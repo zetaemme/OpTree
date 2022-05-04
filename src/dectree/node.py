@@ -42,7 +42,8 @@ class TestNode(Node):
 
         Parameters
         ----------
-        children: A single child or the list of children to add as children of this node
+        children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]
+            A single child or the list of children to add as children of this node
         """
         if isinstance(children, Sequence):
             for child in children:
@@ -62,7 +63,8 @@ class LeafNode(Node):
 
         Parameters
         ----------
-        children: A single child or the list of children to add as children of this node
+        children: Union[Union['TestNode', 'LeafNode'], Sequence[Union['TestNode', 'LeafNode']]]
+            A single child or the list of children to add as children of this node
 
         Raises
         ------

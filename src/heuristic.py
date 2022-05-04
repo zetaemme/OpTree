@@ -14,15 +14,21 @@ def adapted_greedy(
 
     Parameters
     ----------
-    objects: The dataset
-    tests: A list containing all the tests
-    f: A submodular function
-    cost_fn: A function that calculates the effective cost of a given test
-    budget: The maximum budget that a test list should not cross
+    objects: DataFrame
+        The dataset
+    tests: list[str]
+        A list containing all the tests
+    f: Callable
+        A submodular function
+    cost_fn: Callable[[Series], int]
+        A function that calculates the effective cost of a given test
+    budget: int
+        The maximum budget that a test list should not cross
 
     Returns
     -------
-    list[Test]: The maximum list of tests that can be used without crossing the budget
+    tests_sublist: list[str]
+        The maximum list of tests that can be used without crossing the budget
     """
     assert budget >= 0, 'Bound should be a positive integer!'
 
