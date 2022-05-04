@@ -72,3 +72,60 @@ def maximum_separation_set_for_test(objects: DataFrame, test: str) -> DataFrame:
         result_dict[separation_set] = separation_set_pairs.number
 
     return max(result_dict, key=result_dict.get)
+
+
+def objects_kept_by_test(objects: DataFrame, test: str) -> DataFrame:
+    """Computes the objects 'kept by' a given test
+
+    Parameters
+    ----------
+    objects: DataFrame
+        The dataset to evaluate
+    test: str
+        The feature that keeps the objects
+
+    Returns
+    -------
+    objects_kept: A subset of objects, containing all the objects kept by test
+    """
+    # Computes the set difference between S and S^{*}_{test}
+    sigma_test = objects[~objects.apply(tuple, 1).isin(maximum_separation_set_for_test(objects, test).apply(tuple, 1))]
+
+    indexes = set()
+
+    for pair in Pairs(objects).pair_list:
+        if pair[0] in sigma_test.index and pair[1] in sigma_test.index:
+            indexes.add(pair[0])
+            indexes.add(pair[1])
+
+    return objects.iloc[indexes]
+
+
+def objects_separated_by_test(objects: DataFrame, test: str) -> DataFrame:
+    """Computes the objects 'separated by' a given test
+
+    Parameters
+    ----------
+    objects: DataFrame
+        The dataset to evaluate
+    test: str
+        The feature that keeps the objects
+
+    Returns
+    -------
+    objects_separated: A subset of objects, containing all the objects separated by test
+    """
+    maximum_separation_set = maximum_separation_set_for_test(objects, test)
+
+    # Computes the set difference between S and S^{*}_{test}
+    sigma_test = objects[~objects.apply(tuple, 1).isin(maximum_separation_set.apply(tuple, 1))]
+
+    indexes = set()
+
+    for pair in Pairs(objects).pair_list:
+        if (pair[0] in sigma_test.index and pair[1] in maximum_separation_set.index) or \
+                (pair[1] in sigma_test.index and pair[0] in maximum_separation_set.index):
+            indexes.add(pair[0])
+            indexes.add(pair[1])
+
+    return objects.iloc[indexes]
