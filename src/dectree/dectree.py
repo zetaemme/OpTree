@@ -172,6 +172,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
         )
 
         # For each i in {1...l}
+        # FIXME: This should not be class_label, since we should iterate over the possible values of a feature
         for class_label in classes.values():
             items_separated_by_tk = items_separated_by_test[probability_maximizing_test][class_label]
 
@@ -207,6 +208,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
             )
 
             # For each i in {1...l}
+            # FIXME: This should not be class_label, since we should iterate over the possible values of a feature
             for class_label in classes.values():
                 items_separated_by_tk = items_separated_by_test[pairs_maximizing_test][class_label]
 

@@ -46,6 +46,7 @@ def maximum_separated_class(
     -------
     DataFrame: A Pandas DataFrame representing the S^{*}_{t} set
     """
+    # FIXME: This should not be class_label, since we should iterate over the possible values of a feature
     separation_list = {
         items_separated_by_test[maximizing_test][class_label]:
             Pairs(items_separated_by_test[maximizing_test][class_label])
