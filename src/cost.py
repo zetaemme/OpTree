@@ -1,6 +1,6 @@
 from typing import Callable
 
-from pandas import DataFrame, Series, concat
+from pandas import DataFrame, Series
 
 from src.heuristic import adapted_greedy
 from src.pairs import Pairs
@@ -53,14 +53,9 @@ def find_budget(
     """
 
     def submodular_f1(sub_tests: list[str]) -> int:
-        items_separated_by_test = [
-            item
-            for test in sub_tests
-            for item in list(evaluate.dataset_for_test(objects, test).values())
-        ]
-
-        # Merges all the DataFrames in items_separated_by_test into a single one, removing duplicates
-        items_separated_by_test = concat(items_separated_by_test).drop_duplicates().reset_index(drop=True)
+        return dataset_pairs_number - Pairs(evaluate.dataframe_intersection([
+            evaluate.maximum_separation_set_for_test(objects, test) for test in sub_tests
+        ])).number
 
     # NOTE: In the original paper alpha is marked as (1 - e^{X}), approximated with 0.35
     alpha = 0.35
