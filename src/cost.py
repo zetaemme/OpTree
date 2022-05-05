@@ -66,15 +66,20 @@ def find_budget(
 
             heuristic_test_list = adapted_greedy(objects, tests, submodular_f1, calculate_cost, mid)
 
-            heuristic_test_coverage_sum = sum([
-                len(test.evaluate_dataset_for_class(objects, class_index))
-                for class_index in range(len(classes))
-                for test in heuristic_test_list
-            ])
+            kept_df = DataFrame()
+            separated_df = DataFrame()
 
-            if heuristic_test_coverage_sum == (alpha * dataset_pairs_number):
+            for test in heuristic_test_list:
+                kept_df.concat(evaluate.objects_kept_by_test(objects, test)).drop_duplicates()
+
+            for test in heuristic_test_list:
+                separated_df.concat(evaluate.objects_separated_by_test(objects, test)).drop_duplicates()
+
+            covering = max(kept_df.shape[0], separated_df.shape[0])
+
+            if covering == (alpha * dataset_pairs_number):
                 return mid
-            elif heuristic_test_coverage_sum > (alpha * dataset_pairs_number):
+            elif covering > (alpha * dataset_pairs_number):
                 return heuristic_binary_search(lower, mid - 1)
             else:
                 return heuristic_binary_search(mid + 1, upper)
