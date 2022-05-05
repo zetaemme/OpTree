@@ -69,9 +69,9 @@ def maximum_separation_set_for_test(objects: DataFrame, test: str) -> DataFrame:
         separation_set = objects.loc[objects[test] == key]
         separation_set_pairs = Pairs(separation_set)
 
-        result_dict[separation_set] = separation_set_pairs.number
+        result_dict[separation_set_pairs.number] = separation_set
 
-    return max(result_dict, key=result_dict.get)
+    return result_dict[max(result_dict.keys())]
 
 
 def objects_kept_by_test(objects: DataFrame, test: str) -> DataFrame:
