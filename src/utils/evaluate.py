@@ -63,15 +63,16 @@ def maximum_separation_set_for_test(objects: DataFrame, test: str) -> DataFrame:
     maximum_separation_set: DataFrame
         A DataFrame containing the set of objects which maximizes the Pairs number for the given 'test'
     """
-    result_dict = {}
+    result = []
 
     for key in objects[test].unique():
         separation_set = objects.loc[objects[test] == key]
         separation_set_pairs = Pairs(separation_set)
 
-        result_dict[separation_set_pairs.number] = separation_set
+        result.append((separation_set_pairs.number, separation_set))
 
-    return result_dict[max(result_dict.keys())]
+    # NOTE: Returns the DataFrame associated with the maximum Pairs number
+    return max(result, key=lambda x: x[0])[1]
 
 
 def objects_kept_by_test(objects: DataFrame, test: str) -> DataFrame:
