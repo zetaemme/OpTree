@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, NamedTuple
 
 from pandas import DataFrame, Series
 
@@ -35,7 +35,7 @@ def cheapest_test(objects: DataFrame, tests: list[str], cost_fn: Callable[[Serie
 def maximum_separated_class(
         items_separated_by_test: dict[str, DataFrame],
         maximizing_test: str,
-        classes: set[str]
+        feature_values: set[str]
 ) -> DataFrame:
     """Extracts the set S^{*}_{maximizing_test} from a given dictionary of separated objects
 
@@ -45,7 +45,7 @@ def maximum_separated_class(
         The dictionary containing, for each test, a DataFrame of all the objects separated from a specific test
     maximizing_test: str
         The test t for which we want to calculate the S^{*}_{t} set
-    classes: set[str]
+    feature_values: set[str]
         A set containing all the classes in the dataset
 
     Returns
@@ -53,22 +53,27 @@ def maximum_separated_class(
     maximum_separated_class_from_tk: DataFrame
         A Pandas DataFrame representing the S^{*}_{t} set
     """
-    # FIXME: This should not be class_label, since we should iterate over the possible values of a feature
-    separation_list = {
-        items_separated_by_test[maximizing_test][class_label]:
-            Pairs(items_separated_by_test[maximizing_test][class_label])
-        for class_label in classes
-    }
+    # NOTE: NamedTuple is used instead of dict because DataFrame is not hashable
+    SepList = NamedTuple('SepList', [('data_frame', DataFrame), ('pairs', Pairs)])
+
+    separation_list = [
+        SepList(
+            items_separated_by_test[maximizing_test][str(value)],
+            Pairs(items_separated_by_test[maximizing_test][str(value)])
+        )
+        for value in feature_values
+    ]
 
     # Extracts the target pair value for S^{*}_{t_k}
-    max_pair_number = max([pair.number for pair in separation_list.values()])
+    # NOTE: Horrible to see, but necessary since what is written in previous NOTE still holds
+    max_pair_number = max(separation_list, key=lambda x: x.pairs.number).pairs.number
 
     maximum_separated_class_from_tk = None
 
-    for separation_set in separation_list.items():
-        if separation_set[1].number == max_pair_number:
+    for separation_set in separation_list:
+        if separation_set.pairs.number == max_pair_number:
             # NOTE: Corresponds to S^{*}_{t_k}
-            maximum_separated_class_from_tk = separation_set[0]
+            maximum_separated_class_from_tk = separation_set.data_frame
 
     assert maximum_separated_class_from_tk is not None
     return maximum_separated_class_from_tk
