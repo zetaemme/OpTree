@@ -98,7 +98,7 @@ def objects_kept_by_test(objects: DataFrame, test: str) -> DataFrame:
             indexes.add(pair[0])
             indexes.add(pair[1])
 
-    return objects.iloc[indexes]
+    return objects.iloc[list(indexes)]
 
 
 def objects_separated_by_test(objects: DataFrame, test: str) -> DataFrame:
@@ -128,4 +128,4 @@ def objects_separated_by_test(objects: DataFrame, test: str) -> DataFrame:
             indexes.add(pair[0])
             indexes.add(pair[1])
 
-    return objects.iloc[indexes]
+    return objects.iloc[list(indexes)]
