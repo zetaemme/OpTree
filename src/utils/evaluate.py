@@ -48,6 +48,31 @@ def dataset_for_test(objects: DataFrame, test: str) -> dict[str, dict[str, DataF
     return separation_set
 
 
+def are_dataframes_equal(df1: DataFrame, df2: DataFrame) -> bool:
+    """Checks if two DataFrames are equal (same cardinality and same elements)
+
+    Parameters
+    ----------
+    df1: DataFrame
+        The first DataFrame to compare
+
+    df2: DataFrame
+        The second DataFrame to compare
+
+    Returns
+    -------
+    result: bool
+        True if the two DataFrames have same cardinality and same elements, False otherwise
+    """
+    if len(df1) != len(df2):
+        return False
+
+    if not df1.eq(df2, axis=0).all().to_numpy().all():
+        return False
+
+    return True
+
+
 def maximum_separation_set_for_test(objects: DataFrame, test: str) -> DataFrame:
     """Calculates the S^{*}_{test} set for a given dataset
 
