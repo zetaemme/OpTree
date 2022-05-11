@@ -27,7 +27,7 @@ def dataframe_intersection(dataframes: list[DataFrame]) -> DataFrame:
     return intersection
 
 
-def dataset_for_test(objects: DataFrame, test: str) -> dict[str, dict[str, DataFrame]]:
+def dataset_for_test(objects: DataFrame, test: str) -> dict[str, DataFrame]:
     """Calculates the S^{i}_{test} set for a given dataset
 
     Parameters
@@ -43,7 +43,7 @@ def dataset_for_test(objects: DataFrame, test: str) -> dict[str, dict[str, DataF
         A dict containing, for each distinct value for the 'test' feature, a sub-DataFrame containing the objects
         separated by 'test'
     """
-    separation_set = {test: {key: objects.loc[objects[test] == key] for key in objects[test].unique()}}
+    separation_set = {str(key): objects.loc[objects[test] == key] for key in objects[test].unique()}
 
     return separation_set
 
