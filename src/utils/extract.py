@@ -95,7 +95,7 @@ def object_class(dataset: DataFrame, index: int) -> str:
         A string representing the objects class
     """
     assert index >= 0, "Index should be a positive integer"
-    return dataset.rows[index]['class']
+    return dataset['class'][index]
 
 
 def tests_costing_less_than(
