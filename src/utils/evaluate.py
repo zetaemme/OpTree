@@ -24,7 +24,7 @@ def dataframe_intersection(dataframes: list[DataFrame]) -> DataFrame:
     for frame in dataframes[1:]:
         intersection = merge(intersection, frame, how='inner')
 
-    return intersection.dropna(inplace=True)
+    return intersection
 
 
 def dataset_for_test(objects: DataFrame, test: str) -> dict[str, dict[str, DataFrame]]:
