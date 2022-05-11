@@ -6,9 +6,9 @@ from pandas import DataFrame, Series
 def adapted_greedy(
         objects: DataFrame,
         tests: list[str],
-        f: Callable,
+        submodular_f: Callable[[list[str]], int],
         cost_fn: Callable[[Series], int],
-        budget: int
+        budget: int | float
 ) -> list[str]:
     """Implementation of the Adapted-Greedy heuristic
 
@@ -18,7 +18,7 @@ def adapted_greedy(
         The dataset
     tests: list[str]
         A list containing all the tests
-    f: Callable
+    submodular_f: Callable[[list[str]], int]
         A submodular function
     cost_fn: Callable[[Series], int]
         A function that calculates the effective cost of a given test
@@ -30,36 +30,34 @@ def adapted_greedy(
     tests_sublist: list[str]
         The maximum list of tests that can be used without crossing the budget
     """
-    assert budget >= 0, 'Bound should be a positive integer!'
-
     spent = 0
     A = []
-    k = 0
+    k = -1
 
     # Remove from T all tests with cost larger than B
-    tests = [test for test in tests if cost_fn(objects[test]) <= budget]
+    tests_with_ariety = {ariety: test for ariety, test in enumerate(
+        [test for test in tests if cost_fn(objects[test]) <= budget]
+    )}
 
-    if not tests:
-        while True:
-            k += 1
+    # Repeat until spent > budget or test becomes empty
+    while spent <= budget and tests_with_ariety:
+        k += 1
 
-            # Removes and returns the k-th item from the test list
-            tk = tests.pop(k)
+        # Removes and returns the k-th item from the test list
+        minimizing_test_key = min(tests_with_ariety, key=tests_with_ariety.get)
+        minimizing_test_value = tests_with_ariety[minimizing_test_key]
 
-            # Calculate the cost of the k-th test and add it to 'spent'
-            cost = cost_fn(objects[tk])
-            assert cost >= 0, 'Cost should be a positive value!'
-            spent += cost
+        del tests_with_ariety[minimizing_test_key]
 
-            A.append(tk)
+        # Calculate the cost of the k-th test and add it to 'spent'
+        cost = cost_fn(objects[minimizing_test_value])
+        spent += cost
 
-            # If the k-th test's cost is over the given budget, or we're out of tests, we exit the loop
-            if spent > budget or not tests:
-                break
+        A.append(minimizing_test_value)
 
     # If the k-th test covers more pairs than all the others, return the k-th test
-    if f(tests[k]) >= f([a for a in A if a != tests[k]]):
+    if submodular_f([tests[k]]) >= submodular_f([a for a in A if a != tests[k]]):
         return [tests[k]]
 
     # Otherwise, return all the test before the k-th
-    return tests[:k - 1]
+    return tests[:k]
