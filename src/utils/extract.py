@@ -1,60 +1,78 @@
-from pandas import DataFrame
+from typing import Callable, NamedTuple
 
-from src.dectree.test import Test
+from pandas import DataFrame, Series
+
 from src.pairs import Pairs
 
 
-def cheapest_test(tests: list[Test], test_costs: dict[Test, int]) -> Test:
+def cheapest_test(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> str:
     """Extracts the cheapest (separation cost) test that separates the two objects
 
-    Args:
-        tests (list[Test]): The list from which the cheapest test will be extracted
-        test_costs (dict[Test, int]): A dictionary containing, for each test, the corresponding effective cost
+    Parameters
+    ----------
+    objects: DataFrame
+        The dataset containing the objects to classify
+    tests: list[str]
+        The list from which the cheapest test will be extracted
+    cost_fn: Callable[[Series], int]
+        A function returning the effective cost of a given test
 
-    Returns:
-        Test: The minimum cost test in the tests list
+    Returns
+    -------
+    min_cost_test: str
+        The minimum costing test in the tests list
     """
     if len(tests) == 1:
         return tests[0]
 
-    if all(test_costs[test] == 1 for test in tests):
+    if all(cost_fn(objects[test]) == 1 for test in tests):
         return tests[0]
 
-    # TODO: Add a return statement for the effective test costs, since the calculate_cost function always returns 1.
-    #       Connected to the future implementation of a real calculate_cost(...) function
+    return min({test: cost_fn(objects[test]) for test in tests}, key=dict.get)
 
 
 def maximum_separated_class(
-        items_separated_by_test: dict[Test, DataFrame],
-        maximizing_test: Test,
-        classes: set[str]
+        items_separated_by_test: dict[str, DataFrame],
+        maximizing_test: str,
+        feature_values: set[str]
 ) -> DataFrame:
     """Extracts the set S^{*}_{maximizing_test} from a given dictionary of separated objects
 
-    Args:
-        items_separated_by_test (dict[Test, DataFrame]): The dictionary containing, for each test, a DataSet of all the
-                                                         objects separated from a specific test
-        maximizing_test (Test): The test t for which we want to calculate the S^{*}_{t} set
-        classes (set[str]): A set containing all the classes in the dataset
+    Parameters
+    ----------
+    items_separated_by_test: dict[str, DataFrame]
+        The dictionary containing, for each test, a DataFrame of all the objects separated from a specific test
+    maximizing_test: str
+        The test t for which we want to calculate the S^{*}_{t} set
+    feature_values: set[str]
+        A set containing all the classes in the dataset
 
-    Returns:
-        DataFrame: A Pandas DataFrame representing the S^{*}_{t} set
+    Returns
+    -------
+    maximum_separated_class_from_tk: DataFrame
+        A Pandas DataFrame representing the S^{*}_{t} set
     """
-    separation_list = {
-        items_separated_by_test[maximizing_test][class_label]:
-            Pairs(items_separated_by_test[maximizing_test][class_label])
-        for class_label in classes
-    }
+    # NOTE: NamedTuple is used instead of dict because DataFrame is not hashable
+    SepList = NamedTuple('SepList', [('data_frame', DataFrame), ('pairs', Pairs)])
+
+    separation_list = [
+        SepList(
+            items_separated_by_test[maximizing_test][str(value)],
+            Pairs(items_separated_by_test[maximizing_test][str(value)])
+        )
+        for value in feature_values
+    ]
 
     # Extracts the target pair value for S^{*}_{t_k}
-    max_pair_number = max([pair.number for pair in separation_list.values()])
+    # NOTE: Horrible to see, but necessary since what is written in previous NOTE still holds
+    max_pair_number = max(separation_list, key=lambda x: x.pairs.number).pairs.number
 
     maximum_separated_class_from_tk = None
 
-    for separation_set in separation_list.items():
-        if separation_set[1].number == max_pair_number:
+    for separation_set in separation_list:
+        if separation_set.pairs.number == max_pair_number:
             # NOTE: Corresponds to S^{*}_{t_k}
-            maximum_separated_class_from_tk = separation_set[0]
+            maximum_separated_class_from_tk = separation_set.data_frame
 
     assert maximum_separated_class_from_tk is not None
     return maximum_separated_class_from_tk
@@ -63,47 +81,46 @@ def maximum_separated_class(
 def object_class(dataset: DataFrame, index: int) -> str:
     """Extracts the class label from the item in position index of a given dataset
 
-        Args:
-            dataset (DataFrame): The set of objects containing the object in position the given position
-            index (int): The index of the item of which we want to extract the class
+    Parameters
+    ----------
+    dataset: DataFrame
+        The set of objects containing the object in position the given position
+    index: int
+        The index of the item of which we want to extract the class
 
-        Returns:
-            str: A string representing the objects class
+    Returns
+    -------
+    class: str
+        A string representing the objects class
     """
     assert index >= 0, "Index should be a positive integer"
-    return dataset.rows[index]['class']
+    return dataset['class'][index]
 
 
-def test_structure(test: str) -> Test:
-    """Extracts the test structure (lhs, type, rhs) from a given string
-
-    Args:
-        test (str): A string representing the test
-
-    Returns:
-        Test: A Test object, created starting from the given string structure
-    """
-    structure = test.split()
-
-    if float(structure[2]).is_integer():
-        rhs = int(structure[2])
-    else:
-        rhs = float(structure[2])
-
-    return Test(structure[0], structure[1], rhs, list(map(int, structure[3:])))
-
-
-def tests_costing_less_than(tests: list[Test], test_costs: dict[Test, int], cost: int) -> list[Test]:
+def tests_costing_less_than(
+        objects: DataFrame,
+        tests: list[str],
+        cost_fn: Callable[[Series], int],
+        cost: int
+) -> list[str]:
     """Extracts all the tests which cost is less than a given cost
 
-    Args:
-        tests (list[Test]): The list in which we need to search
-        test_costs (dict[Test, int]): A dictionary containing, for each test, the corresponding effective cost
-        cost (int): The threshold we mustn't cross
+    Parameters
+    ----------
+    objects: DataFrame
+        The dataset containing the objects to classify
+    tests: str
+        The list in which we need to search
+    cost_fn: Callable[[Series], int]
+        A function returning the effective cost of a given test
+    cost: int
+        The threshold we mustn't cross
 
-    Returns:
-        list[Test]: A list containing all tests of effective cost less than the given cost
+    Returns
+    -------
+    resulting_tests: list[str]
+        A list containing all tests of effective cost less than the given cost
     """
     # NOTE: Doing this assignment avoids the case in which a Generator is returned instead of a list
-    result = [test for test in tests if test_costs[test] <= cost]
-    return result
+    resulting_tests = [test for test in tests if cost_fn(objects[test]) <= cost]
+    return resulting_tests
