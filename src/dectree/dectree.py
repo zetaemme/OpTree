@@ -179,6 +179,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
         for value in objects[probability_maximizing_test].unique():
             items_separated_by_tk = items_separated_by_test[probability_maximizing_test][str(value)]
 
+
             resulting_intersection = evaluate.dataframe_intersection([items_separated_by_tk, universe])
 
             # If U intersect S^{i}_{t_k} is not empty and S^{i}_{t_k} != S^{*}_{t_k}
