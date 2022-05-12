@@ -1,90 +1,83 @@
-from dataclasses import dataclass, field
-from typing import Callable, Sequence, Union
+from typing import Callable, Union
 
-from pandas import DataFrame, Series, merge
+from pandas import DataFrame, Series
+from treelib import Tree
 
 from src.cost import find_budget
-from src.dectree.node import LeafNode, TestNode
+from src.dectree.node import Node, NodeType
 from src.pairs import Pairs
 from src.utils import evaluate, extract
 
 
-@dataclass
 class DecTree:
     """Represents a Decision Tree
 
     Attributes
     ----------
-    root: Union[LeafNode, TestNode, None]
+    tree: Tree
+        A reference to the tree implementation
+    root: Node | None
         Represents the root of the Decision Tree. Can be empty.
-    last_added_node: Union[LeafNode, TestNode]
+    last_added_node: Node
         The last added node of the Decision Tree
     """
-    root: Union[LeafNode, TestNode, None]
-    last_added_node: Union[LeafNode, TestNode] = field(init=False)
 
-    def __post_init__(self) -> None:
-        if self.root is None:
-            return
+    def __init__(self, root: Node = None) -> None:
+        """Constructs a DecTree object"""
+        self.tree = Tree()
 
-        if not self.root.children:
+        if root:
+            self.tree.create_node(root.label, root.label, data=root)
+            self.root = self.tree.root
+
             self.last_added_node = self.root
         else:
-            current = self.root
+            self.root = None
 
-            while current.children:
-                current = current.children[-1]
-
-            self.last_added_node = current
-
-    def add_children(self, children: Union[Union[LeafNode, TestNode], Sequence[Union[LeafNode, TestNode]]]) -> None:
-        """Adds a children to the last added node of this tree
+    def add_root(self, root: Node) -> None:
+        """Adds a given node as root for the DecTree
 
         Parameters
         ----------
-        children: Union[Union[LeafNode, TestNode], Sequence[Union[LeafNode, TestNode]]]
-            A single child or the list of children to add as children of this node
+        root: Union[TestNode, LeafNode]
+            The new root node
         """
-        self.last_added_node.add_children(children)
+        if self.root:
+            raise RuntimeError('Root node already exists!')
 
-        if isinstance(children, Sequence):
-            self.last_added_node = children[-1]
-        else:
-            self.last_added_node = children
+        self.tree.create_node(root.label, root.label, data=root)
+        self.root = self.tree.root
 
-    def add_root(self, new_root: Union[LeafNode, TestNode]) -> None:
-        """Adds a node as root, if the root is None.
+        self.last_added_node = self.root
+
+    def add_children(self, children: Node | list[Node]) -> None:
+        """Adds a single, or a series, of node(s) to the "youngest" node in the tree
 
         Parameters
         ----------
-        new_root: Union[LeafNode, TestNode]
-            The new root of the tree
-
-        Raises
-        ------
-        ValueError: This operation will block the execution if invoked on a non-empty Decision Tree
+        children: Node | list[Node]
+            The Node/list[Node] to add
         """
-        assert self.root is None, ValueError('Root is not None!')
-        self.root = new_root
+        for child in children:
+            self.tree.create_node(child.label, child.label, parent=self.last_added_node, data=child)
 
-    def add_subtree(self, subtree: 'DecTree') -> None:
-        """Adds the DecTree subtree as a child of the last added node
+        # NOTE: If next_test_node is None, only nodes of type LeafNode have been added
+        next_test_node = next((child for child in children if child.node_type == NodeType.TestNode), None)
+
+        if next_test_node is not None:
+            self.last_added_node = self.tree.get_node(next_test_node)
+
+    def add_subtree(self, sub_tree: 'DecTree') -> None:
+        """Appends a given sub_tree to the currently last_added_node
 
         Parameters
         ----------
-        subtree: DecTree
-            The tree to be added as subtree
+        sub_tree: DecTree
+            The subtree to append
         """
-        subtree.root.parent = self.last_added_node
-        self.add_children(subtree.root)
-        self.last_added_node = subtree.last_added_node
-
-    @classmethod
-    def build_empty_tree(cls) -> 'DecTree':
-        """API to handle the creation of an empty Decision Tree.
-        Needed in order to grant the existence of a tree to start from to add nodes.
-        """
-        return DecTree(None)
+        # FIXME: Ci sono 2 nodi 't1'?
+        self.tree.paste(self.last_added_node, sub_tree.tree)
+        self.last_added_node = sub_tree.last_added_node
 
 
 def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> DecTree:
@@ -120,7 +113,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     # Base case.
     # All objects in the dataset have the same class. A single leaf is returned.
     if pairs.number == 0:
-        return DecTree(LeafNode(extract.object_class(objects, 0)))
+        return DecTree(Node(extract.object_class(objects, 0), node_type=NodeType.LeafNode))
 
     # Base case.
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
@@ -128,12 +121,12 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     if pairs.number == 1:
         # NOTE: This set of instructions works since, in this specific case, we're working with a single pair.
         #       The TestNode has been assigned to a variable in order to assign the parent node to each LeafNode
-        root_node = TestNode(label=extract.cheapest_test(objects, tests, cost_fn))
+        root_node = Node(label=extract.cheapest_test(objects, tests, cost_fn), node_type=NodeType.TestNode)
         decision_tree = DecTree(root_node)
 
         decision_tree.add_children([
-            LeafNode(label=extract.object_class(objects, 0), parent=root_node),
-            LeafNode(label=extract.object_class(objects, 1), parent=root_node)
+            Node(label=extract.object_class(objects, 0), node_type=NodeType.LeafNode),
+            Node(label=extract.object_class(objects, 1), node_type=NodeType.LeafNode)
         ])
 
         return decision_tree
@@ -154,14 +147,17 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     tests = [test for test in tests if cost_fn(objects[test]) <= budget]
 
     # Builds an empty decision tree, the starting point of the recursive procedure
-    decision_tree = DecTree.build_empty_tree()
+    decision_tree = DecTree()
 
     # While there's a test t with cost(t) <= budget - spent
     while any([test for test in tests if cost_fn(objects[test]) <= budget - spent]):
         # NOTE: Since we need to extract the test t_{k} which maximizes the function:
         #           (probability(universe) - probability(universe intersect items_separated_by_t_{k}))/cost(t_{k})
         #       we can simply create a list containing all tests which cost is less than budget - spent.
-        #       Then we can use the cheapest possible test, since it always maximizes the function (?).
+        #       Then we can use the cheapest possible test, since it maximizes the function in the majority of times.
+
+        # FIXME: Si dovrebbe implementare in modo che venga fatto un check per costi uguali, dato che in quel caso va
+        #        massimizzato il numeratore
         tests_eligible_for_maximization = extract.tests_costing_less_than(objects, tests, cost_fn, budget - spent)
 
         # NOTE: Corresponds to t_k
@@ -169,27 +165,25 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
 
         if probability_maximizing_test == tests[0]:
             # Make test[0] the root of the tree D
-            decision_tree.add_root(TestNode(probability_maximizing_test))
+            decision_tree.add_root(Node(probability_maximizing_test, node_type=NodeType.TestNode))
         else:
             # Make test[k] child of test t[k - 1]
-            decision_tree.add_children(TestNode(probability_maximizing_test, parent=decision_tree.last_added_node))
+            decision_tree.add_children(Node(probability_maximizing_test, node_type=NodeType.TestNode))
 
         # Extracts S^{*}_{t_k}
-        maximum_separated_class_from_tk = extract.maximum_separated_class(
-            items_separated_by_test,
-            probability_maximizing_test,
-            set(classes.values())
-        )
+        maximum_separated_class_from_tk = extract.maximum_separated_class(items_separated_by_test,
+                                                                          probability_maximizing_test,
+                                                                          objects[probability_maximizing_test].unique())
 
         # For each i in {1...l}
-        # FIXME: This should not be class_label, since we should iterate over the possible values of a feature
-        for class_label in classes.values():
-            items_separated_by_tk = items_separated_by_test[probability_maximizing_test][class_label]
+        for value in objects[probability_maximizing_test].unique():
+            items_separated_by_tk = items_separated_by_test[probability_maximizing_test][str(value)]
 
-            resulting_intersection = merge(items_separated_by_tk, universe, how='inner')
+            resulting_intersection = evaluate.dataframe_intersection([items_separated_by_tk, universe])
 
             # If U intersect S^{i}_{t_k} is not empty and S^{i}_{t_k} != S^{*}_{t_k}
-            if resulting_intersection and items_separated_by_tk != maximum_separated_class_from_tk:
+            if not resulting_intersection.empty and \
+                    not evaluate.are_dataframes_equal(items_separated_by_tk, maximum_separated_class_from_tk):
                 # Make D^{i} the recursive call to DTOA, called on resulting_intersection
                 decision_tree.add_subtree(DTOA(resulting_intersection, tests, cost_fn))
 
@@ -204,28 +198,30 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
         while budget - spent2 >= 0 or tests:
             # NOTE: Since we need to extract the test t_{k} which maximizes the function:
             #           (pairs(universe) - pairs(universe intersect items_separated_by_t_{k}))/cost(t_{k})
-            #       we can simply use the cheapest possible test, since it always maximizes the function (?).
+            #       we can simply use the cheapest possible test,
+            #       since it maximizes the function in the majority of times.
+
+            # FIXME: Si dovrebbe implementare in modo che venga fatto un check per costi uguali, dato che in quel caso
+            #        va massimizzato il numeratore
             pairs_maximizing_test = extract.cheapest_test(objects, tests, cost_fn)
 
             # Set t_{k} as child of t_{k - 1}
-            decision_tree.add_children(TestNode(str(pairs_maximizing_test), parent=decision_tree.last_added_node))
+            decision_tree.add_children(Node(pairs_maximizing_test, node_type=NodeType.TestNode))
 
             # Extracts S^{*}_{t_k}
-            maximum_separated_class_from_tk = extract.maximum_separated_class(
-                items_separated_by_test,
-                pairs_maximizing_test,
-                set(classes.values())
-            )
+            maximum_separated_class_from_tk = extract.maximum_separated_class(items_separated_by_test,
+                                                                              pairs_maximizing_test,
+                                                                              objects[pairs_maximizing_test].unique())
 
             # For each i in {1...l}
-            # FIXME: This should not be class_label, since we should iterate over the possible values of a feature
-            for class_label in classes.values():
-                items_separated_by_tk = items_separated_by_test[pairs_maximizing_test][class_label]
+            for value in objects[pairs_maximizing_test].unique():
+                items_separated_by_tk = items_separated_by_test[pairs_maximizing_test][str(value)]
 
-                resulting_intersection = merge(items_separated_by_tk, universe, how='inner')
+                resulting_intersection = evaluate.dataframe_intersection([items_separated_by_tk, universe])
 
                 # If U intersect S^{i}_{t_k} is not empty and S^{i}_{t_k} != S^{*}_{t_k}
-                if resulting_intersection and items_separated_by_tk != maximum_separated_class_from_tk:
+                if not resulting_intersection.empty and \
+                        not evaluate.are_dataframes_equal(items_separated_by_tk, maximum_separated_class_from_tk):
                     # Make D^{i} the recursive call to DTOA, called on resulting_intersection
                     decision_tree.add_subtree(DTOA(resulting_intersection, tests, cost_fn))
 
