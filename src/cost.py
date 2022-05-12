@@ -1,6 +1,6 @@
 from typing import Callable
 
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, concat
 
 from src.heuristic import adapted_greedy
 from src.pairs import Pairs
@@ -53,36 +53,46 @@ def find_budget(
     """
 
     def submodular_f1(sub_tests: list[str]) -> int:
-        return dataset_pairs_number - Pairs(evaluate.dataframe_intersection([
-            evaluate.maximum_separation_set_for_test(objects, test) for test in sub_tests
-        ])).number
+        maximum_separation_set = [evaluate.maximum_separation_set_for_test(objects, test) for test in sub_tests]
+
+        eval_result = evaluate.dataframe_intersection(maximum_separation_set)
+
+        dataframe_intersection_pairs = Pairs(eval_result)
+        return dataset_pairs_number - dataframe_intersection_pairs.number
 
     # NOTE: In the original paper alpha is marked as (1 - e^{X}), approximated with 0.35
     alpha = 0.35
 
-    def heuristic_binary_search(lower, upper) -> int:
+    def heuristic_binary_search(
+            lower: int | float,
+            upper: int | float,
+            kept_df: DataFrame = DataFrame(),
+            separated_df: DataFrame = DataFrame()
+    ) -> int | float:
         if upper >= lower:
             mid = lower + (upper - lower) / 2
 
             heuristic_test_list = adapted_greedy(objects, tests, submodular_f1, calculate_cost, mid)
 
-            kept_df = DataFrame()
-            separated_df = DataFrame()
+            for test in heuristic_test_list:
+                objects_kept_by_test = evaluate.objects_kept_by_test(objects, test)
+                kept_df = concat([kept_df, objects_kept_by_test]).drop_duplicates()
 
             for test in heuristic_test_list:
-                kept_df.concat(evaluate.objects_kept_by_test(objects, test)).drop_duplicates()
-
-            for test in heuristic_test_list:
-                separated_df.concat(evaluate.objects_separated_by_test(objects, test)).drop_duplicates()
+                objects_separated_by_test = evaluate.objects_separated_by_test(objects, test)
+                separated_df = concat([separated_df, objects_separated_by_test]).drop_duplicates()
 
             covering = max(kept_df.shape[0], separated_df.shape[0])
 
-            if covering == (alpha * dataset_pairs_number):
-                return mid
-            elif covering > (alpha * dataset_pairs_number):
-                return heuristic_binary_search(lower, mid - 1)
-            else:
+            # FIXME: Se mi basta che copra almeno (alpha * dataset_pairs_number) paia, che Binary Search è?
+            # if covering > (alpha * dataset_pairs_number):
+            #     print(f'{mid=} {covering=}')
+            #     return heuristic_binary_search(lower, mid - 1)
+
+            if covering < (alpha * dataset_pairs_number):
                 return heuristic_binary_search(mid + 1, upper)
+
+            return mid
         else:
             raise ValueError
 
