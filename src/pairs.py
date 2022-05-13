@@ -16,6 +16,9 @@ class Pairs:
         # We suppose to have a 'class' column in the dataset
         assert 'class' in dataset.columns, 'Dataset should contain a \'class\' column'
 
+        # FIXME: Scambiare con Logger
+        print('CALCULATING PAIRS')
+
         # If item1 and item2 have a different class, they constitute a pair
         self.pair_list = [
             (i1, i2)
