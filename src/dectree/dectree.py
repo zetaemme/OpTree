@@ -11,23 +11,7 @@ from src.utils import evaluate, extract
 last_added_node = None
 
 
-        if next_test_node is not None:
-            self.last_added_node = self.tree.get_node(next_test_node)
-
-    def add_subtree(self, sub_tree: 'DecTree') -> None:
-        """Appends a given sub_tree to the currently last_added_node
-
-        Parameters
-        ----------
-        sub_tree: DecTree
-            The subtree to append
-        """
-        # FIXME: Ci sono 2 nodi 't1'?
-        self.tree.paste(self.last_added_node, sub_tree.tree)
-        self.last_added_node = sub_tree.last_added_node
-
-
-def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> DecTree:
+def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> Tree:
     """Recursive function that creates an optimal Decision Tree
 
     Parameters
