@@ -1,4 +1,14 @@
+import logging
 from pandas import DataFrame
+
+# NOTE: Change the log level here to enable DEBUG mode
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    filename='dectree.log',
+    format='%(asctime)s:%(levelname)s: %(message)s',
+    level=logging.INFO
+)
 
 
 class Pairs:
@@ -16,8 +26,7 @@ class Pairs:
         # We suppose to have a 'class' column in the dataset
         assert 'class' in dataset.columns, 'Dataset should contain a \'class\' column'
 
-        # FIXME: Scambiare con Logger
-        print('CALCULATING PAIRS')
+        logging.info(f'Calculating pairs for {dataset.shape[0]} rows...')
 
         # If item1 and item2 have a different class, they constitute a pair
         self.pair_list = [
@@ -28,3 +37,5 @@ class Pairs:
         ]
 
         self.number = len(self.pair_list)
+
+        logging.info('Pairs calculation complete!')
