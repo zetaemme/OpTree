@@ -28,7 +28,8 @@ def cheapest_test(objects: DataFrame, tests: list[str], cost_fn: Callable[[Serie
     if all(cost_fn(objects[test]) == 1 for test in tests):
         return tests[0]
 
-    return min({test: cost_fn(objects[test]) for test in tests}, key=dict.get)
+    result_dict = {test: cost_fn(objects[test]) for test in tests}
+    return min(result_dict, key=result_dict.get)
 
 
 def maximum_separated_class(
