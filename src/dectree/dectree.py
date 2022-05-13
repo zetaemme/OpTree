@@ -44,7 +44,10 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     # Base case.
     # All objects in the dataset have the same class. A single leaf is returned.
     if pairs.number == 0:
-        return DecTree(Node(extract.object_class(objects, 0), node_type=NodeType.LeafNode))
+        decision_tree = Tree()
+        decision_tree.create_node(extract.object_class(objects, 0), randint(1, 1000000))
+
+        return decision_tree
 
     # Base case.
     # I have a single pair, each object in it has a different class. Two leafs are returned, having the minimum cost
@@ -52,13 +55,13 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     if pairs.number == 1:
         # NOTE: This set of instructions works since, in this specific case, we're working with a single pair.
         #       The TestNode has been assigned to a variable in order to assign the parent node to each LeafNode
-        root_node = Node(label=extract.cheapest_test(objects, tests, cost_fn), node_type=NodeType.TestNode)
-        decision_tree = DecTree(root_node)
+        decision_tree = Tree()
 
-        decision_tree.add_children([
-            Node(label=extract.object_class(objects, 0), node_type=NodeType.LeafNode),
-            Node(label=extract.object_class(objects, 1), node_type=NodeType.LeafNode)
-        ])
+        node_id = randint(1, 1000000)
+        decision_tree.create_node(extract.cheapest_test(objects, tests, cost_fn), node_id)
+
+        decision_tree.create_node(extract.object_class(objects, 0), randint(1, 1000000), parent=node_id)
+        decision_tree.create_node(extract.object_class(objects, 1), randint(1, 1000000), parent=node_id)
 
         return decision_tree
 
@@ -78,7 +81,8 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     tests = [test for test in tests if cost_fn(objects[test]) <= budget]
 
     # Builds an empty decision tree, the starting point of the recursive procedure
-    decision_tree = DecTree()
+    decision_tree = Tree()
+    global last_added_node
 
     # While there's a test t with cost(t) <= budget - spent
     while any([test for test in tests if cost_fn(objects[test]) <= budget - spent]):
@@ -96,10 +100,14 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
 
         if probability_maximizing_test == tests[0]:
             # Make test[0] the root of the tree D
-            decision_tree.add_root(Node(probability_maximizing_test, node_type=NodeType.TestNode))
+            node_id = randint(1, 1000000)
+            decision_tree.create_node(probability_maximizing_test, node_id)
+            last_added_node = decision_tree.get_node(node_id)
         else:
             # Make test[k] child of test t[k - 1]
-            decision_tree.add_children(Node(probability_maximizing_test, node_type=NodeType.TestNode))
+            node_id = randint(1, 1000000)
+            decision_tree.create_node(probability_maximizing_test, node_id, parent=last_added_node)
+            last_added_node = decision_tree.get_node(node_id)
 
         # Extracts S^{*}_{t_k}
         maximum_separated_class_from_tk = extract.maximum_separated_class(items_separated_by_test,
@@ -110,14 +118,13 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
         for value in objects[probability_maximizing_test].unique():
             items_separated_by_tk = items_separated_by_test[probability_maximizing_test][str(value)]
 
-
             resulting_intersection = evaluate.dataframe_intersection([items_separated_by_tk, universe])
 
             # If U intersect S^{i}_{t_k} is not empty and S^{i}_{t_k} != S^{*}_{t_k}
             if not resulting_intersection.empty and \
                     not evaluate.are_dataframes_equal(items_separated_by_tk, maximum_separated_class_from_tk):
                 # Make D^{i} the recursive call to DTOA, called on resulting_intersection
-                decision_tree.add_subtree(DTOA(resulting_intersection, tests, cost_fn))
+                decision_tree.paste(last_added_node.identifier, DTOA(resulting_intersection, tests, cost_fn))
 
         # NOTE: The warning can be ignored since resulting_intersection is granted to be assigned during the for loop
         universe = resulting_intersection
@@ -138,7 +145,9 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
             pairs_maximizing_test = extract.cheapest_test(objects, tests, cost_fn)
 
             # Set t_{k} as child of t_{k - 1}
-            decision_tree.add_children(Node(pairs_maximizing_test, node_type=NodeType.TestNode))
+            node_id = randint(1, 1000000)
+            decision_tree.create_node(pairs_maximizing_test, node_id, parent=last_added_node)
+            last_added_node = decision_tree.get_node(node_id)
 
             # Extracts S^{*}_{t_k}
             maximum_separated_class_from_tk = extract.maximum_separated_class(items_separated_by_test,
@@ -155,7 +164,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
                 if not resulting_intersection.empty and \
                         not evaluate.are_dataframes_equal(items_separated_by_tk, maximum_separated_class_from_tk):
                     # Make D^{i} the recursive call to DTOA, called on resulting_intersection
-                    decision_tree.add_subtree(DTOA(resulting_intersection, tests, cost_fn))
+                    decision_tree.paste(last_added_node.identifier, DTOA(resulting_intersection, tests, cost_fn))
 
             universe = resulting_intersection
 
@@ -165,6 +174,6 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
 
     # Create a new decision tree to be added as child of decision_tree, created with a recursive call to DTOA
     decision_tree_prime = DTOA(universe, tests, cost_fn)
-    decision_tree.add_subtree(decision_tree_prime)
+    decision_tree.paste(last_added_node.identifier, decision_tree_prime)
 
     return decision_tree
