@@ -24,7 +24,7 @@ def main() -> None:
         cost_fn=calculate_cost
     )
 
-    decision_tree.tree.show()
+    decision_tree.show()
 
 
 if __name__ == '__main__':

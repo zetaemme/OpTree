@@ -1,68 +1,15 @@
-from typing import Callable, Union
+from random import randint
+from typing import Callable
 
 from pandas import DataFrame, Series
 from treelib import Tree
 
 from src.cost import find_budget
-from src.dectree.node import Node, NodeType
 from src.pairs import Pairs
 from src.utils import evaluate, extract
 
+last_added_node = None
 
-class DecTree:
-    """Represents a Decision Tree
-
-    Attributes
-    ----------
-    tree: Tree
-        A reference to the tree implementation
-    root: Node | None
-        Represents the root of the Decision Tree. Can be empty.
-    last_added_node: Node
-        The last added node of the Decision Tree
-    """
-
-    def __init__(self, root: Node = None) -> None:
-        """Constructs a DecTree object"""
-        self.tree = Tree()
-
-        if root:
-            self.tree.create_node(root.label, root.label, data=root)
-            self.root = self.tree.root
-
-            self.last_added_node = self.root
-        else:
-            self.root = None
-
-    def add_root(self, root: Node) -> None:
-        """Adds a given node as root for the DecTree
-
-        Parameters
-        ----------
-        root: Union[TestNode, LeafNode]
-            The new root node
-        """
-        if self.root:
-            raise RuntimeError('Root node already exists!')
-
-        self.tree.create_node(root.label, root.label, data=root)
-        self.root = self.tree.root
-
-        self.last_added_node = self.root
-
-    def add_children(self, children: Node | list[Node]) -> None:
-        """Adds a single, or a series, of node(s) to the "youngest" node in the tree
-
-        Parameters
-        ----------
-        children: Node | list[Node]
-            The Node/list[Node] to add
-        """
-        for child in children:
-            self.tree.create_node(child.label, child.label, parent=self.last_added_node, data=child)
-
-        # NOTE: If next_test_node is None, only nodes of type LeafNode have been added
-        next_test_node = next((child for child in children if child.node_type == NodeType.TestNode), None)
 
         if next_test_node is not None:
             self.last_added_node = self.tree.get_node(next_test_node)
