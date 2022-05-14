@@ -44,7 +44,6 @@ def dataset_for_test(objects: DataFrame, test: str) -> dict[str, DataFrame]:
         separated by 'test'
     """
     separation_set = {str(key): objects.loc[objects[test] == key] for key in objects[test].unique()}
-
     return separation_set
 
 
