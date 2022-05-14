@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 logging.basicConfig(
     filename='dectree.log',
-    format='%(asctime)s:%(levelname)s: %(message)s',
+    format='%(levelname)s (%(asctime)s): %(message)s',
     level=logging.INFO
 )
 
