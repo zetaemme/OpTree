@@ -1,3 +1,4 @@
+import logging
 from typing import Callable
 
 from pandas import DataFrame, Series, concat
@@ -5,6 +6,14 @@ from pandas import DataFrame, Series, concat
 from src.heuristic import adapted_greedy
 from src.pairs import Pairs
 from src.utils import evaluate
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    filename='dectree.log',
+    format='%(levelname)s (%(asctime)s): %(message)s',
+    level=logging.INFO
+)
 
 
 def calculate_cost(test: Series) -> int:
@@ -20,8 +29,7 @@ def calculate_cost(test: Series) -> int:
     cost: int
         The cost of the given test
     """
-    # FIXME: Implement a real cost function
-    return 1
+    return len(test.unique())
 
 
 def find_budget(
@@ -94,6 +102,7 @@ def find_budget(
 
             return mid
         else:
+            logger.error('No budget found during Binary Search!')
             raise ValueError
 
     return heuristic_binary_search(1, sum([cost_fn(objects[test]) for test in tests]))
