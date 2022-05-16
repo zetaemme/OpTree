@@ -1,5 +1,4 @@
 import logging
-import os
 from sys import argv
 
 import joblib
@@ -7,9 +6,6 @@ import pandas as pd
 
 from src.cost import calculate_cost
 from src.dectree.dectree import DTOA
-
-if os.path.exists('dectree.log'):
-    os.remove('dectree.log')
 
 # NOTE: Change the log level here to enable DEBUG mode
 logger = logging.getLogger(__name__)
@@ -54,6 +50,7 @@ def main() -> None:
 
     logging.info('Saving model...')
     joblib.dump(decision_tree, 'model/dectree.sav')
+    logging.info('Successfully saved model in \'model/dectree.sav\'!')
 
     logging.info('Showing result...')
     decision_tree.show()
