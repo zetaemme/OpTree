@@ -32,9 +32,6 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     # Creates a Pairs object that holds the pairs for the given dataset
     pairs = Pairs(objects)
 
-    # Extracts all the class names from the dataset
-    classes = {ariety: class_name for ariety, class_name in enumerate(set(objects['class']))}
-
     # Inits a dictionary containing the S^{i}_{test} for each feature in tests
     items_separated_by_test = {
         test: evaluate.dataset_for_test(objects, test)
@@ -66,7 +63,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
         return decision_tree
 
     # Uses the FindBudget procedure to extract the correct cost budget
-    budget = find_budget(objects, tests, set(classes.values()), cost_fn, pairs.number)
+    budget = find_budget(objects, tests, cost_fn, pairs.number)
 
     spent = 0
     spent2 = 0

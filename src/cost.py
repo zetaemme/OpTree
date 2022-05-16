@@ -35,7 +35,6 @@ def calculate_cost(test: Series) -> int:
 def find_budget(
         objects: DataFrame,
         tests: list[str],
-        classes: set[str],
         cost_fn: Callable[[Series], int],
         dataset_pairs_number: int
 ) -> int:
@@ -47,8 +46,6 @@ def find_budget(
         The dataset we want to classify
     tests: list[str]
         The list of the tests that can be applied to the dataset
-    classes: set[str]
-        A set containing all the possible classes in the dataset
     cost_fn: Callable[[Series], int]
         A function that computes the effective cost of a given test
     dataset_pairs_number: int
