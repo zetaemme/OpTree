@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 from sys import argv
 
@@ -11,7 +12,7 @@ from src.dectree.dectree import DTOA
 logger = logging.getLogger(__name__)
 
 logging.basicConfig(
-    filename='dectree.log',
+    filename=f'log/dectree_{datetime.now().strftime("%d-%m-%Y_%H.%M.%S")}.log',
     format='%(levelname)s (%(asctime)s): %(message)s',
     level=logging.INFO
 )
