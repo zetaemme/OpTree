@@ -2,6 +2,7 @@ import logging
 import os
 from sys import argv
 
+import joblib
 import pandas as pd
 
 from src.cost import calculate_cost
@@ -23,7 +24,7 @@ logging.basicConfig(
 def main() -> None:
     """Inits dataset and test list in order to pass them to the algorithm"""
     # NOTE: The following is the init for the test dataset of the referenced paper
-    # dataset = DataFrame(
+    # dataset = pd.DataFrame(
     #     data=[
     #         [1, 1, 2, 'A', 0.1],
     #         [1, 2, 1, 'A', 0.2],
@@ -50,6 +51,9 @@ def main() -> None:
         tests=dataset.columns[:-1].to_list(),
         cost_fn=calculate_cost
     )
+
+    logging.info('Saving model...')
+    joblib.dump(decision_tree, 'model/dectree.sav')
 
     logging.info('Showing result...')
     decision_tree.show()
