@@ -9,6 +9,16 @@ from src.pairs import Pairs
 from src.utils import evaluate, extract
 
 last_added_node = None
+rec_call = 0
+
+# NOTE: Change the log level here to enable DEBUG mode
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    filename='dectree.log',
+    format='%(levelname)s (%(asctime)s): %(message)s',
+    level=logging.INFO
+)
 
 
 def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> Tree:
@@ -28,6 +38,10 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     decision_tree: DecTree
         An optimal Decision Tree
     """
+    global rec_call
+    rec_call += 1
+
+    logger.info(f'Performing recursive call {rec_call}')
 
     # Creates a Pairs object that holds the pairs for the given dataset
     pairs = Pairs(objects)
