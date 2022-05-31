@@ -1,4 +1,4 @@
-# OpDeT: Optimal Decison Tree algorithm
+# OpSion: (Op)timal Deci(Sion) Tree algorithm
 Implementation of the DecTree algorithm presented in the paper from Cicalese, Later, Saettler
 
 ## Author
