@@ -1,34 +1,27 @@
-from datetime import datetime
-import logging
+# from datetime import datetime
+# import logging
 
 from pandas import DataFrame
 
 # NOTE: Change the log level here to enable DEBUG mode
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
-logging.basicConfig(
-    filename=f'log/dectree_{datetime.now().strftime("%d-%m-%Y_%H.%M.%S")}.log',
-    format='%(levelname)s (%(asctime)s): %(message)s',
-    level=logging.INFO
-)
+# logging.basicConfig(
+#     filename=f'log/dectree_{datetime.now().strftime("%d-%m-%Y_%H.%M.%S")}.log',
+#     format='%(levelname)s (%(asctime)s): %(message)s',
+#     level=logging.INFO
+# )
 
 
 class Pairs:
-    """A tuple of items having different classes
-
-    Attributes
-    ----------
-    number: int
-        The number of pairs for a given dataset
-    pair_list: list[tuple]
-        A list containing all the pairs tuples in a given dataset
-    """
+    """A tuple of items having different classes"""
+    
     def __init__(self, dataset: DataFrame) -> None:
         """Inits the number and pair_list fields"""
         # We suppose to have a 'class' column in the dataset
         assert 'class' in dataset.columns, 'Dataset should contain a \'class\' column'
 
-        logging.info(f'Calculating pairs for {dataset.shape[0]} rows...')
+        # logging.info(f'Calculating pairs for {dataset.shape[0]} rows...')
 
         # If item1 and item2 have a different class, they constitute a pair
         self.pair_list = [
@@ -40,4 +33,4 @@ class Pairs:
 
         self.number = len(self.pair_list)
 
-        logging.info('Pairs calculation complete!')
+        # logging.info('Pairs calculation complete!')
