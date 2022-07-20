@@ -2,7 +2,7 @@ from typing import Callable, NamedTuple
 
 from pandas import DataFrame, Series
 
-from src.pairs import Pairs
+from src.dataset import Pairs
 
 
 def cheapest_test(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int]) -> str:
@@ -54,7 +54,7 @@ def maximum_separated_class(
         A Pandas DataFrame representing the S^{*}_{t} set
     """
     # NOTE: NamedTuple is used instead of dict because DataFrame is not hashable
-    SepList = NamedTuple('SepList', [('data_frame', DataFrame), ('pairs', Pairs)])
+    SepList = NamedTuple('SepList', [('data_frame', DataFrame), ('_pairs', Pairs)])
 
     separation_list = [
         SepList(
@@ -66,7 +66,7 @@ def maximum_separated_class(
 
     # Extracts the target pair value for S^{*}_{t_k}
     # NOTE: Horrible to see, but necessary since what is written in previous NOTE still holds
-    max_pair_number = max(separation_list, key=lambda x: x.pairs.number).pairs.number
+    max_pair_number = max(separation_list, key=lambda x: x._pairs.number).pairs.number
 
     maximum_separated_class_from_tk = None
 

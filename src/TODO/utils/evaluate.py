@@ -1,6 +1,6 @@
 from pandas import DataFrame, merge
 
-from src.pairs import Pairs
+from src.dataset import Pairs
 
 
 def dataframe_intersection(dataframes: list[DataFrame]) -> DataFrame:

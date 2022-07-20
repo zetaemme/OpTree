@@ -7,7 +7,7 @@ from pandas import DataFrame, Series
 from treelib import Tree
 
 from src.cost import find_budget
-from src.pairs import Pairs
+from src.dataset import Pairs
 from src.utils import evaluate, extract
 
 last_added_node = None
@@ -45,7 +45,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
 
     logger.info(f'Performing recursive call {rec_call}')
 
-    # Creates a Pairs object that holds the pairs for the given dataset
+    # Creates a Pairs object that holds the _pairs for the given dataset
     pairs = Pairs(objects)
 
     # Inits a dictionary containing the S^{i}_{test} for each feature in tests
@@ -149,7 +149,7 @@ def DTOA(objects: DataFrame, tests: list[str], cost_fn: Callable[[Series], int])
     if tests:
         while budget - spent2 >= 0 or tests:
             # NOTE: Since we need to extract the test t_{k} which maximizes the function:
-            #           (pairs(universe) - pairs(universe intersect items_separated_by_t_{k}))/cost(t_{k})
+            #           (_pairs(universe) - _pairs(universe intersect items_separated_by_t_{k}))/cost(t_{k})
             #       we can simply use the cheapest possible test,
             #       since it maximizes the function in the majority of times.
 

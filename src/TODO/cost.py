@@ -5,7 +5,7 @@ from typing import Callable
 from pandas import DataFrame, Series, concat
 
 from src.heuristic import adapted_greedy
-from src.pairs import Pairs
+from src.dataset import Pairs
 from src.utils import evaluate
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def find_budget(
     cost_fn: Callable[[Series], int]
         A function that computes the effective cost of a given test
     dataset_pairs_number: int
-        The number of pairs in the whole dataset
+        The number of _pairs in the whole dataset
 
     Returns
     -------

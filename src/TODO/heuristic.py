@@ -55,7 +55,7 @@ def adapted_greedy(
 
         A.append(minimizing_test_value)
 
-    # If the k-th test covers more pairs than all the others, return the k-th test
+    # If the k-th test covers more _pairs than all the others, return the k-th test
     if submodular_f([tests[k]]) >= submodular_f([a for a in A if a != tests[k]]):
         return [tests[k]]
 
