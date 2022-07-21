@@ -1,6 +1,6 @@
-from src.opsion import opsion
 from pathlib import Path
 from src.dataset import Dataset
+from src.opsion import opsion
 from treelib import Tree
 
 
