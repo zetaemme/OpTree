@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-
-import numpy as np
-from numpy import ndarray, ndenumerate
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
+from numpy import append, ndarray
 
 
 @dataclass(init=False, repr=False)
@@ -19,14 +18,14 @@ class Dataset:
         pairs_list: list[tuple[int, int]]
 
         def __init__(self, dataset: ndarray) -> None:
-            item_classes: list[tuple] = [(idx[0], value) for idx, value in ndenumerate(dataset) if idx[1] == dataset.shape[1] - 1]
+            item_classes: list[str] = dataset[:, -1, None].ravel().tolist()
 
-            self.classes: list[str] = list(set(class_name[1] for class_name in item_classes))
+            self.classes: list[str] = list(set(item_classes))
 
             self.pairs_list: list[tuple[int, int]] = [
-                (idx1 + 1, idx2 + 1)
-                for idx1, class1 in item_classes
-                for idx2, class2 in item_classes[idx1:]
+                (idx1, idx1 + idx2)
+                for idx1, class1 in enumerate(item_classes)
+                for idx2, class2 in enumerate(item_classes[idx1:])
                 if class1 != class2
             ]
 
@@ -34,18 +33,25 @@ class Dataset:
 
             self.number: int = len(self.pairs_list)
 
-    _columns: ndarray
+    columns: ndarray
+    costs: dict[str, int]
     _pairs: Pairs
     _table: ndarray
 
     def __init__(self, dataset_path: Path) -> None:
         dataset_df: pd.DataFrame = pd.read_csv(dataset_path)
+        dataset_np = dataset_df.to_numpy()
 
-        self._columns: ndarray = dataset_df.columns.values
-        self._pairs: Dataset.Pairs = self.Pairs(dataset_df.to_numpy())
-        self._table: ndarray = np.append([dataset_df.columns.values], dataset_df.to_numpy(), axis=0)
+        self.columns: ndarray = dataset_df.columns.values[:-1]
+        self._pairs: Dataset.Pairs = self.Pairs(dataset_np)
+        self._table: ndarray = append([dataset_df.columns.values], dataset_np, axis=0)
 
-        del dataset_df
+        self.costs = {}
+
+        for idx, column_name in enumerate(self.columns[:-1]):
+            self.costs[column_name] = len(set(dataset_np[:, idx, None].flatten()))
+
+        del dataset_df, dataset_np
 
     def __repr__(self) -> str:
         return self._table.__repr__()
@@ -53,10 +59,6 @@ class Dataset:
     @property
     def classes(self) -> list[str]:
         return self._pairs.classes
-
-    @property
-    def columns(self) -> ndarray:
-        return self._columns
 
     @property
     def pairs_list(self) -> list[tuple]:
