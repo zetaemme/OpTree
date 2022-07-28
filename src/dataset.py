@@ -54,6 +54,9 @@ class Dataset:
 
         del dataset_df, dataset_np
 
+    def __getitem__(self, idx: int) -> Any:
+        return self._table[idx + 1]
+
     def __repr__(self) -> str:
         return self._table.__repr__()
 
