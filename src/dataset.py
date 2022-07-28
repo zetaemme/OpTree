@@ -60,9 +60,16 @@ class Dataset:
     def __repr__(self) -> str:
         return self._table.__repr__()
 
+    def get_class(self, idx: int) -> str:
+        return self._table[idx + 1][-1]
+
     @property
     def classes(self) -> list[str]:
         return self._pairs.classes
+
+    @property
+    def data(self) -> ndarray:
+        return self._table[1:, :-1]
 
     @property
     def pairs_list(self) -> list[tuple]:
