@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
-from numpy import append, ndarray
+from numpy import append, ndarray, var
 
 
 @dataclass(init=False, repr=False)
@@ -33,8 +34,8 @@ class Dataset:
 
             self.number: int = len(self.pairs_list)
 
-    columns: ndarray
-    costs: dict[str, int]
+    features: ndarray
+    costs: dict[str, float]
     _pairs: Pairs
     _table: ndarray
 
@@ -42,14 +43,14 @@ class Dataset:
         dataset_df: pd.DataFrame = pd.read_csv(dataset_path)
         dataset_np = dataset_df.to_numpy()
 
-        self.columns: ndarray = dataset_df.columns.values[:-1]
+        self.features: ndarray = dataset_df.columns.values[:-1]
         self._pairs: Dataset.Pairs = self.Pairs(dataset_np)
         self._table: ndarray = append([dataset_df.columns.values], dataset_np, axis=0)
 
         self.costs = {}
 
-        for idx, column_name in enumerate(self.columns[:-1]):
-            self.costs[column_name] = len(set(dataset_np[:, idx, None].flatten()))
+        for idx, column_name in enumerate(self.features):
+            self.costs[column_name] = float(var(dataset_np[:, idx, None].flatten()))
 
         del dataset_df, dataset_np
 
