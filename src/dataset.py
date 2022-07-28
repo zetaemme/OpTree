@@ -52,6 +52,8 @@ class Dataset:
         for idx, column_name in enumerate(self.features):
             self.costs[column_name] = float(var(dataset_np[:, idx, None].flatten()))
 
+        self.costs = dict(sorted(self.costs.items(), key=lambda item: item[1]))
+
         del dataset_df, dataset_np
 
     def __getitem__(self, idx: int) -> Any:
