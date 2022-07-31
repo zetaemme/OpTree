@@ -22,3 +22,19 @@ class Separation:
 
     def __getitem__(self, key: str) -> dict[Any, list[int]]:
         return self.features_separation[key]
+
+    def check(self, feature: str, obj_idx1: int, obj_idx2: int) -> bool:
+        key_list = list(self.features_separation[feature])
+
+        for idx, key1 in enumerate(key_list):
+            for key2 in key_list[idx:]:
+                if (
+                        obj_idx1 in self.features_separation[feature][key1] and
+                        obj_idx2 in self.features_separation[feature][key2]
+                ) or (
+                        obj_idx1 in self.features_separation[feature][key2] and
+                        obj_idx2 in self.features_separation[feature][key1]
+                ):
+                    return True
+
+                continue
