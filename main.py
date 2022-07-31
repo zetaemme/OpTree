@@ -3,7 +3,7 @@ from pathlib import Path
 from src.dataset import Dataset
 from src.separation import Separation
 
-# from src.opsion import opsion
+# from src.decision_tree import build_decision_tree
 # from treelib import Tree
 
 DEBUG = False
@@ -20,7 +20,7 @@ def main() -> None:
 
     separation: Separation = Separation(dataset)
 
-    # decision_tree: Tree = opsion(dataset, dataset.columns)
+    # decision_tree: Tree = build_decision_tree(dataset, separation)
 
     # joblib.dump(decision_tree, 'model/dectree.sav')
     # decision_tree.show()
