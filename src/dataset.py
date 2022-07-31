@@ -80,3 +80,7 @@ class Dataset:
     @property
     def pairs_number(self) -> int:
         return self._pairs.number
+
+    @property
+    def total_cost(self) -> float:
+        return sum(self.costs.values())
