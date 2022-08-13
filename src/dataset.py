@@ -23,6 +23,14 @@ class Dataset:
 
             self.classes: list[str] = list(set(item_classes))
 
+            if dataset.shape[0] == 1:
+                self.pairs_list = []
+                self.number = 0
+
+                del item_classes
+
+                return
+
             self.pairs_list: list[tuple[int, int]] = [
                 (idx1, idx1 + idx2)
                 for idx1, class1 in enumerate(item_classes)
