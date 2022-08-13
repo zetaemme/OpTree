@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
+from functools import reduce
 from typing import Any
+
+from numpy import intersect1d, ndarray
 
 from src.dataset import Dataset
 
@@ -38,3 +41,9 @@ class Separation:
                     return True
 
                 continue
+
+    def maximum_intersection(self, features: ndarray) -> ndarray:
+        return reduce(
+            intersect1d,
+            [max(self.features_separation[test].values(), key=lambda x: len(x)) for test in features]
+        )
