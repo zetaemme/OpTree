@@ -77,8 +77,10 @@ class Dataset:
     def classes(self) -> list[str]:
         return self._pairs.classes
 
-    @property
-    def data(self) -> ndarray:
+    def data(self, *, complete: bool = False) -> ndarray:
+        if complete:
+            return self._table[1:]
+
         return self._table[1:, :-1]
 
     @property
