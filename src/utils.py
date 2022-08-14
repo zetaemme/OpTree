@@ -1,10 +1,15 @@
-from numpy import ndarray
+from numpy import ndarray, take
 
+from src.dataset import Dataset
 from src.separation import Separation
 
 
-def submodular_function_1(features: ndarray, pairs_number: int, separation: Separation) -> int:
-    max_intersection = separation.maximum_intersection(features)
+def submodular_function_1(dataset: Dataset, features: ndarray, separation: Separation) -> int:
+    max_intersection: ndarray = separation.maximum_intersection(features)
 
     if len(max_intersection) == 1:
-        return pairs_number
+        return dataset.pairs_number
+
+    intersection_pairs: Dataset.Pairs = Dataset.Pairs(take(dataset.data(complete=True), max_intersection, axis=0))
+
+    return dataset.pairs_number - intersection_pairs.number
