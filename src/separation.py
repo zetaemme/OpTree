@@ -19,7 +19,7 @@ class Separation:
                     for obj_idx, obj_value in enumerate(dataset.data())
                     if obj_value[feature_idx] == value
                 ]
-                for value in {value[0] for value in dataset.data[:, feature_idx, None]}
+                for value in {value[0] for value in dataset.data()[:, feature_idx, None]}
             } for feature_idx, feature in enumerate(dataset.features)
         }
 
