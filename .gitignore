@@ -128,8 +128,12 @@ dmypy.json
 # Pyre test_type checker
 .pyre/
 
-# PyCharm
+# Editors
 .idea
+.vscode
 
 # Dataset
 data/*.csv
+
+# macOS
+.DS_Store
