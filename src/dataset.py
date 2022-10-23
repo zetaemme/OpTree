@@ -1,9 +1,13 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from statistics import variance
+from typing import Any, TypeVar
 
 import pandas as pd
-from numpy import append, ndarray, var
+from numpy import append, ndarray
+
+Self = TypeVar('Self', bound='Dataset')
 
 
 @dataclass(init=False, repr=False)
@@ -52,13 +56,13 @@ class Dataset:
         dataset_np = dataset_df.to_numpy()
 
         self.features: ndarray = dataset_df.columns.values[:-1]
-        self._pairs: Dataset.Pairs = self.Pairs(dataset_np)
+        self._pairs = self.Pairs(dataset_np)
         self._table: ndarray = append([dataset_df.columns.values], dataset_np, axis=0)
 
         self.costs = {}
 
         for idx, column_name in enumerate(self.features):
-            self.costs[column_name] = float(var(dataset_np[:, idx, None].flatten()))
+            self.costs[column_name] = round(variance(dataset_np[:, idx, None]))
 
         self.costs = dict(sorted(self.costs.items(), key=lambda item: item[1]))
 
@@ -73,15 +77,18 @@ class Dataset:
     def get_class(self, idx: int) -> str:
         return self._table[idx + 1][-1]
 
-    @property
-    def classes(self) -> list[str]:
-        return self._pairs.classes
-
     def data(self, *, complete: bool = False) -> ndarray:
         if complete:
             return self._table[1:]
 
         return self._table[1:, :-1]
+
+    def copy(self) -> Self:
+        return deepcopy(self)
+
+    @property
+    def classes(self) -> list[str]:
+        return self._pairs.classes
 
     @property
     def pairs_list(self) -> list[tuple]:
@@ -92,5 +99,5 @@ class Dataset:
         return self._pairs.number
 
     @property
-    def total_cost(self) -> float:
+    def total_cost(self) -> int:
         return sum(self.costs.values())

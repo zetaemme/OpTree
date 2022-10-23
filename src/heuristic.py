@@ -7,7 +7,7 @@ from src.separation import Separation
 
 
 def wolsey_greedy_heuristic(
-        budget: float,
+        budget: int,
         dataset: Dataset,
         separation: Separation,
         submodular_function: Callable[[Dataset, ndarray, Separation], int]
@@ -16,8 +16,8 @@ def wolsey_greedy_heuristic(
     #       If not, just add 'features: ndarray' as argument
     features = dataset.features.copy()
 
-    spent: float = 0.0
-    k: int = 0
+    spent = 0.0
+    k = 0
 
     auxiliary_array = ndarray([])
 
