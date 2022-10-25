@@ -1,15 +1,16 @@
 from dataclasses import dataclass, field
-from functools import reduce
 from typing import Any
-
-from numpy import intersect1d, ndarray
 
 from src.dataset import Dataset
 
 
 @dataclass(init=False)
 class Separation:
+    max_outcome_separation: dict[str, list[int]] = field(default_factory=dict)
+    """S^*_t with t test"""
+
     features_separation: dict[str: dict[Any, list[int]]] = field(default_factory=dict)
+    """S^i_t with i corresponding to the single values in the feature column, t test"""
 
     def __init__(self, dataset: Dataset) -> None:
         self.features_separation = {
@@ -22,6 +23,16 @@ class Separation:
                 for value in {value[0] for value in dataset.data()[:, feature_idx, None]}
             } for feature_idx, feature in enumerate(dataset.features)
         }
+
+        self.max_outcome_separation = {}
+        for test in dataset.features:
+            feature_pairs = {
+                label: Dataset.Pairs(dataset.multi_get(objects)).number
+                for label, objects in self.features_separation[test].items()
+            }
+
+            max_pairs = max(feature_pairs, key=feature_pairs.get)
+            self.max_outcome_separation[test] = self.features_separation[test][max_pairs]
 
     def __getitem__(self, key: str) -> dict[Any, list[int]]:
         return self.features_separation[key]
@@ -41,9 +52,3 @@ class Separation:
                     return True
 
                 continue
-
-    def maximum_intersection(self, features: ndarray) -> ndarray:
-        return reduce(
-            intersect1d,
-            [max(self.features_separation[test].values(), key=lambda x: len(x)) for test in features]
-        )

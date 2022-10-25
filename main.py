@@ -9,16 +9,15 @@ from src.separation import Separation
 DEBUG = False
 
 if DEBUG:
-    import sys
-    import timeit
+    pass
 
 
 def main() -> None:
     """Inits dataset and test list in order to pass them to the algorithm"""
-    path: Path = Path('data/test.csv')
-    dataset: Dataset = Dataset(path)
+    path = Path('data/test.csv')
+    dataset = Dataset(path)
 
-    separation: Separation = Separation(dataset)
+    separation = Separation(dataset)
 
     # decision_tree: Tree = build_decision_tree(dataset, separation)
 
@@ -27,9 +26,9 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    if DEBUG:
-        result = timeit.timeit(stmt='main()', globals=globals(), number=10)
-        print(f'{result / 10}')
-        sys.exit(0)
+    # if DEBUG:
+    #     result = timeit.timeit(stmt='main()', globals=globals(), number=10)
+    #     print(f'{result / 10}')
+    #     sys.exit(0)
 
     main()
