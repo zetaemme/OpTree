@@ -1,19 +1,22 @@
 from dataclasses import dataclass, field
+from functools import reduce
 from typing import Any
+
+from numpy import intersect1d, ndarray
 
 from src.dataset import Dataset
 
 
 @dataclass(init=False)
 class Separation:
-    max_outcome_separation: dict[str, list[int]] = field(default_factory=dict)
+    S_star: dict[str, list[int]] = field(default_factory=dict)
     """S^*_t with t test"""
 
-    features_separation: dict[str: dict[Any, list[int]]] = field(default_factory=dict)
-    """S^i_t with i corresponding to the single values in the feature column, t test"""
+    S_label: dict[str: dict[Any, list[int]]] = field(default_factory=dict)
+    """S^i_t with i corresponding to the single labels in the feature column, t test"""
 
     def __init__(self, dataset: Dataset) -> None:
-        self.features_separation = {
+        self.S_label = {
             feature: {
                 value: [
                     obj_idx
@@ -24,31 +27,36 @@ class Separation:
             } for feature_idx, feature in enumerate(dataset.features)
         }
 
-        self.max_outcome_separation = {}
+        self.S_star = {}
         for test in dataset.features:
             feature_pairs = {
                 label: Dataset.Pairs(dataset.multi_get(objects)).number
-                for label, objects in self.features_separation[test].items()
+                for label, objects in self.S_label[test].items()
             }
 
             max_pairs = max(feature_pairs, key=feature_pairs.get)
-            self.max_outcome_separation[test] = self.features_separation[test][max_pairs]
+            self.S_star[test] = self.S_label[test][max_pairs]
 
     def __getitem__(self, key: str) -> dict[Any, list[int]]:
-        return self.features_separation[key]
+        return self.S_label[key]
 
     def check(self, feature: str, obj_idx1: int, obj_idx2: int) -> bool:
-        key_list = list(self.features_separation[feature])
+        key_list = list(self.S_label[feature])
 
         for idx, key1 in enumerate(key_list):
             for key2 in key_list[idx:]:
                 if (
-                        obj_idx1 in self.features_separation[feature][key1] and
-                        obj_idx2 in self.features_separation[feature][key2]
+                        obj_idx1 in self.S_label[feature][key1] and
+                        obj_idx2 in self.S_label[feature][key2]
                 ) or (
-                        obj_idx1 in self.features_separation[feature][key2] and
-                        obj_idx2 in self.features_separation[feature][key1]
+                        obj_idx1 in self.S_label[feature][key2] and
+                        obj_idx2 in self.S_label[feature][key1]
                 ):
                     return True
 
                 continue
+
+    @property
+    def S_star_intersection(self) -> ndarray:
+        """Returns the intersection on the tests of S^*_t"""
+        return reduce(intersect1d, self.S_star.values())

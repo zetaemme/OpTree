@@ -10,8 +10,8 @@ def find_budget(dataset: Dataset, separation: Separation) -> float:
 
     # FIXME: This should be done by Binary Search
     for budget in range(1, dataset.total_cost + 1):
-        heuristc_result = wolsey_greedy_heuristic(budget, dataset, separation, submodular_function_1)
+        heuristic_result = wolsey_greedy_heuristic(budget, dataset, separation, submodular_function_1)
 
-        # NOTE: Look for "test covering" meaning in paper
+        # NOTE: Test covering -> KEEPS or SEPARATES
 
     return 0.0
