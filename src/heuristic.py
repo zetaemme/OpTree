@@ -33,4 +33,4 @@ def wolsey_greedy_heuristic(
             >= submodular_function(dataset, delete(auxiliary_array, k), separation):
         return features[k]
 
-    return features[:k]
+    return features[:k].tolist()
