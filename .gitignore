@@ -131,6 +131,7 @@ dmypy.json
 # Editors
 .idea
 .vscode
+.fleet
 
 # Dataset
 data/*.csv
