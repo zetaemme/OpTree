@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 from functools import reduce
 from typing import Any
 
-from numpy import intersect1d, ndarray
+from numpy import intersect1d
+import numpy.typing as npt
 
 from src.dataset import Dataset
 
@@ -12,8 +13,11 @@ class Separation:
     S_star: dict[str, list[int]] = field(default_factory=dict)
     """S^*_t with t test"""
 
-    S_label: dict[str: dict[Any, list[int]]] = field(default_factory=dict)
+    S_label: dict[str, dict[Any, list[int]]] = field(default_factory=dict)
     """S^i_t with i corresponding to the single labels in the feature column, t test"""
+
+    sigma: dict[str, list[int]] = field(default_factory=dict)
+    """Set of objects not included in S^*_t"""
 
     def __init__(self, dataset: Dataset) -> None:
         self.S_label = {
@@ -37,6 +41,12 @@ class Separation:
             max_pairs = max(feature_pairs, key=feature_pairs.get)
             self.S_star[test] = self.S_label[test][max_pairs]
 
+        self.sigma = {
+            test: dataset.set_minus(self.S_star[test])
+            for test in dataset.features
+        }
+
+
     def __getitem__(self, key: str) -> dict[Any, list[int]]:
         return self.S_label[key]
 
@@ -56,7 +66,9 @@ class Separation:
 
                 continue
 
+        return False
+
     @property
-    def S_star_intersection(self) -> ndarray:
+    def S_star_intersection(self) -> npt.NDArray[Any]:
         """Returns the intersection on the tests of S^*_t"""
         return reduce(intersect1d, self.S_star.values())
