@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from functools import reduce
 from typing import Any
 
-from numpy import intersect1d
 import numpy.typing as npt
+from numpy import intersect1d
 
 from src.dataset import Dataset
 
@@ -42,10 +42,12 @@ class Separation:
             self.S_star[test] = self.S_label[test][max_pairs]
 
         self.sigma = {
-            test: dataset.set_minus(self.S_star[test])
+            test: [
+                dataset.index_of_row(row)
+                for row in dataset.set_minus(self.S_star[test])
+            ]
             for test in dataset.features
         }
-
 
     def __getitem__(self, key: str) -> dict[Any, list[int]]:
         return self.S_label[key]
