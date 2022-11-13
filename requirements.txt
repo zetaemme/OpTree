@@ -2,7 +2,7 @@ certifi
 charset-normalizer
 idna
 joblib
-numba
+# numba
 numpy
 pandas
 pylint
