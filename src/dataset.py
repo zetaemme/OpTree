@@ -1,12 +1,12 @@
 from copy import deepcopy
 from dataclasses import dataclass
+from math import fsum
 from pathlib import Path
-from typing import TypeVar
+from typing import Self
 
+import numpy as np
+import numpy.typing as npt
 import pandas as pd
-from numpy import append, ndarray
-
-Self = TypeVar('Self', bound='Dataset')
 
 
 @dataclass(init=False, repr=False)
@@ -21,7 +21,7 @@ class Dataset:
         number: int
         pairs_list: list[tuple[int, int]]
 
-        def __init__(self, dataset: ndarray) -> None:
+        def __init__(self, dataset: npt.NDArray) -> None:
             item_classes: list[str] = dataset[:, -1, None].ravel().tolist()
 
             self.classes: list[str] = list(set(item_classes))
@@ -45,31 +45,38 @@ class Dataset:
 
             self.number: int = len(self.pairs_list)
 
-    features: ndarray
+    features: npt.NDArray
     costs: dict[str, float]
     _pairs: Pairs
-    _table: ndarray
+    _table: npt.NDArray
 
     def __init__(self, dataset_path: Path) -> None:
         dataset_df: pd.DataFrame = pd.read_csv(dataset_path)
         dataset_np = dataset_df.to_numpy()
 
-        self.features: ndarray = dataset_df.columns.values[:-1]
+        self.features = dataset_df.columns.values[:-1]
         self._pairs = self.Pairs(dataset_np)
-        self._table: ndarray = append([dataset_df.columns.values], dataset_np, axis=0)
+        self._table = np.append(
+            [dataset_df.columns.values],
+            dataset_np,
+            axis=0
+        )
 
         self.costs = {}
 
         for idx, column_name in enumerate(self.features):
             self.costs[column_name] = round(dataset_np[:, idx, None].var())
 
-        self.costs = {key: value for key, value in sorted(self.costs.items(), key=lambda item: item[1])}
+        self.costs = {
+            key: value
+            for key, value in sorted(self.costs.items(), key=lambda item: item[1])
+        }
 
         del dataset_df, dataset_np
 
-    def __getitem__(self, idx: int) -> ndarray:
+    def __getitem__(self, pos) -> npt.NDArray:
         """[] operator overload"""
-        return self._table[idx + 1]
+        return self._table.__getitem__(pos)
 
     def __repr__(self) -> str:
         return self._table.__repr__()
@@ -82,19 +89,29 @@ class Dataset:
         """Returns a deep copy of the dataset"""
         return deepcopy(self)
 
-    def data(self, *, complete=False) -> ndarray:
-        """
-        Returns the dataset as a numpy.ndarray.
-        If complete, the 'class column is returned as well.'
+    def data(self, *, complete=False) -> npt.NDArray:
+        """Removes useless infos from dataset and returns it
+
+        Args:
+            complete (bool, optional): States if the output should contain 'Class' feature. Defaults to False.
+
+        Returns:
+            npt.NDArray: The content of the dataset.
         """
         if complete:
             return self._table[1:]
 
         return self._table[1:, :-1]
 
-    def multi_get(self, indexes: list[int], *, complete=False) -> ndarray:
+    def multi_get(self, indexes: list[int], *, complete=False) -> npt.NDArray:
         """Returns all the items specified in indexes"""
         return self.data(complete=complete)[[indexes]][0]
+
+    def set_minus(self, other: npt.NDArray, axis=0) -> npt.NDArray:
+        return np.delete(self._table[1:, :-1], other, axis)
+
+    def index_of_row(self, other: npt.NDArray) -> int | list[int]:
+        return np.where(np.all(self.data() == other, axis=1))[0][0]
 
     @property
     def classes(self) -> list[str]:
@@ -114,4 +131,4 @@ class Dataset:
     @property
     def total_cost(self) -> int:
         """Returns the sum of the feature costs"""
-        return sum(self.costs.values())
+        return int(fsum(self.costs.values()))
