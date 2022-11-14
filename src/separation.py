@@ -10,44 +10,57 @@ from src.dataset import Dataset
 
 @dataclass(init=False)
 class Separation:
-    S_star: dict[str, list[int]] = field(default_factory=dict)
-    """S^*_t with t test"""
-
     S_label: dict[str, dict[Any, list[int]]] = field(default_factory=dict)
-    """S^i_t with i corresponding to the single labels in the feature column, t test"""
-
+    S_star: dict[str, list[int]] = field(default_factory=dict)
     sigma: dict[str, list[int]] = field(default_factory=dict)
-    """Set of objects not included in S^*_t"""
+
+    kept: dict[str, list[tuple[int]]] = field(default_factory=dict)
+    separated: dict[str, list[tuple[int]]] = field(default_factory=dict)
 
     def __init__(self, dataset: Dataset) -> None:
-        self.S_label = {
-            feature: {
+        self.S_label = {}
+        self.S_star = {}
+        self.sigma = {}
+        self.kept = {}
+        self.separated = {}
+
+        for feature_idx, feature in enumerate(dataset.features):
+            self.S_label[feature] = {
                 value: [
                     obj_idx
                     for obj_idx, obj_value in enumerate(dataset.data())
                     if obj_value[feature_idx] == value
                 ]
                 for value in {value[0] for value in dataset.data()[:, feature_idx, None]}
-            } for feature_idx, feature in enumerate(dataset.features)
-        }
+            }
 
-        self.S_star = {}
-        for test in dataset.features:
             feature_pairs = {
                 label: Dataset.Pairs(dataset.multi_get(objects)).number
-                for label, objects in self.S_label[test].items()
+                for label, objects in self.S_label[feature].items()
             }
 
             max_pairs = max(feature_pairs, key=feature_pairs.get)
-            self.S_star[test] = self.S_label[test][max_pairs]
+            self.S_star[feature] = self.S_label[feature][max_pairs]
 
-        self.sigma = {
-            test: [
+            self.sigma[feature] = [
                 dataset.index_of_row(row)
-                for row in dataset.set_minus(self.S_star[test])
+                for row in dataset.set_minus(self.S_star[feature])
             ]
-            for test in dataset.features
-        }
+
+            # FIXME: Find a better way to do this (itertools)
+            self.kept[feature] = list({
+                pair
+                for pair in dataset.pairs_list
+                if pair[0] in self.sigma[feature] and pair[1] in self.sigma[feature]
+            })
+
+            # FIXME: Find a better way to do this (itertools)
+            self.separated[feature] = list({
+                pair
+                for pair in dataset.pairs_list
+                if pair[0] in self.sigma[feature] and pair[1] in self.S_star[feature]
+                or pair[1] in self.sigma[feature] and pair[0] in self.S_star[feature]
+            })
 
     def __getitem__(self, key: str) -> dict[Any, list[int]]:
         return self.S_label[key]
