@@ -1,3 +1,4 @@
+from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
 from math import fsum
@@ -17,14 +18,11 @@ class Dataset:
     class Pairs:
         """A tuple of items having different classes"""
 
-        classes: list[str]
         number: int
         pairs_list: list[tuple[int, int]]
 
         def __init__(self, dataset: npt.NDArray) -> None:
             item_classes: list[str] = dataset[:, -1, None].ravel().tolist()
-
-            self.classes: list[str] = list(set(item_classes))
 
             if dataset.shape[0] == 1:
                 self.pairs_list = []
@@ -46,6 +44,7 @@ class Dataset:
             self.number: int = len(self.pairs_list)
 
     features: npt.NDArray
+    probabilities: dict[str, float]
     costs: dict[str, float]
     _pairs: Pairs
     _table: npt.NDArray
@@ -55,6 +54,13 @@ class Dataset:
         dataset_np = dataset_df.to_numpy()
 
         self.features = dataset_df.columns.values[:-1]
+
+        counter = Counter(dataset_np[:, -1, None].flatten().tolist())
+        self.probabilities = {
+            key: (value / sum(counter.values()))
+            for key, value in counter.items()
+        }
+
         self._pairs = self.Pairs(dataset_np)
         self._table = np.append(
             [dataset_df.columns.values],
@@ -72,6 +78,7 @@ class Dataset:
             for key, value in sorted(self.costs.items(), key=lambda item: item[1])
         }
 
+        del counter
         del dataset_df, dataset_np
 
     def __getitem__(self, pos) -> npt.NDArray:
@@ -116,7 +123,7 @@ class Dataset:
     @property
     def classes(self) -> list[str]:
         """Returns a list of all the possible class labels"""
-        return self._pairs.classes
+        return list(self.probabilities.keys())
 
     @property
     def pairs_list(self) -> list[tuple]:
