@@ -111,13 +111,50 @@ class Dataset:
         return self._table[1:, :-1]
 
     def multi_get(self, indexes: list[int], *, complete=False) -> npt.NDArray:
-        """Returns all the items specified in indexes"""
+        """Returns multiple rows of the dataset
+
+        Args:
+            indexes (list[int]): The indexes to be returned
+            complete (bool, optional): States if the "class" column should be returned. Defaults to False.
+
+        Returns:
+            npt.NDArray: A subset of the rows of the dataset
+        """
         return self.data(complete=complete)[[indexes]][0]
+
+    def from_sfeatures_subset(self, features: list[str]) -> Self:
+        """Returns a copy of the dataset, containing only the given features
+
+        Args:
+            features (npt.NDArray): The features to be returned
+
+        Returns:
+            Self: An instance of the dataset containing only the given features
+        """
+        dataset_copy = self.copy()
+        remaining_features = set(self.features) - set(features)
+
+        for feature in remaining_features:
+            dataset_copy.drop_feature(feature)
+
+        return dataset_copy
+
+    def drop_feature(self, feature: str) -> None:
+        feature_index = np.where(self.features == feature)[0][0]
+        self._table = np.delete(self.data(), feature_index, axis=1)
 
     def set_minus(self, other: npt.NDArray, axis=0) -> npt.NDArray:
         return np.delete(self._table[1:, :-1], other, axis)
 
     def index_of_row(self, other: npt.NDArray) -> int | list[int]:
+        """Returns the index of a given row
+
+        Args:
+            other (npt.NDArray): The row which we want to index
+
+        Returns:
+            int | list[int]: The row number in the dataset
+        """
         return np.where(np.all(self.data() == other, axis=1))[0][0]
 
     @property
