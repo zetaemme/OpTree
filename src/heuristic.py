@@ -1,36 +1,41 @@
 from typing import Callable
 
-from numpy import delete, ndarray, union1d
-
 from src.dataset import Dataset
-from src.separation import Separation
+from src.maximization import submodular_maximization
 
 
 def wolsey_greedy_heuristic(
         budget: int,
         dataset: Dataset,
-        separation: Separation,
-        submodular_function: Callable[[Dataset, ndarray, Separation], int]
+        submodular_function: Callable[[Dataset, list[str]], int]
 ) -> list[str]:
     # NOTE: This assumes that the whole set of features will be used.
     #       If not, just add 'features: ndarray' as argument
-    features = dataset.features.copy()
+    features = dataset.features
 
     spent = 0.0
     k = 0
 
-    auxiliary_array = ndarray([])
+    auxiliary_array: list[str] = []
+    chosen_test = ""
 
-    while features or spent <= budget:
-        k += 1
+    while features:
+        if spent <= budget:
+            k += 1
 
-        features = delete(features, k)
-        spent += dataset.costs[features[k]]
+            chosen_test = submodular_maximization(
+                dataset,
+                auxiliary_array,
+                submodular_function
+            )
 
-        auxiliary_array = union1d(auxiliary_array, features[k])
+            features.remove(chosen_test)
+            spent += dataset.costs[chosen_test]
+            auxiliary_array.append(chosen_test)
 
-    if submodular_function(dataset, features[k], separation) \
-            >= submodular_function(dataset, delete(auxiliary_array, k), separation):
-        return features[k]
+    auxiliary_array.remove(chosen_test)
+    if submodular_function(dataset, [chosen_test]) >= submodular_function(dataset, auxiliary_array):
+        return [chosen_test]
 
-    return features[:k].tolist()
+    # FIXME: Must return all items before chosen_test!
+    return features[:chosen_test]
