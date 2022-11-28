@@ -1,34 +1,45 @@
+# from treelib import Tree
+import argparse
+import logging
+from os.path import dirname
 from pathlib import Path
 
 from src.dataset import Dataset
+from src.decision_tree import build_decision_tree
 from src.separation import Separation
-
-# from src.decision_tree import build_decision_tree
-# from treelib import Tree
 
 DEBUG = False
 
-if DEBUG:
-    pass
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] - OpSion @ {%(module)s#%(funcName)s} - %(message)s",
+    datefmt="%H:%M:%S"
+)
 
 
-def main() -> None:
+def main(dataset_path: str) -> None:
     """Inits dataset and test list in order to pass them to the algorithm"""
-    path = Path('data/test.csv')
+    path = Path(dirname(__file__) + "/" + dataset_path)
     dataset = Dataset(path)
-
     separation = Separation(dataset)
 
-    # decision_tree: Tree = build_decision_tree(dataset, separation)
+    build_decision_tree(dataset, separation)
 
     # joblib.dump(decision_tree, 'model/dectree.sav')
     # decision_tree.show()
 
 
 if __name__ == '__main__':
-    # if DEBUG:
-    #     result = timeit.timeit(stmt='main()', globals=globals(), number=10)
-    #     print(f'{result / 10}')
-    #     sys.exit(0)
+    parser = argparse.ArgumentParser(
+        prog="OpSion",
+        description="Builds (log-)optimal decision trees"
+    )
+    parser.add_argument(
+        "filename",
+        type=str,
+        help="The CSV file containing the dataset"
+    )
 
-    main()
+    args = parser.parse_args()
+
+    main(args.filename)
