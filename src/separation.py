@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass, field
 from functools import reduce
 from typing import Any
@@ -6,6 +7,8 @@ import numpy.typing as npt
 from numpy import intersect1d
 
 from src.dataset import Dataset
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(init=False)
@@ -18,6 +21,7 @@ class Separation:
     separated: dict[str, list[tuple[int]]] = field(default_factory=dict)
 
     def __init__(self, dataset: Dataset) -> None:
+        logger.info("Computing dataset separation")
         self.S_label = {}
         self.S_star = {}
         self.sigma = {}

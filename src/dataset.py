@@ -1,3 +1,4 @@
+import logging
 from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
@@ -8,6 +9,8 @@ from typing import Self
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(init=False, repr=False)
@@ -21,6 +24,7 @@ class Dataset:
         pairs_list: list[tuple[int, int]]
 
         def __init__(self, dataset: npt.NDArray) -> None:
+            logger.info("Computing dataset pairs")
             item_classes: list[str] = dataset[:, -2, None].ravel().tolist()
 
             if dataset.shape[0] == 1:
@@ -40,6 +44,11 @@ class Dataset:
 
         @property
         def number(self) -> int:
+            """Number of paris
+
+            Returns:
+                int: The total number of pairs for the dataset
+            """
             return len(self.pairs_list)
 
     class_probabilities: dict[str, float]
@@ -50,6 +59,7 @@ class Dataset:
     _table: npt.NDArray
 
     def __init__(self, dataset_path: Path) -> None:
+        logger.info("Initializing dataset")
         dataset_df: pd.DataFrame = pd.read_csv(dataset_path)
         dataset_np = dataset_df.to_numpy()
 
@@ -127,24 +137,37 @@ class Dataset:
         if not features:
             return self.copy()
 
+        logger.info(f"Generating dataset from subset {features} of features")
         dataset_copy = self.copy()
         remaining_features = set(self.features) - set(features)
 
         for feature in remaining_features:
-            dataset_copy.drop_feature(feature)
+            dataset_copy.drop_column(feature)
 
         return dataset_copy
 
-    def drop_feature(self, feature: str) -> None:
+    def drop_column(self, feature: str) -> None:
+        """Removes the column with given label
+
+        Args:
+            feature (str): Label of the column to remove
+        """
+        logger.info(f"Dropping column {feature}")
         feature_index = self.features.index(feature)
-        print(f"{feature_index=}")
-        print("BEFORE")
-        print(self._table)
-        self._table = np.delete(self.data(), feature_index, axis=1)
-        print("AFTER")
-        print(self._table)
+        self._table = np.delete(
+            self.data(complete=True),
+            feature_index,
+            axis=1
+        )
+        self.features.remove(feature)
 
     def drop_row(self, index: int) -> None:
+        """Removes the row at given index
+
+        Args:
+            index (int): Index of the row to remove
+        """
+        logger.info(f"Dropping row {index}")
         # TODO: In future, it could be necessary to update this function to recompute objects probability after deletion
         self._table = np.delete(self.data(), index, axis=0)
         self._pairs.pairs_list = [
@@ -163,6 +186,7 @@ class Dataset:
         Returns:
             npt.NDArray: the set difference between two datasets
         """
+        logger.info("Computing datasets difference")
         return np.delete(self._table[1:, :-2], other, axis)
 
     def index_of_row(self, other: npt.NDArray) -> int | list[int]:
@@ -172,7 +196,7 @@ class Dataset:
             other (npt.NDArray): The row which we want to index
 
         Returns:
-            int | list[int]: The row number in the dataset
+            int | list[int]: The row index
         """
         return np.where(np.any(self.data() == other))[0][0]
 
@@ -185,6 +209,7 @@ class Dataset:
         Returns:
             npt.NDArray: The resulting intersection
         """
+        logger.info("Computing datasets intersection")
         dataset_copy = self.copy()
 
         data_as_set = {index for _, index in enumerate(dataset_copy.data())}
@@ -212,7 +237,11 @@ class Dataset:
 
     @property
     def total_cost(self) -> int:
-        """Returns the sum of the feature costs"""
+        """Total costs of features
+
+        Returns:
+            int: Sum of all the costs
+        """
         return int(fsum(self.costs.values()))
 
     @property
@@ -220,6 +249,6 @@ class Dataset:
         """Total probability of the dataset objects
 
         Returns:
-            float: Sum of all the probabilities 
+            float: Sum of all the probabilities
         """
         return fsum(probability for probability in self._table[1:, -1, None])
