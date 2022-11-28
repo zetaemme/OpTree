@@ -35,7 +35,7 @@ class Separation:
             }
 
             feature_pairs = {
-                label: Dataset.Pairs(dataset.multi_get(objects)).number
+                label: Dataset.Pairs(dataset[objects]).number
                 for label, objects in self.S_label[feature].items()
             }
 
@@ -44,7 +44,7 @@ class Separation:
 
             self.sigma[feature] = [
                 dataset.index_of_row(row)
-                for row in dataset.set_minus(self.S_star[feature])
+                for row in dataset.difference(self.S_star[feature])
             ]
 
             # FIXME: Find a better way to do this (itertools)
