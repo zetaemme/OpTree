@@ -14,7 +14,7 @@ def find_budget(dataset: Dataset, separation: Separation) -> float:
     Returns:
         float: The optimal budget for the decision tree test costs
     """
-    # Should be (1 - e^{chi}), approximated with 0.35
+    # Should be (1 - e^{chi}), approximated with 0.35 in the paper
     alpha = 0.35
 
     # FIXME: This should be done by Binary Search
@@ -22,7 +22,6 @@ def find_budget(dataset: Dataset, separation: Separation) -> float:
         heuristic_result = wolsey_greedy_heuristic(
             budget,
             dataset,
-            separation,
             submodular_function_1
         )
 
