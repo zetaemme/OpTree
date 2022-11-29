@@ -1,7 +1,10 @@
+import logging
 from typing import Callable
 
 from src.dataset import Dataset
 from src.maximization import submodular_maximization
+
+logger = logging.getLogger(__name__)
 
 
 def wolsey_greedy_heuristic(
@@ -9,6 +12,7 @@ def wolsey_greedy_heuristic(
         dataset: Dataset,
         submodular_function: Callable[[Dataset, list[str]], int]
 ) -> list[str]:
+    logger.info(f"Applying heuristic for budget: {budget}")
     # NOTE: This assumes that the whole set of features will be used.
     #       If not, just add 'features: ndarray' as argument
     features = dataset.features

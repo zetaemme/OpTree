@@ -1,7 +1,10 @@
+import logging
 from typing import Callable
 
 from src.dataset import Dataset
 from src.separation import Separation
+
+logger = logging.getLogger(__name__)
 
 
 def probability_maximization(universe: Dataset, budget: float, spent: float) -> str:
@@ -45,6 +48,7 @@ def submodular_maximization(
     features: list[str],
     submodular_function: Callable[[Dataset, list[str]], int]
 ) -> str:
+    logger.info(f"Maximizing submodular function for {features}")
     maximum_eligible: dict[str, float] = {}
     for feature in dataset.features:
         feature_result = submodular_function(dataset, features)

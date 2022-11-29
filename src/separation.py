@@ -39,13 +39,14 @@ class Separation:
             }
 
             feature_pairs = {
-                label: Dataset.Pairs(dataset[objects]).number
+                label: dataset.pairs_number_for(objects)
                 for label, objects in self.S_label[feature].items()
             }
 
             max_pairs = max(feature_pairs, key=feature_pairs.get)
             self.S_star[feature] = self.S_label[feature][max_pairs]
 
+            # FIXME: Alla terza iterazione dell'euristica si ferma qui
             self.sigma[feature] = [
                 dataset.index_of_row(row)
                 for row in dataset.difference(self.S_star[feature])

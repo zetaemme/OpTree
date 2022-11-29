@@ -1,7 +1,9 @@
-from numpy import ndarray, take
+import logging
 
 from src.dataset import Dataset
 from src.separation import Separation
+
+logger = logging.getLogger(__name__)
 
 
 def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
@@ -16,13 +18,7 @@ def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
     """
     submodular_separation = Separation(dataset.from_features_subset(features))
 
-    max_intersection: ndarray = submodular_separation.S_star_intersection
-
-    if len(max_intersection) == 1:
+    if len(submodular_separation.S_star_intersection) == 1:
         return dataset.pairs_number
 
-    intersection_pairs = Dataset.Pairs(
-        take(dataset.data(complete=True), max_intersection, axis=0)
-    )
-
-    return dataset.pairs_number - intersection_pairs.number
+    return dataset.pairs_number - dataset.pairs_number_for(submodular_separation.S_star_intersection)

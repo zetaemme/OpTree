@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(init=False, repr=False)
 class Dataset:
-    """A general purpose dataset implementation that doesn't rely on Pandas"""
+    """A general purpose dataset implementation that doesn't (more or less) rely on Pandas"""
 
     @dataclass(init=False)
     class Pairs:
@@ -54,7 +54,6 @@ class Dataset:
     class_probabilities: dict[str, float]
     costs: dict[str, float]
     features: list[str]
-    # _data: npt.NDArray
     _pairs: Pairs
     _table: npt.NDArray
 
@@ -77,8 +76,6 @@ class Dataset:
             dataset_np,
             axis=0
         )
-
-        # self._data = self._table[1:]
 
         self.costs = {}
 
@@ -187,6 +184,8 @@ class Dataset:
             npt.NDArray: the set difference between two datasets
         """
         logger.info("Computing datasets difference")
+        print(other)
+        print(self.data())
         return np.delete(self._table[1:, :-2], other, axis)
 
     def index_of_row(self, other: npt.NDArray) -> int | list[int]:
@@ -219,6 +218,17 @@ class Dataset:
             dataset_copy.drop_row(row)
 
         return dataset_copy
+
+    def pairs_number_for(self, objects: list[int]) -> int:
+        """Number of pairs containing objects
+
+        Args:
+            objects (list[int]): The objects to be checked
+
+        Returns:
+            int: Number of pairs
+        """
+        return len({pair for obj in objects for pair in self.pairs_list if obj in pair})
 
     @property
     def classes(self) -> list[str]:
