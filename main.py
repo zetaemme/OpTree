@@ -31,7 +31,7 @@ def main(dataset_path: str) -> None:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        prog="OpSion",
+        prog="main.py",
         description="Builds (log-)optimal decision trees"
     )
     parser.add_argument(
