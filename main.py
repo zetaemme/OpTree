@@ -1,63 +1,45 @@
-from datetime import datetime
+# from treelib import Tree
+import argparse
 import logging
-from sys import argv
+from os.path import dirname
+from pathlib import Path
 
-import joblib
-import pandas as pd
+from src.dataset import Dataset
+from src.decision_tree import build_decision_tree
+from src.separation import Separation
 
-from src.cost import calculate_cost
-from src.dectree.dectree import DTOA
-
-# NOTE: Change the log level here to enable DEBUG mode
-logger = logging.getLogger(__name__)
+DEBUG = False
 
 logging.basicConfig(
-    filename=f'log/dectree_{datetime.now().strftime("%d-%m-%Y_%H.%M.%S")}.log',
-    format='%(levelname)s (%(asctime)s): %(message)s',
-    level=logging.INFO
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] - OpSion @ {%(module)s#%(funcName)s} - %(message)s",
+    datefmt="%H:%M:%S"
 )
 
 
-def main() -> None:
+def main(dataset_path: str) -> None:
     """Inits dataset and test list in order to pass them to the algorithm"""
-    # NOTE: The following is the init for the test dataset of the referenced paper
-    # dataset = pd.DataFrame(
-    #     data=[
-    #         [1, 1, 2, 'A', 0.1],
-    #         [1, 2, 1, 'A', 0.2],
-    #         [2, 2, 1, 'B', 0.4],
-    #         [1, 2, 2, 'C', 0.25],
-    #         [2, 2, 2, 'C', 0.05]
-    #     ],
-    #     columns=['t1', 't2', 't3', 'class', 'probability']
-    # )
+    path = Path(dirname(__file__) + "/" + dataset_path)
+    dataset = Dataset(path)
+    separation = Separation(dataset)
 
-    logging.info(f'Loading dataset \'{argv[1]}\'')
+    build_decision_tree(dataset, separation)
 
-    dataset = pd.read_csv(argv[1], names=[
-        'age', 'workclass', 'fnlwgt', 'education', 'education-num', 'marital-status', 'occupation', 'relationship',
-        'race', 'sex', 'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'class'
-    ])
-
-    logging.info('Dataset loaded!')
-
-    # Runs the recursive algorithm that builds the optimal Decision Tree
-    logging.info('Starting decision tree creation...')
-    decision_tree = DTOA(
-        objects=dataset,
-        tests=dataset.columns[:-1].to_list(),
-        cost_fn=calculate_cost
-    )
-
-    logging.info('Saving model...')
-    joblib.dump(decision_tree, 'model/dectree.sav')
-    logging.info('Successfully saved model in \'model/dectree.sav\'!')
-
-    logging.info('Showing result...')
-    decision_tree.show()
+    # joblib.dump(decision_tree, 'model/dectree.sav')
+    # decision_tree.show()
 
 
 if __name__ == '__main__':
-    logging.info('Starting execution...')
-    main()
-    logging.info('Execution completed successfully!')
+    parser = argparse.ArgumentParser(
+        prog="main.py",
+        description="Builds (log-)optimal decision trees"
+    )
+    parser.add_argument(
+        "filename",
+        type=str,
+        help="The CSV file containing the dataset"
+    )
+
+    args = parser.parse_args()
+
+    main(args.filename)
