@@ -1,7 +1,8 @@
 import logging
+from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import Any
+from typing import Any, Self
 
 import numpy.typing as npt
 from numpy import intersect1d
@@ -87,6 +88,18 @@ class Separation:
                 continue
 
         return False
+
+    def for_features_subset(self, features: list[str]) -> Self:
+        separation_copy = deepcopy(self)
+
+        for feature in features:
+            del separation_copy.S_label[feature]
+            del separation_copy.S_star[feature]
+            del separation_copy.sigma[feature]
+            del separation_copy.kept[feature]
+            del separation_copy.separated[feature]
+
+        return separation_copy
 
     @property
     def S_star_intersection(self) -> npt.NDArray[Any]:

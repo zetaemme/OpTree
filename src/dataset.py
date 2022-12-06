@@ -183,10 +183,8 @@ class Dataset:
         Returns:
             npt.NDArray: the set difference between two datasets
         """
-        logger.info("Computing datasets difference")
-        print(other)
-        print(self.data())
-        return np.delete(self._table[1:, :-2], other, axis)
+        logger.debug("Computing datasets difference")
+        return np.delete(self.data(), other, axis)
 
     def index_of_row(self, other: npt.NDArray) -> int | list[int]:
         """Returns the index of a given row
@@ -236,6 +234,10 @@ class Dataset:
         return list(self.class_probabilities.keys())
 
     @property
+    def mean(self) -> float:
+        return self.data().mean()
+
+    @property
     def pairs_list(self) -> list[tuple]:
         """Returns a list of all the pairs of the dataset"""
         return self._pairs.pairs_list
@@ -244,6 +246,10 @@ class Dataset:
     def pairs_number(self) -> int:
         """Return the number of pairs in the dataset"""
         return self._pairs.number
+
+    @property
+    def std(self) -> float:
+        return self.data().std()
 
     @property
     def total_cost(self) -> int:

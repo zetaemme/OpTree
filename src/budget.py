@@ -20,6 +20,7 @@ def find_budget(dataset: Dataset, separation: Separation) -> float:
     """
     # Should be (1 - e^{chi}), approximated with 0.35 in the paper
     alpha = 0.35
+    result = 0
 
     # FIXME: This should be done by Binary Search
     logger.info("Starting budget computation")
@@ -27,6 +28,7 @@ def find_budget(dataset: Dataset, separation: Separation) -> float:
         heuristic_result = wolsey_greedy_heuristic(
             budget,
             dataset,
+            separation,
             submodular_function_1
         )
 
@@ -36,4 +38,7 @@ def find_budget(dataset: Dataset, separation: Separation) -> float:
         )
 
         if len(covered_pairs) >= (alpha * dataset.pairs_number):
-            return budget
+            result = budget
+            break
+
+    return result
