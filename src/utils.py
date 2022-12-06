@@ -6,7 +6,7 @@ from src.separation import Separation
 logger = logging.getLogger(__name__)
 
 
-def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
+def submodular_function_1(dataset: Dataset, separation: Separation, features: list[str]) -> int:
     """Submodular function used by the heuristic
 
     Args:
@@ -16,7 +16,10 @@ def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
     Returns:
         int: The difference between the dataset "Pairs" and the number of pairs in the S_star[feature] intersection
     """
-    submodular_separation = Separation(dataset.from_features_subset(features))
+    if not features:
+        return dataset.pairs_number
+
+    submodular_separation = separation.for_features_subset(features)
 
     if len(submodular_separation.S_star_intersection) == 1:
         return dataset.pairs_number

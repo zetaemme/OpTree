@@ -45,15 +45,16 @@ def pairs_maximization(universe: Dataset) -> str:
 
 def submodular_maximization(
     dataset: Dataset,
+    separation,
     features: list[str],
-    submodular_function: Callable[[Dataset, list[str]], int]
+    submodular_function: Callable[[Dataset, Separation, list[str]], int]
 ) -> str:
     logger.info(f"Maximizing submodular function for {features}")
     maximum_eligible: dict[str, float] = {}
     for feature in dataset.features:
-        feature_result = submodular_function(dataset, features)
+        feature_result = submodular_function(dataset, separation, features)
         features.append(feature)
-        union_result = submodular_function(dataset, features)
+        union_result = submodular_function(dataset, separation, features)
         features.remove(feature)
 
         submodular_result = (union_result - feature_result) \

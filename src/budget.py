@@ -27,6 +27,7 @@ def find_budget(dataset: Dataset, separation: Separation) -> float:
         heuristic_result = wolsey_greedy_heuristic(
             budget,
             dataset,
+            separation,
             submodular_function_1
         )
 
