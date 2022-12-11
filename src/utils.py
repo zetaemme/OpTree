@@ -6,7 +6,9 @@ from src.separation import Separation
 logger = logging.getLogger(__name__)
 
 
-def submodular_function_1(dataset: Dataset, separation: Separation, features: list[str]) -> int:
+def submodular_function_1(
+    dataset: Dataset, separation: Separation, features: list[str]
+) -> int:
     """Submodular function used by the heuristic
 
     Args:
@@ -24,4 +26,20 @@ def submodular_function_1(dataset: Dataset, separation: Separation, features: li
     if len(submodular_separation.S_star_intersection) == 1:
         return dataset.pairs_number
 
-    return dataset.pairs_number - dataset.pairs_number_for(submodular_separation.S_star_intersection)
+    return dataset.pairs_number - dataset.pairs_number_for(
+        submodular_separation.S_star_intersection
+    )
+
+
+def get_parent_node(features: list[str], child: str) -> str:
+    """Gets the name of child's parent node
+
+    Args:
+        features (list[str]): List of all possible nodes
+        child (str): Node that we want to connect with his parent
+
+    Returns:
+        str: The name of the parent node
+    """
+    parent_index = features.index(child) - 1
+    return features[parent_index]
