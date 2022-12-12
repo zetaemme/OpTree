@@ -3,7 +3,7 @@ import logging
 from src.dataset import Dataset
 from src.heuristic import wolsey_greedy_heuristic
 from src.separation import Separation
-from src.utils import submodular_function_1
+from src.utils import binary_search_budget
 
 logger = logging.getLogger(__name__)
 
@@ -18,27 +18,7 @@ def find_budget(dataset: Dataset, separation: Separation) -> float:
     Returns:
         float: The optimal budget for the decision tree test costs
     """
-    # Should be (1 - e^{chi}), approximated with 0.35 in the paper
-    alpha = 0.35
-    result = 0
-
-    # FIXME: This should be done by Binary Search
     logger.info("Starting budget computation")
-    for budget in range(1, dataset.total_cost + 1):
-        heuristic_result = wolsey_greedy_heuristic(
-            budget,
-            dataset,
-            separation,
-            submodular_function_1
-        )
-
-        covered_pairs = list(
-            set(separation.kept[test] + separation.separated[test])
-            for test in heuristic_result
-        )
-
-        if len(covered_pairs) >= (alpha * dataset.pairs_number):
-            result = budget
-            break
-
-    return result
+    return binary_search_budget(
+        dataset, separation, [1.0, dataset.total_cost], wolsey_greedy_heuristic
+    )
