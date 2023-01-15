@@ -1,8 +1,8 @@
-# from treelib import Tree
-import argparse
 import logging
+from argparse import ArgumentParser
 from os.path import dirname
 from pathlib import Path
+from pickle import HIGHEST_PROTOCOL, dump
 
 from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
@@ -23,14 +23,17 @@ def main(dataset_path: str) -> None:
     dataset = Dataset(path)
     separation = Separation(dataset)
 
-    build_decision_tree(dataset, separation)
+    decision_tree = build_decision_tree(dataset, separation)
 
-    # joblib.dump(decision_tree, 'model/dectree.sav')
-    # decision_tree.show()
+    if not DEBUG:
+        with open("model/decision_tree.obj", "wb") as obj_file:
+            dump(decision_tree, obj_file, HIGHEST_PROTOCOL)
+
+        decision_tree.show()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         prog="main.py", description="Builds (log-)optimal decision trees"
     )
     parser.add_argument(
