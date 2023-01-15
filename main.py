@@ -35,9 +35,8 @@ if __name__ == "__main__":
         prog="main.py", description="Builds (log-)optimal decision trees"
     )
     parser.add_argument(
-        "filename", type=str, help="The CSV file containing the dataset"
+        "-f", "--filename", type=str, help="The CSV file containing the dataset"
     )
 
     args = parser.parse_args()
-
     main(args.filename)
