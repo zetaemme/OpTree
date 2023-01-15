@@ -8,8 +8,6 @@ from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
 from src.separation import Separation
 
-DEBUG = False
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] - OpSion @ {%(module)s#%(funcName)s} - %(message)s",
@@ -25,7 +23,7 @@ def main(dataset_path: str) -> None:
 
     decision_tree = build_decision_tree(dataset, separation)
 
-    if not DEBUG:
+    if decision_tree is not None:
         with open("model/decision_tree.obj", "wb") as obj_file:
             dump(decision_tree, obj_file, HIGHEST_PROTOCOL)
 
