@@ -11,3 +11,5 @@ Functions:
     wolsey_greedy_heuristic
     submodular_function_1
 """
+
+DEBUG = True
