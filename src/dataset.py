@@ -10,7 +10,10 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
+from src import DEBUG
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
 
 @dataclass(init=False, repr=False)
@@ -66,16 +69,11 @@ class Dataset:
 
         counter = Counter(dataset_np[:, -1, None].flatten().tolist())
         self.class_probabilities = {
-            key: (value / sum(counter.values()))
-            for key, value in counter.items()
+            key: (value / sum(counter.values())) for key, value in counter.items()
         }
 
         self._pairs = self.Pairs(dataset_np)
-        self._table = np.append(
-            [dataset_df.columns.values],
-            dataset_np,
-            axis=0
-        )
+        self._table = np.append([dataset_df.columns.values], dataset_np, axis=0)
 
         self.costs = {}
 
@@ -83,10 +81,7 @@ class Dataset:
         #       To avoid the problem, we multiply by 10 the variance.
         #       Other cost metrics should be considered!
         for idx, column_name in enumerate(self.features):
-            self.costs[column_name] = round(
-                dataset_np[:, idx, None].var(),
-                2
-            ) * 10
+            self.costs[column_name] = round(dataset_np[:, idx, None].var(), 2) * 10
 
         self.costs = dict(sorted(self.costs.items(), key=lambda item: item[1]))
 
@@ -149,13 +144,9 @@ class Dataset:
         Args:
             feature (str): Label of the column to remove
         """
-        logger.info(f"Dropping column {feature}")
+        logger.info("Dropping column %s", feature)
         feature_index = self.features.index(feature)
-        self._table = np.delete(
-            self.data(complete=True),
-            feature_index,
-            axis=1
-        )
+        self._table = np.delete(self.data(complete=True), feature_index, axis=1)
         self.features.remove(feature)
 
     def drop_row(self, index: int) -> None:
@@ -164,13 +155,10 @@ class Dataset:
         Args:
             index (int): Index of the row to remove
         """
-        logger.info(f"Dropping row {index}")
-        # TODO: In future, it could be necessary to update this function to recompute objects probability after deletion
+        logger.info("Dropping row %i", index)
         self._table = np.delete(self.data(), index, axis=0)
         self._pairs.pairs_list = [
-            pair
-            for pair in self._pairs.pairs_list
-            if index not in pair
+            pair for pair in self._pairs.pairs_list if index not in pair
         ]
 
     def difference(self, other: npt.NDArray, *, axis=0) -> npt.NDArray:

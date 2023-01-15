@@ -1,5 +1,6 @@
 from treelib import Node, Tree
 
+from src import DEBUG
 from src.budget import find_budget
 from src.dataset import Dataset
 from src.extraction import cheapest_separation
@@ -10,7 +11,7 @@ from src.utils import get_parent_node
 
 def build_decision_tree(
     dataset: Dataset, separation: Separation, decision_tree=Tree()
-) -> Tree:
+) -> Tree | None:
     """Recursively builds an optimal decision tree.
 
     Args:
@@ -40,8 +41,12 @@ def build_decision_tree(
             dataset.get_class_of(dataset.pairs_list[0][1]), parent=root
         )
 
-    # FIXME: Da fixare euristica
     budget = find_budget(dataset, separation)
+
+    print(f"\nBUDGET: {budget}")
+
+    if DEBUG:
+        return
 
     spent = 0.0
     spent_2 = 0.0
