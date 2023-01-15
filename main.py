@@ -13,7 +13,7 @@ DEBUG = False
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] - OpSion @ {%(module)s#%(funcName)s} - %(message)s",
-    datefmt="%H:%M:%S"
+    datefmt="%H:%M:%S",
 )
 
 
@@ -29,15 +29,12 @@ def main(dataset_path: str) -> None:
     # decision_tree.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="main.py",
-        description="Builds (log-)optimal decision trees"
+        prog="main.py", description="Builds (log-)optimal decision trees"
     )
     parser.add_argument(
-        "filename",
-        type=str,
-        help="The CSV file containing the dataset"
+        "filename", type=str, help="The CSV file containing the dataset"
     )
 
     args = parser.parse_args()
