@@ -69,7 +69,6 @@ def binary_search_budget(
     # Should be (1 - e^{chi}), approximated with 0.35 in the paper
     alpha = 0.35
 
-    idx = 1
     while search_range.upper >= search_range.lower + 1:
         current_budget = (search_range.lower + search_range.upper) / 2
 
@@ -88,6 +87,5 @@ def binary_search_budget(
             search_range.lower = current_budget
 
         result = search_range.lower
-        idx += 1
 
     return result
