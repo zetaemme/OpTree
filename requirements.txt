@@ -10,6 +10,7 @@ pytest
 python-dateutil
 pytz
 requests
+scipy
 six
 treelib
 urllib3
