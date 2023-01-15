@@ -1,8 +1,8 @@
 import logging
-from typing import Callable
 
 from src.dataset import Dataset
 from src.separation import Separation
+from src.types import Bounds, HeuristicFunction
 
 logger = logging.getLogger(__name__)
 
@@ -50,16 +50,8 @@ def get_parent_node(features: list[str], child: str) -> str:
 def binary_search_budget(
     dataset: Dataset,
     separation: Separation,
-    search_range: list[float],
-    heuristic: Callable[
-        [
-            float,
-            Dataset,
-            Separation,
-            Callable[[Dataset, Separation, list[str]], int],
-        ],
-        list[str],
-    ],
+    search_range: Bounds,
+    heuristic: HeuristicFunction,
 ) -> float:
     """Calculates the procedure's budget via Binary Search
 
@@ -67,7 +59,7 @@ def binary_search_budget(
         dataset (Dataset): The dataset on which the decision is being built
         separation (Separation): Dataset tripartition and sets
         search_range (list[float]): Range in which the binary search is performed
-        heuristic (Callable): Heuristic function
+        heuristic (HeuristicFunction): Heuristic function
 
     Returns:
         float: The optimal budget for the procedure
@@ -76,10 +68,14 @@ def binary_search_budget(
 
     # Should be (1 - e^{chi}), approximated with 0.35 in the paper
     alpha = 0.35
-    while search_range[0] <= search_range[1]:
-        mid = (search_range[0] + search_range[1]) / 2
 
-        heuristic_result = heuristic(mid, dataset, separation, submodular_function_1)
+    idx = 1
+    while search_range.upper >= search_range.lower + 1:
+        current_budget = (search_range.lower + search_range.upper) / 2
+
+        heuristic_result = heuristic(
+            current_budget, dataset, separation, submodular_function_1
+        )
 
         covered_pairs = list(
             set(separation.kept[test] + separation.separated[test])
@@ -87,9 +83,11 @@ def binary_search_budget(
         )
 
         if len(covered_pairs) < (alpha * dataset.pairs_number):
-            search_range[0] = mid + 1
+            search_range.upper = current_budget
         else:
-            result = mid
-            break
+            search_range.lower = current_budget
+
+        result = search_range.lower
+        idx += 1
 
     return result
