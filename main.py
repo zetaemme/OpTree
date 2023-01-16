@@ -4,13 +4,14 @@ from os.path import dirname
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
 
+from src import DEBUG
 from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
 from src.separation import Separation
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] - OpSion @ {%(module)s#%(funcName)s} - %(message)s",
+    level=logging.DEBUG if DEBUG else logging.INFO,
+    format="%(asctime)s [%(levelname)s] - OpSion @ {%(module)s.py -> %(funcName)s} - %(message)s",
     datefmt="%H:%M:%S",
 )
 

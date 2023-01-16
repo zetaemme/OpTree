@@ -10,10 +10,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from src import DEBUG
-
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
 
 @dataclass(init=False, repr=False)
