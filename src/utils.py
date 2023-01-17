@@ -25,7 +25,7 @@ def submodular_function_1(
 
     submodular_separation = separation.for_features_subset(features)
 
-    if len(submodular_separation.S_star_intersection) == 1:
+    if len(submodular_separation.S_star_intersection) < 2:
         return dataset.pairs_number
 
     return dataset.pairs_number - dataset.pairs_number_for(
@@ -76,10 +76,15 @@ def binary_search_budget(
             current_budget, dataset, separation, submodular_function_1
         )
 
+        logger.debug(f"Heuristic result: {heuristic_result}")
+
         covered_pairs = list(
             set(separation.kept[test] + separation.separated[test])
             for test in heuristic_result
         )
+
+        # FIXME: Troppo incapsulato
+        logger.debug(f"Pairs covered by the heuristic: {covered_pairs}")
 
         if len(covered_pairs) < (alpha * dataset.pairs_number):
             search_range.upper = current_budget
