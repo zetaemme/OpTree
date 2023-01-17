@@ -22,7 +22,7 @@ def probability_maximization(universe: Dataset, budget: float, spent: float) -> 
         if universe.costs[feature] <= budget - spent
     }
 
-    return max(maximum_eligible, key=maximum_eligible.get)
+    return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
 
 
 def pairs_maximization(universe: Dataset) -> str:
@@ -39,25 +39,33 @@ def pairs_maximization(universe: Dataset) -> str:
         for feature in universe.features
     }
 
-    return max(maximum_eligible, key=maximum_eligible.get)
+    return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
 
 
 def submodular_maximization(
     dataset: Dataset,
-    separation,
-    features: list[str],
+    separation: Separation,
+    heuristic_features: list[str],
+    auxiliary_features: list[str],
     submodular_function: SubmodularFunction,
 ) -> str:
-    logger.info(f"Maximizing submodular function for {features}")
+    logger.info(f"Maximizing submodular function in {heuristic_features}")
+
     maximum_eligible: dict[str, float] = {}
-    for feature in dataset.features:
-        feature_result = submodular_function(dataset, separation, features)
-        features.append(feature)
-        union_result = submodular_function(dataset, separation, features)
-        features.remove(feature)
+    for feature in heuristic_features:
+        logger.debug("Feature: %s", feature)
+
+        # Computes f(A)
+        feature_result = submodular_function(dataset, separation, auxiliary_features)
+        logger.debug("f(A): %i", feature_result)
+
+        # Computes f(A U {t})
+        union_result = submodular_function(
+            dataset, separation, auxiliary_features + [feature]
+        )
+        logger.debug("f(A U {t}): %i", union_result)
 
         submodular_result = (union_result - feature_result) / dataset.costs[feature]
-
         maximum_eligible[feature] = submodular_result
 
-    return max(maximum_eligible, key=maximum_eligible.get)
+    return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
