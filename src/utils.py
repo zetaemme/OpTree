@@ -78,15 +78,15 @@ def binary_search_budget(
 
         logger.debug(f"Heuristic result: {heuristic_result}")
 
+        # FIXME: Troppo incapsulato
         covered_pairs = list(
             set(separation.kept[test] + separation.separated[test])
             for test in heuristic_result
         )
 
-        # FIXME: Troppo incapsulato
         logger.debug(f"Pairs covered by the heuristic: {covered_pairs}")
 
-        if len(covered_pairs) < (alpha * dataset.pairs_number):
+        if heuristic_result and len(covered_pairs) < (alpha * dataset.pairs_number):
             search_range.upper = current_budget
         else:
             search_range.lower = current_budget
