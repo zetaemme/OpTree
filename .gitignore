@@ -135,6 +135,7 @@ dmypy.json
 
 # Dataset
 data/*.csv
+!data/test.csv
 
 # macOS
 .DS_Store
