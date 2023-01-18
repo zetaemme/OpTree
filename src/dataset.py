@@ -60,6 +60,11 @@ class Dataset:
     def __init__(self, dataset_path: Path) -> None:
         logger.info("Initializing dataset")
         dataset_df: pd.DataFrame = pd.read_csv(dataset_path)
+
+        if "Probability" not in dataset_df.columns:
+            number_of_rows = len(dataset_df.index)
+            dataset_df["Probability"] = [1 / number_of_rows] * number_of_rows
+
         dataset_np = dataset_df.to_numpy()
 
         self.features = dataset_df.columns.values[:-2].tolist()
