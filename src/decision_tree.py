@@ -43,8 +43,6 @@ def build_decision_tree(
 
     budget = find_budget(dataset, separation)
 
-    print(f"\nBUDGET: {budget}")
-
     if DEBUG:
         return
 
@@ -62,7 +60,7 @@ def build_decision_tree(
     while any(cost <= budget - spent for cost in budgeted_features.values()):
         chosen_test = probability_maximization(universe, budget, spent)
 
-        # NOTE: Is it possible to sort the tests before the loop, resulting in a simple "for each" iteration (?)
+        # FIXME: Is it possible to sort the tests before the loop, resulting in a simple "for each" iteration (?)
         if list(budgeted_features).index(chosen_test) == 0:
             decision_tree.create_node(chosen_test, identifier=chosen_test)
         else:
@@ -72,7 +70,12 @@ def build_decision_tree(
                 parent=get_parent_node(list(budgeted_features), chosen_test),
             )
 
-        # TODO: For every...
+        for objects in separation.S_label[chosen_test].values():
+            universe_intersection = universe.intersection(objects)
+
+            if universe_intersection and objects != separation.S_star[chosen_test]:
+                # TODO: Make D'(U inter S^{i}_{t_k}) child of node corresponding to chosen_test
+                pass
 
         universe = universe.intersection(separation.S_star[chosen_test])
         spent += dataset.costs[chosen_test]
@@ -89,7 +92,12 @@ def build_decision_tree(
                 parent=get_parent_node(list(budgeted_features), chosen_test),
             )
 
-            # TODO: For every...
+            for objects in separation.S_label[chosen_test].values():
+                universe_intersection = universe.intersection(objects)
+
+                if universe_intersection and objects != separation.S_star[chosen_test]:
+                    # TODO: Make D'(U inter S^{i}_{t_k}) child of node corresponding to chosen_test
+                    pass
 
             universe = universe.intersection(separation.S_star[chosen_test])
             spent_2 += dataset.costs[chosen_test]
