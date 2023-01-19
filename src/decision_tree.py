@@ -1,11 +1,11 @@
-from treelib import Node, Tree
-
 from src import DEBUG
 from src.budget import find_budget
 from src.dataset import Dataset
 from src.extraction import cheapest_separation
 from src.maximization import pairs_maximization, probability_maximization
 from src.separation import Separation
+from src.tree.node import Node
+from src.tree.tree import Tree
 from src.utils import get_parent_node
 
 
