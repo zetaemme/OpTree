@@ -28,8 +28,6 @@ def main(dataset_path: str) -> None:
         with open("model/decision_tree.obj", "wb") as obj_file:
             dump(decision_tree, obj_file, HIGHEST_PROTOCOL)
 
-        decision_tree.show()
-
 
 if __name__ == "__main__":
     parser = ArgumentParser(
