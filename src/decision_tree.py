@@ -1,50 +1,44 @@
-from src import DEBUG
 from src.budget import find_budget
 from src.dataset import Dataset
 from src.extraction import cheapest_separation
 from src.maximization import pairs_maximization, probability_maximization
 from src.separation import Separation
-from src.tree.node import Node
-from src.tree.tree import Tree
+from src.tree import Tree
 from src.utils import get_parent_node
 
 
 def build_decision_tree(
-    dataset: Dataset, separation: Separation, decision_tree=Tree()
-) -> Tree | None:
-    """Recursively builds an optimal decision tree.
+    dataset: Dataset, separation: Separation, decision_tree=Tree(None)
+) -> Tree:
+    """Recursively builds a (log)-optimal decision tree.
 
     Args:
         dataset (Dataset): The dataset used to train the model
         separation (Separation): Dataset tripartition and sets
 
     Returns:
-        Tree: The optimal decision tree
+        Tree: The (log)-optimal decision tree
     """
     if dataset.pairs_number == 0:
-        decision_tree.create_node(dataset.classes[0])
-
-        return decision_tree
+        return Tree(dataset.classes[0])
 
     if dataset.pairs_number == 1:
-        root = Node(
+        terminal_tree = Tree(
             cheapest_separation(
                 dataset, dataset.pairs_list[0][0], dataset.pairs_list[0][1], separation
             )
         )
 
-        decision_tree.add_node(root)
-        decision_tree.create_node(
-            dataset.get_class_of(dataset.pairs_list[0][0]), parent=root
+        terminal_tree.add_child(
+            Tree(dataset.get_class_of(dataset.pairs_list[0][0])),
         )
-        decision_tree.create_node(
-            dataset.get_class_of(dataset.pairs_list[0][1]), parent=root
+        terminal_tree.add_child(
+            Tree(dataset.get_class_of(dataset.pairs_list[0][1])),
         )
+
+        return terminal_tree
 
     budget = find_budget(dataset, separation)
-
-    if DEBUG:
-        return
 
     spent = 0.0
     spent_2 = 0.0
@@ -60,22 +54,30 @@ def build_decision_tree(
     while any(cost <= budget - spent for cost in budgeted_features.values()):
         chosen_test = probability_maximization(universe, budget, spent)
 
-        # FIXME: Is it possible to sort the tests before the loop, resulting in a simple "for each" iteration (?)
-        if list(budgeted_features).index(chosen_test) == 0:
-            decision_tree.create_node(chosen_test, identifier=chosen_test)
+        if k == 1:
+            decision_tree.set_label(chosen_test)
         else:
-            decision_tree.create_node(
-                chosen_test,
-                identifier=chosen_test,
-                parent=get_parent_node(list(budgeted_features), chosen_test),
+
+            decision_tree.add_child(
+                Tree(chosen_test),
+                # FIXME: Utilizzare get parent node per inserire in modo corretto il nuovo nodo
+                parent_label=get_parent_node(list(budgeted_features), chosen_test),
             )
 
         for objects in separation.S_label[chosen_test].values():
             universe_intersection = universe.intersection(objects)
 
             if universe_intersection and objects != separation.S_star[chosen_test]:
-                # TODO: Make D'(U inter S^{i}_{t_k}) child of node corresponding to chosen_test
-                pass
+                decision_tree.add_child(
+                    build_decision_tree(
+                        universe_intersection,
+                        # FIXME: Separation andrebbe ricalcolato (?)
+                        separation,
+                        decision_tree,
+                    ),
+                    # FIXME: Utilizzare get parent node per inserire in modo corretto il nuovo nodo
+                    parent_label=get_parent_node(list(budgeted_features), chosen_test),
+                )
 
         universe = universe.intersection(separation.S_star[chosen_test])
         spent += dataset.costs[chosen_test]
@@ -86,18 +88,28 @@ def build_decision_tree(
         while True:
             chosen_test = pairs_maximization(universe)
 
-            decision_tree.create_node(
-                chosen_test,
-                identifier=chosen_test,
-                parent=get_parent_node(list(budgeted_features), chosen_test),
+            decision_tree.add_child(
+                Tree(chosen_test),
+                # FIXME: Utilizzare get parent node per inserire in modo corretto il nuovo nodo
+                parent_label=get_parent_node(list(budgeted_features), chosen_test),
             )
 
             for objects in separation.S_label[chosen_test].values():
                 universe_intersection = universe.intersection(objects)
 
                 if universe_intersection and objects != separation.S_star[chosen_test]:
-                    # TODO: Make D'(U inter S^{i}_{t_k}) child of node corresponding to chosen_test
-                    pass
+                    decision_tree.add_child(
+                        build_decision_tree(
+                            universe_intersection,
+                            # FIXME: Separation andrebbe ricalcolato (?)
+                            separation,
+                            decision_tree,
+                        ),
+                        # FIXME: Utilizzare get parent node per inserire in modo corretto il nuovo nodo
+                        parent_label=get_parent_node(
+                            list(budgeted_features), chosen_test
+                        ),
+                    )
 
             universe = universe.intersection(separation.S_star[chosen_test])
             spent_2 += dataset.costs[chosen_test]
@@ -107,8 +119,10 @@ def build_decision_tree(
             if budget - spent_2 < 0 or not budgeted_features:
                 break
 
-    # FIXME: Separation andrebbe ricalcolato (?)
-    sub_decision_tree = build_decision_tree(universe, separation, decision_tree)
-    # TODO: Make sub_decision_tree child of decision_tree
+    decision_tree.add_child(
+        # FIXME: Separation andrebbe ricalcolato (?)
+        build_decision_tree(universe, separation, decision_tree),
+        parent_label=# Nodo corrispondente a k - 1
+    )
 
     return decision_tree
