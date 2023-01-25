@@ -12,4 +12,4 @@ Functions:
     submodular_function_1
 """
 
-DEBUG = True
+DEBUG = False
