@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-from typing import Callable, NewType
+from typing import Callable
 
-from .dataset import Dataset
-from .separation import Separation
+from src.dataset import Dataset
+from src.separation import Separation
 
 
 @dataclass(repr=False, slots=True)
 class Bounds:
+    """Defines the bounds for the binary search"""
+
     lower: float
     upper: float
 
