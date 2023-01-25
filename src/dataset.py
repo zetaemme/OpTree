@@ -199,7 +199,7 @@ class Dataset:
         logger.info("Computing datasets intersection")
         dataset_copy = self.copy()
 
-        data_as_set = {index for _, index in enumerate(dataset_copy.data())}
+        data_as_set = set(range(dataset_copy.data().shape[0]))
         difference = data_as_set.symmetric_difference(set(other))
 
         for row in difference:
