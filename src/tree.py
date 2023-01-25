@@ -11,19 +11,33 @@ class Tree:
 
     label: str | None
     children: list[Self] | None = field(default=None)
+    last_added: Self = field(init=False)
 
     def add_child(self, child: Self) -> None:
-        """Adds the given node as a child of the labelled node, if given as parameter.
-        If parent_label is not passed as parameter, the node will be added as child of root.
+        """Adds the given node as a child of this tree.
 
         Args:
-            node (Node): The node to be added.
-            parent_label (str, optional): The label of the given node's parent. Defaults to None.
+            child (Self): The node to be added.
         """
-        if self.children is not None:
-            self.children.append(child)
-        else:
+        if self.children is None:
             self.children = [child]
+        else:
+            self.children.append(child)
+
+        self.last_added = child
+
+    def add_children(self, children: list[Self]) -> None:
+        """Adds the given nodes as children of this tree.
+
+        Args:
+            children (list[Self]): The nodes to be added.
+        """
+        if self.children is None:
+            self.children = children
+        else:
+            self.children += children
+
+        self.last_added = children[-1]
 
     def set_label(self, label: str) -> None:
         """Setter for the label field
@@ -32,3 +46,4 @@ class Tree:
             label (str): The root label
         """
         self.label = label
+        self.last_added = self

@@ -4,7 +4,6 @@ from src.extraction import cheapest_separation
 from src.maximization import pairs_maximization, probability_maximization
 from src.separation import Separation
 from src.tree import Tree
-from src.utils import get_parent_node
 
 
 def build_decision_tree(
@@ -29,11 +28,11 @@ def build_decision_tree(
             )
         )
 
-        terminal_tree.add_child(
-            Tree(dataset.get_class_of(dataset.pairs_list[0][0])),
-        )
-        terminal_tree.add_child(
-            Tree(dataset.get_class_of(dataset.pairs_list[0][1])),
+        terminal_tree.add_children(
+            [
+                Tree(dataset.get_class_of(dataset.pairs_list[0][0])),
+                Tree(dataset.get_class_of(dataset.pairs_list[0][1])),
+            ]
         )
 
         return terminal_tree
@@ -57,26 +56,19 @@ def build_decision_tree(
         if k == 1:
             decision_tree.set_label(chosen_test)
         else:
-
-            decision_tree.add_child(
-                Tree(chosen_test),
-                # FIXME: Utilizzare get parent node per inserire in modo corretto il nuovo nodo
-                parent_label=get_parent_node(list(budgeted_features), chosen_test),
-            )
+            decision_tree.add_child(Tree(chosen_test))
 
         for objects in separation.S_label[chosen_test].values():
             universe_intersection = universe.intersection(objects)
 
             if universe_intersection and objects != separation.S_star[chosen_test]:
-                decision_tree.add_child(
+                decision_tree.last_added.add_child(
                     build_decision_tree(
                         universe_intersection,
                         # FIXME: Separation andrebbe ricalcolato (?)
                         separation,
                         decision_tree,
-                    ),
-                    # FIXME: Utilizzare get parent node per inserire in modo corretto il nuovo nodo
-                    parent_label=get_parent_node(list(budgeted_features), chosen_test),
+                    )
                 )
 
         universe = universe.intersection(separation.S_star[chosen_test])
@@ -88,27 +80,19 @@ def build_decision_tree(
         while True:
             chosen_test = pairs_maximization(universe)
 
-            decision_tree.add_child(
-                Tree(chosen_test),
-                # FIXME: Utilizzare get parent node per inserire in modo corretto il nuovo nodo
-                parent_label=get_parent_node(list(budgeted_features), chosen_test),
-            )
+            decision_tree.add_child(Tree(chosen_test))
 
             for objects in separation.S_label[chosen_test].values():
                 universe_intersection = universe.intersection(objects)
 
                 if universe_intersection and objects != separation.S_star[chosen_test]:
-                    decision_tree.add_child(
+                    decision_tree.last_added.add_child(
                         build_decision_tree(
                             universe_intersection,
                             # FIXME: Separation andrebbe ricalcolato (?)
                             separation,
                             decision_tree,
-                        ),
-                        # FIXME: Utilizzare get parent node per inserire in modo corretto il nuovo nodo
-                        parent_label=get_parent_node(
-                            list(budgeted_features), chosen_test
-                        ),
+                        )
                     )
 
             universe = universe.intersection(separation.S_star[chosen_test])
@@ -121,8 +105,6 @@ def build_decision_tree(
 
     decision_tree.add_child(
         # FIXME: Separation andrebbe ricalcolato (?)
-        build_decision_tree(universe, separation, decision_tree),
-        parent_label=# Nodo corrispondente a k - 1
+        build_decision_tree(universe, separation, decision_tree)
     )
-
     return decision_tree
