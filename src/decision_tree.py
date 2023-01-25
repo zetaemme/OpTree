@@ -39,7 +39,6 @@ def build_decision_tree(
             ]
         )
 
-        # Return the tree
         return terminal_tree
 
     budget = find_budget(dataset, separation)
@@ -82,7 +81,6 @@ def build_decision_tree(
                     )
                 )
 
-        # Update values
         universe = universe.intersection(separation.S_star[chosen_test])
         spent += dataset.costs[chosen_test]
         del budgeted_features[chosen_test]
@@ -111,7 +109,6 @@ def build_decision_tree(
                         )
                     )
 
-            # Update values
             universe = universe.intersection(separation.S_star[chosen_test])
             spent_2 += dataset.costs[chosen_test]
             del budgeted_features[chosen_test]
@@ -127,5 +124,4 @@ def build_decision_tree(
         build_decision_tree(universe, separation, decision_tree)
     )
 
-    # Return the tree
     return decision_tree
