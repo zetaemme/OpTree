@@ -65,6 +65,8 @@ class Dataset:
             number_of_rows = len(dataset_df.index)
             dataset_df["Probability"] = [1 / number_of_rows] * number_of_rows
 
+        dataset_df.insert(loc=0, column="Index", value=range(dataset_df.shape[0]))
+
         dataset_np = dataset_df.to_numpy()
 
         self.features = dataset_df.columns.values[:-2].tolist()
@@ -199,7 +201,7 @@ class Dataset:
         logger.info("Computing datasets intersection")
         dataset_copy = self.copy()
 
-        data_as_set = set(range(dataset_copy.data().shape[0]))
+        data_as_set = set(self.indexes)
         difference = data_as_set.symmetric_difference(set(other))
 
         for row in difference:
@@ -222,6 +224,10 @@ class Dataset:
     def classes(self) -> list[str]:
         """Returns a list of all the possible class labels"""
         return list(self.class_probabilities.keys())
+
+    @property
+    def indexes(self) -> npt.NDArray:
+        return self._table[:, None, 0].flatten()
 
     @property
     def mean(self) -> float:
