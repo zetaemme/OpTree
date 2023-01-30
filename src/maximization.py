@@ -12,9 +12,7 @@ def probability_maximization(universe: Dataset, budget: float, spent: float) -> 
 
     def calculate_probability_maximization_for(feature: str) -> float:
         intersection = universe.intersection(universe_separation.S_star[feature])
-        return (
-            universe.total_probability - intersection.total_probability
-        ) / universe.costs[feature]
+        return (universe.total_probability - intersection.total_probability) / universe.costs[feature]
 
     maximum_eligible: dict[str, float] = {
         feature: calculate_probability_maximization_for(feature)
@@ -30,13 +28,10 @@ def pairs_maximization(universe: Dataset) -> str:
 
     def calculate_pairs_maximization_for(feature: str) -> float:
         intersection = universe.intersection(universe_separation.S_star[feature])
-        return (universe.pairs_number - intersection.pairs_number) / universe.costs[
-            feature
-        ]
+        return (universe.pairs_number - intersection.pairs_number) / universe.costs[feature]
 
     maximum_eligible: dict[str, float] = {
-        feature: calculate_pairs_maximization_for(feature)
-        for feature in universe.features
+        feature: calculate_pairs_maximization_for(feature) for feature in universe.features
     }
 
     return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
@@ -60,9 +55,7 @@ def submodular_maximization(
         logger.debug("f(A): %i", feature_result)
 
         # Computes f(A U {t})
-        union_result = submodular_function(
-            dataset, separation, auxiliary_features + [feature]
-        )
+        union_result = submodular_function(dataset, separation, auxiliary_features + [feature])
         logger.debug("f(A U {t}): %i", union_result)
 
         submodular_result = (union_result - feature_result) / dataset.costs[feature]
