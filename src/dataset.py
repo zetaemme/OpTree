@@ -94,7 +94,7 @@ class Dataset:
         #       To avoid the problem, we multiply by 10 the variance.
         #       Other cost metrics should be considered!
         for idx, column_name in enumerate(self.features):
-            self.costs[column_name] = round(dataset_np[:, idx, None].var(), 2) * 10
+            self.costs[column_name] = round(dataset_np[:, idx + 1].var(), 2) * 10
 
         self.costs = dict(sorted(self.costs.items(), key=lambda item: item[1]))
 
@@ -170,7 +170,7 @@ class Dataset:
         self._data = np.delete(self._data, drop_index, axis=0)
         self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
 
-    def difference(self, other: npt.NDArray, *, axis=0) -> npt.NDArray:
+    def difference(self, other: list[int], *, axis=0) -> npt.NDArray:
         """Computes the set difference between two datasets
 
         Args:
@@ -253,13 +253,13 @@ class Dataset:
         return self.data().std()
 
     @property
-    def total_cost(self) -> int:
+    def total_cost(self) -> float:
         """Total costs of features
 
         Returns:
             int: Sum of all the costs
         """
-        return int(fsum(self.costs.values()))
+        return fsum(self.costs.values())
 
     @property
     def total_probability(self) -> float:
