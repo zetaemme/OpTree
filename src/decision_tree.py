@@ -1,9 +1,12 @@
+import logging
 from src.budget import find_budget
 from src.dataset import Dataset
 from src.extraction import cheapest_separation
 from src.maximization import pairs_maximization, probability_maximization
 from src.separation import Separation
 from src.tree import Tree
+
+logger = logging.getLogger(__name__)
 
 
 def build_decision_tree(
@@ -42,6 +45,7 @@ def build_decision_tree(
         return terminal_tree
 
     budget = find_budget(dataset, separation)
+    logger.info("Using budget %f", budget)
 
     spent = 0.0
     spent_2 = 0.0
@@ -54,10 +58,12 @@ def build_decision_tree(
     budgeted_features = {
         test: cost for test, cost in dataset.costs.items() if cost <= budget
     }
+    logger.info(f"Features within budget {list(budgeted_features.keys())}")
 
     # While exists at least a test with cost equal or less than (budget - spent)
     while any(cost <= budget - spent for cost in budgeted_features.values()):
         chosen_test = probability_maximization(universe, budget, spent)
+        logger.debug("Chosen test: %s", chosen_test)
 
         if k == 1:
             # Set chosen_test as the root of the tree
@@ -69,6 +75,7 @@ def build_decision_tree(
         # For each object in the possible outcomes of chosen_test
         for objects in separation.S_label[chosen_test].values():
             universe_intersection = universe.intersection(objects)
+            logger.debug(f"Intersection with {objects}: {universe_intersection}")
 
             if universe_intersection and objects != separation.S_star[chosen_test]:
                 # Set the tree resulting from the recursive call as the child of chosen_test
@@ -90,6 +97,7 @@ def build_decision_tree(
     if budgeted_features:
         while True:
             chosen_test = pairs_maximization(universe)
+            logger.debug("Chosen test: %s", chosen_test)
 
             # Set chosen_test as child of the test added in the last iteration
             decision_tree.add_child(Tree(chosen_test))
@@ -97,6 +105,7 @@ def build_decision_tree(
             # For each object in the possible outcomes of chosen_test
             for objects in separation.S_label[chosen_test].values():
                 universe_intersection = universe.intersection(objects)
+                logger.debug(f"Intersection with {objects}: {universe_intersection}")
 
                 if universe_intersection and objects != separation.S_star[chosen_test]:
                     # Set the tree resulting from the recursive call as the child of chosen_test
