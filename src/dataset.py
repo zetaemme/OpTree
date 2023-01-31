@@ -1,5 +1,5 @@
 import logging
-from collections import Counter
+# from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
 from math import fsum
@@ -81,12 +81,9 @@ class Dataset:
 
         dataset_np = dataset_df.to_numpy()
 
-        self.features = dataset_df.columns.values[:-2].tolist()
-
-        counter = Counter(dataset_np[:, -1, None].flatten().tolist())
-        self.class_probabilities = {
-            key: (value / sum(counter.values())) for key, value in counter.items()
-        }
+        # Calculate probability of each class
+        # counter = Counter(dataset_np[:, -1, None].flatten().tolist())
+        # self.class_probabilities = {key: (value / sum(counter.values())) for key, value in counter.items()}
 
         self._pairs = self.Pairs(dataset_np)
         self._data = dataset_np[:, :-2]
@@ -101,7 +98,7 @@ class Dataset:
 
         self.costs = dict(sorted(self.costs.items(), key=lambda item: item[1]))
 
-        del counter
+        # del counter
         del dataset_df, dataset_np
 
     def __getitem__(self, pos) -> npt.NDArray:
