@@ -7,9 +7,7 @@ from src.types import Bounds, HeuristicFunction
 logger = logging.getLogger(__name__)
 
 
-def submodular_function_1(
-    dataset: Dataset, separation: Separation, features: list[str]
-) -> int:
+def submodular_function_1(dataset: Dataset, separation: Separation, features: list[str]) -> int:
     """Submodular function used by the heuristic
 
     Args:
@@ -28,23 +26,7 @@ def submodular_function_1(
     if len(submodular_separation.S_star_intersection) < 2:
         return dataset.pairs_number
 
-    return dataset.pairs_number - dataset.pairs_number_for(
-        submodular_separation.S_star_intersection
-    )
-
-
-def get_parent_node(features: list[str], child: str) -> str:
-    """Gets the name of child's parent node
-
-    Args:
-        features (list[str]): List of all possible nodes
-        child (str): Node that we want to connect with his parent
-
-    Returns:
-        str: The name of the parent node
-    """
-    parent_index = features.index(child) - 1
-    return features[parent_index]
+    return dataset.pairs_number - dataset.pairs_number_for(submodular_separation.S_star_intersection)
 
 
 def binary_search_budget(
@@ -72,9 +54,7 @@ def binary_search_budget(
     while search_range.upper >= search_range.lower + 1:
         current_budget = (search_range.lower + search_range.upper) / 2
 
-        heuristic_result = heuristic(
-            current_budget, dataset, separation, submodular_function_1
-        )
+        heuristic_result = heuristic(current_budget, dataset, separation, submodular_function_1)
 
         logger.debug(f"Heuristic result: {heuristic_result}")
 
