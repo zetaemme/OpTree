@@ -54,18 +54,30 @@ class Dataset:
     class_probabilities: dict[str, float]
     costs: dict[str, float]
     features: list[str]
+    _classes: dict[int, str]
+    _data: npt.NDArray
+    _header: list[str]
     _pairs: Pairs
-    _table: npt.NDArray
+    _probabilities: list[float]
 
     def __init__(self, dataset_path: Path) -> None:
         logger.info("Initializing dataset")
         dataset_df: pd.DataFrame = pd.read_csv(dataset_path)
 
+        # If no probability is given, assume uniform
         if "Probability" not in dataset_df.columns:
             number_of_rows = len(dataset_df.index)
             dataset_df["Probability"] = [1 / number_of_rows] * number_of_rows
 
+        self._classes = dataset_df["Class"].to_dict()
+        self._probabilities = dataset_df["Probability"].to_list()
+
+        # Add "Index" column
         dataset_df.insert(loc=0, column="Index", value=range(dataset_df.shape[0]))
+
+        # Extract dataset's features
+        self._header = dataset_df.columns.to_list()
+        self.features = self._header[1:-2]
 
         dataset_np = dataset_df.to_numpy()
 
@@ -77,7 +89,7 @@ class Dataset:
         }
 
         self._pairs = self.Pairs(dataset_np)
-        self._table = np.append([dataset_df.columns.values], dataset_np, axis=0)
+        self._data = dataset_np[:, :-2]
 
         self.costs = {}
 
@@ -94,20 +106,20 @@ class Dataset:
 
     def __getitem__(self, pos) -> npt.NDArray:
         """[] operator overload"""
-        return self._table.__getitem__(pos)
+        return self._data.__getitem__(pos)
 
     def __repr__(self) -> str:
-        return self._table.__repr__()
+        return self._data.__repr__()
 
     def get_class_of(self, idx: int) -> str:
         """Returns the class of the observation at index idx"""
-        return self._table[idx + 1][-2]
+        return self._data[idx + 1][-2]
 
     def copy(self) -> Self:
         """Returns a deep copy of the dataset"""
         return deepcopy(self)
 
-    def data(self, *, complete=False) -> npt.NDArray:
+    def data(self) -> npt.NDArray:
         """Removes useless infos from dataset and returns it
 
         Args:
@@ -116,10 +128,7 @@ class Dataset:
         Returns:
             npt.NDArray: The content of the dataset.
         """
-        if complete:
-            return self._table[1:]
-
-        return self._table[1:, :-2]
+        return self._data
 
     def from_features_subset(self, features: list[str]) -> Self:
         """Returns a copy of the dataset, containing only the given features
@@ -150,7 +159,7 @@ class Dataset:
         """
         logger.info("Dropping column %s", feature)
         feature_index = self.features.index(feature)
-        self._table = np.delete(self.data(complete=True), feature_index, axis=1)
+        self._data = np.delete(self.data()[1:], feature_index, axis=1)
         self.features.remove(feature)
 
     def drop_row(self, index: int) -> None:
@@ -160,10 +169,9 @@ class Dataset:
             index (int): Index of the row to remove
         """
         logger.info("Dropping row %i", index)
-        self._table = np.delete(self.data(), index, axis=0)
-        self._pairs.pairs_list = [
-            pair for pair in self._pairs.pairs_list if index not in pair
-        ]
+        drop_index = np.where(self.indexes == index)
+        self._data = np.delete(self._data, drop_index, axis=0)
+        self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
 
     def difference(self, other: npt.NDArray, *, axis=0) -> npt.NDArray:
         """Computes the set difference between two datasets
@@ -221,13 +229,13 @@ class Dataset:
         return len({pair for obj in objects for pair in self.pairs_list if obj in pair})
 
     @property
-    def classes(self) -> list[str]:
-        """Returns a list of all the possible class labels"""
-        return list(self.class_probabilities.keys())
+    def classes(self) -> dict[int, str]:
+        """Returns a dict of all the possible classes with relative object index"""
+        return self._classes
 
     @property
     def indexes(self) -> npt.NDArray:
-        return self._table[:, None, 0].flatten()
+        return self._data[:, 0]
 
     @property
     def mean(self) -> float:
@@ -263,4 +271,4 @@ class Dataset:
         Returns:
             float: Sum of all the probabilities
         """
-        return fsum(probability for probability in self._table[1:, -1, None])
+        return fsum(probability for probability in self._data[1:, -1])
