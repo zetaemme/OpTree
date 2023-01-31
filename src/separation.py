@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from functools import reduce
 from typing import Any, Self
 
-import numpy.typing as npt
 from numpy import intersect1d
 
 from src.dataset import Dataset
@@ -102,6 +101,6 @@ class Separation:
         return separation_copy
 
     @property
-    def S_star_intersection(self) -> npt.NDArray[Any]:
+    def S_star_intersection(self) -> list[int]:
         """Returns the intersection on the tests of S^*_t"""
         return reduce(intersect1d, self.S_star.values())
