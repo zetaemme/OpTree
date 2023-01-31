@@ -4,6 +4,8 @@ from src.dataset import Dataset
 from src.separation import Separation
 from src.types import Bounds, HeuristicFunction
 
+from itertools import chain
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,14 +60,12 @@ def binary_search_budget(
 
         logger.debug(f"Heuristic result: {heuristic_result}")
 
-        covered_pairs = [
-            set(separation.kept[test] + separation.separated[test])
-            for test in heuristic_result
-        ]
+        covered_pairs = [set(separation.kept[test] + separation.separated[test]) for test in heuristic_result]
+        covered_pairs = set(chain(*covered_pairs))
 
         logger.debug(f"Pairs covered by the heuristic: {covered_pairs}")
 
-        if len(*covered_pairs) < (alpha * dataset.pairs_number):
+        if len(covered_pairs) < (alpha * dataset.pairs_number):
             search_range.upper = current_budget
         else:
             search_range.lower = current_budget
