@@ -17,6 +17,7 @@ def build_decision_tree(
     Args:
         dataset (Dataset): The dataset used to train the model
         separation (Separation): Dataset tripartition and sets
+        decision_tree (Tree): The tree to build
 
     Returns:
         Tree: The (log)-optimal decision tree
@@ -37,8 +38,8 @@ def build_decision_tree(
         # Add the two items as leafs labelled with the respective class
         terminal_tree.add_children(
             [
-                Tree(dataset.get_class_of(dataset.pairs_list[0][0])),
-                Tree(dataset.get_class_of(dataset.pairs_list[0][1])),
+                Tree(dataset.classes[dataset.pairs_list[0][0]]),
+                Tree(dataset.classes[dataset.pairs_list[0][1]]),
             ]
         )
 
