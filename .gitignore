@@ -137,5 +137,8 @@ dmypy.json
 data/*.csv
 !data/test.csv
 
+# Model
+model/*.obj
+
 # macOS
 .DS_Store
