@@ -154,7 +154,7 @@ class Dataset:
         Args:
             feature (str): Label of the column to remove
         """
-        logger.info("Dropping column %s", feature)
+        logger.debug("Dropping column %s", feature)
         feature_index = self.features.index(feature)
         self._data = np.delete(self.data()[1:], feature_index, axis=1)
         self.features.remove(feature)
@@ -165,7 +165,7 @@ class Dataset:
         Args:
             index (int): Index of the row to remove
         """
-        logger.info("Dropping row %i", index)
+        logger.debug("Dropping row %i", index)
         drop_index = np.where(self.indexes == index)
         self._data = np.delete(self._data, drop_index, axis=0)
         self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
@@ -204,7 +204,7 @@ class Dataset:
         Returns:
             npt.NDArray: The resulting intersection
         """
-        logger.info("Computing datasets intersection")
+        logger.debug("Computing datasets intersection")
         dataset_copy = self.copy()
 
         data_as_set = set(self.indexes)

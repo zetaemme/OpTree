@@ -23,7 +23,7 @@ class Separation:
     separated: dict[str, list[tuple[int]]] = field(default_factory=dict)
 
     def __init__(self, dataset: Dataset) -> None:
-        logger.info("Computing dataset separation")
+        logger.debug("Computing dataset separation")
         self.S_label = {}
         self.S_star = {}
         self.sigma = {}
