@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Self
 
 
-@dataclass
+@dataclass(repr=False)
 class Tree:
     """
     The decision tree. Implemented as in the following grammar:
@@ -47,3 +47,14 @@ class Tree:
         """
         self.label = label
         self.last_added = self
+
+    def __repr__(self) -> str:
+        if self.children is not None:
+            child_repr = [child.__repr__() for child in self.children]
+        else:
+            child_repr = ""
+
+        if child_repr:
+            return f"{self.label} -> [ {', '.join(child_repr)} ]"
+        else:
+            return self.label
