@@ -181,7 +181,8 @@ class Dataset:
             npt.NDArray: the set difference between two datasets
         """
         logger.debug("Computing datasets difference")
-        return np.delete(self.data(), other, axis)
+        drop_indexes = [np.where(self.indexes == index) for index in other]
+        return np.delete(self.data(), drop_indexes, axis)
 
     def index_of_row(self, other: npt.NDArray) -> int | list[int]:
         """Returns the index of a given row
