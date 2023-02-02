@@ -135,10 +135,13 @@ dmypy.json
 
 # Dataset
 data/*.csv
-!data/test.csv
+!tests/data/test.csv
 
 # Model
 model/*.obj
+
+# Tests
+!tests/.pytest_cache
 
 # macOS
 .DS_Store
