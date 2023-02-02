@@ -55,6 +55,6 @@ class Tree:
             child_repr = ""
 
         if child_repr:
-            return f"{self.label} -> [ {', '.join(child_repr)} ]"
+            return f"({self.label} -> [ {', '.join(child_repr)} ])"
         else:
             return self.label
