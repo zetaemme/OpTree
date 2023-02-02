@@ -110,10 +110,6 @@ class Dataset:
     def __repr__(self) -> str:
         return self._data.__repr__()
 
-    def get_class_of(self, idx: int) -> str:
-        """Returns the class of the observation at index idx"""
-        return self._data[idx + 1][-2]
-
     def copy(self) -> Self:
         """Returns a deep copy of the dataset"""
         return deepcopy(self)
@@ -128,38 +124,6 @@ class Dataset:
             npt.NDArray: The content of the dataset.
         """
         return self._data
-
-    def from_features_subset(self, features: list[str]) -> Self:
-        """Returns a copy of the dataset, containing only the given features
-
-        Args:
-            features (npt.NDArray): The features to be returned
-
-        Returns:
-            Self: An instance of the dataset containing only the given features
-        """
-        if not features:
-            return self.copy()
-
-        logger.info(f"Generating dataset from subset {features} of features")
-        dataset_copy = self.copy()
-        remaining_features = set(self.features) - set(features)
-
-        for feature in remaining_features:
-            dataset_copy.drop_column(feature)
-
-        return dataset_copy
-
-    def drop_column(self, feature: str) -> None:
-        """Removes the column with given label
-
-        Args:
-            feature (str): Label of the column to remove
-        """
-        logger.debug("Dropping column %s", feature)
-        feature_index = self.features.index(feature)
-        self._data = np.delete(self.data()[1:], feature_index, axis=1)
-        self.features.remove(feature)
 
     def drop_row(self, index: int) -> None:
         """Removes the row at given index
