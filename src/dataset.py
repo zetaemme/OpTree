@@ -51,7 +51,7 @@ class Dataset:
             """
             return len(self.pairs_list)
 
-    class_probabilities: dict[str, float]
+    # class_probabilities: dict[str, float]
     costs: dict[str, float]
     features: list[str]
     _classes: dict[int, str]
@@ -271,4 +271,4 @@ class Dataset:
         Returns:
             float: Sum of all the probabilities
         """
-        return fsum(probability for probability in self._data[1:, -1])
+        return fsum(probability for probability in self._probabilities)
