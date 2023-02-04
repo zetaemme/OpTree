@@ -153,31 +153,21 @@ class Dataset:
         ]).flatten()
         return np.delete(self.data(), drop_indexes, axis)
 
-    def index_of_row(self, other: np.ndarray) -> int | list[int]:
-        """Returns the index of a given row
-
-        Args:
-            other (npt.NDArray): The row which we want to index
-
-        Returns:
-            int | list[int]: The row index
-        """
-        return np.where(np.any(self.data() == other))[0][0]
-
     def intersection(self, other: list[int]) -> Self:
         """Calculates the intersection between the dataset and the given subset of rows
 
         Args:
-            other (npt.NDArray): The rows to intersect
+            other (list[int]): Indexes of the rows to intersect
 
         Returns:
-            npt.NDArray: The resulting intersection
+            Dataset: The resulting intersection
         """
         logger.debug("Computing datasets intersection")
         dataset_copy = self.copy()
 
         data_as_set = set(self.indexes)
-        difference = data_as_set.symmetric_difference(set(other))
+
+        difference = data_as_set - set(other)
 
         for row in difference:
             dataset_copy.drop_row(row)

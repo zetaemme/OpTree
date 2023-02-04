@@ -1,14 +1,13 @@
 from pathlib import Path
 from unittest import TestCase, main
 
-import numpy as np
-
 from src.dataset import Dataset
 
 
 class TestDataset(TestCase):
-    def setUp(self):
-        self.dataset = Dataset(Path("data/test.csv"))
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.dataset = Dataset(Path("data/test.csv"))
 
     def test_fields(self) -> None:
         default_features = ["t1", "t2", "t3"]
@@ -95,11 +94,13 @@ class TestDataset(TestCase):
         )
 
     def test_difference(self) -> None:
-        other = Dataset(Path("data/test.csv"))
-        other.drop_row(2)
-        other.drop_row(3)
+        dataset_copy = self.dataset.copy()
+        dataset_copy.drop_row(2)
+        dataset_copy.drop_row(3)
 
-        difference = self.dataset.difference(other.indexes.tolist()).tolist()  # type: ignore
+        difference = self.dataset.difference(
+            dataset_copy.indexes.tolist()  # type: ignore
+        ).tolist()
 
         self.assertEqual(
             difference,
@@ -108,6 +109,26 @@ class TestDataset(TestCase):
                 [3, 1, 2, 2]
             ],
             "Error computing difference without rows 2 and 3"
+        )
+
+    def test_intersection(self) -> None:
+        dataset_copy_1 = self.dataset.copy()
+        dataset_copy_2 = self.dataset.copy()
+
+        dataset_copy_1.drop_row(0)
+        dataset_copy_1.drop_row(2)
+        dataset_copy_1.drop_row(3)
+
+        dataset_copy_2.drop_row(0)
+        dataset_copy_2.drop_row(1)
+
+        intersection = dataset_copy_1.intersection(
+            dataset_copy_2.indexes.tolist()  # type: ignore
+        )
+
+        self.assertEqual(
+            intersection.data().tolist(),
+            [[4, 2, 2, 2]]
         )
 
 
