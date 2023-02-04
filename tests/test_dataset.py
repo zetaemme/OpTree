@@ -1,12 +1,14 @@
 from pathlib import Path
 from unittest import TestCase, main
 
+import numpy as np
+
 from src.dataset import Dataset
 
 
 class TestDataset(TestCase):
     def setUp(self):
-        self.dataset = Dataset(Path("tests/data/test.csv"))
+        self.dataset = Dataset(Path("data/test.csv"))
 
     def test_fields(self) -> None:
         default_features = ["t1", "t2", "t3"]
@@ -26,7 +28,7 @@ class TestDataset(TestCase):
         self.assertEqual(self.dataset.total_probability, sum(default_probabilities))
         self.assertEqual(self.dataset.data().tolist(), default_data)
 
-    def test_drop_rows(self) -> None:
+    def test_drop_row(self) -> None:
         dataset_copy = self.dataset.copy()
         dataset_copy.drop_row(0)
         self.assertEqual(
@@ -36,7 +38,8 @@ class TestDataset(TestCase):
                 [2, 2, 2, 1],
                 [3, 1, 2, 2],
                 [4, 2, 2, 2]
-            ]
+            ],
+            "Error dropping row 0"
         )
 
         dataset_copy = self.dataset.copy()
@@ -48,7 +51,8 @@ class TestDataset(TestCase):
                 [2, 2, 2, 1],
                 [3, 1, 2, 2],
                 [4, 2, 2, 2]
-            ]
+            ],
+            "Error dropping row 1"
         )
 
         dataset_copy = self.dataset.copy()
@@ -60,7 +64,8 @@ class TestDataset(TestCase):
                 [1, 1, 2, 1],
                 [3, 1, 2, 2],
                 [4, 2, 2, 2]
-            ]
+            ],
+            "Error dropping row 2"
         )
 
         dataset_copy = self.dataset.copy()
@@ -72,7 +77,8 @@ class TestDataset(TestCase):
                 [1, 1, 2, 1],
                 [2, 2, 2, 1],
                 [4, 2, 2, 2]
-            ]
+            ],
+            "Error dropping row 3"
         )
 
         dataset_copy = self.dataset.copy()
@@ -84,7 +90,24 @@ class TestDataset(TestCase):
                 [1, 1, 2, 1],
                 [2, 2, 2, 1],
                 [3, 1, 2, 2]
-            ]
+            ],
+            "Error dropping row 4"
+        )
+
+    def test_difference(self) -> None:
+        other = Dataset(Path("data/test.csv"))
+        other.drop_row(2)
+        other.drop_row(3)
+
+        difference = self.dataset.difference(other.indexes.tolist()).tolist()  # type: ignore
+
+        self.assertEqual(
+            difference,
+            [
+                [2, 2, 2, 1],
+                [3, 1, 2, 2]
+            ],
+            "Error computing difference without rows 2 and 3"
         )
 
 

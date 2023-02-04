@@ -2,12 +2,12 @@ import logging
 # from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
+from itertools import chain
 from math import fsum
 from pathlib import Path
 from typing import Self
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class Dataset:
 
         pairs_list: list[tuple[int, int]]
 
-        def __init__(self, dataset: npt.NDArray) -> None:
+        def __init__(self, dataset: np.ndarray) -> None:
             logger.info("Computing dataset pairs")
             item_classes: list[str] = dataset[:, -2, None].ravel().tolist()
 
@@ -55,7 +55,7 @@ class Dataset:
     costs: dict[str, float]
     features: list[str]
     _classes: dict[int, str]
-    _data: npt.NDArray
+    _data: np.ndarray
     _header: list[str]
     _pairs: Pairs
     _probabilities: list[float]
@@ -103,7 +103,7 @@ class Dataset:
         # del counter
         del dataset_df, dataset_np
 
-    def __getitem__(self, pos) -> npt.NDArray:
+    def __getitem__(self, pos) -> np.ndarray:
         """[] operator overload"""
         return self._data.__getitem__(pos)
 
@@ -114,11 +114,8 @@ class Dataset:
         """Returns a deep copy of the dataset"""
         return deepcopy(self)
 
-    def data(self) -> npt.NDArray:
+    def data(self) -> np.ndarray:
         """Removes useless infos from dataset and returns it
-
-        Args:
-            complete (bool, optional): States if the output should contain 'Class' feature. Defaults to False.
 
         Returns:
             npt.NDArray: The content of the dataset.
@@ -133,10 +130,10 @@ class Dataset:
         """
         logger.debug("Dropping row %i", index)
         drop_index = np.where(self.indexes == index)
-        self._data = np.delete(self._data, drop_index, axis=0)
+        self._data = np.delete(self._data, drop_index[0][0], axis=0)
         self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
 
-    def difference(self, other: list[int], *, axis=0) -> npt.NDArray:
+    def difference(self, other: list[int], *, axis=0) -> np.ndarray:
         """Computes the set difference between two datasets
 
         Args:
@@ -147,10 +144,16 @@ class Dataset:
             npt.NDArray: the set difference between two datasets
         """
         logger.debug("Computing datasets difference")
-        drop_indexes = [np.where(self.indexes == index) for index in other]
+        drop_indexes = np.array([
+            arr
+            for arr in chain(
+                np.where(self.indexes == index)
+                for index in other
+            )
+        ]).flatten()
         return np.delete(self.data(), drop_indexes, axis)
 
-    def index_of_row(self, other: npt.NDArray) -> int | list[int]:
+    def index_of_row(self, other: np.ndarray) -> int | list[int]:
         """Returns the index of a given row
 
         Args:
@@ -198,8 +201,8 @@ class Dataset:
         return self._classes
 
     @property
-    def indexes(self) -> npt.NDArray:
-        return self._data[:, 0]
+    def indexes(self) -> np.ndarray:
+        return self._data[:, 0]  # type: ignore
 
     @property
     def mean(self) -> float:
