@@ -8,10 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 def probability_maximization(universe: Dataset, budget: float, spent: float) -> str:
+    universe_copy = universe.copy()
     universe_separation = Separation(universe)
 
     def calculate_probability_maximization_for(feature: str) -> float:
-        intersection = universe.intersection(universe_separation.S_star[feature])
+        intersection = universe_copy.intersection(universe_separation.S_star[feature])
         return (universe.total_probability - intersection.total_probability) / universe.costs[feature]
 
     maximum_eligible: dict[str, float] = {
@@ -24,10 +25,11 @@ def probability_maximization(universe: Dataset, budget: float, spent: float) -> 
 
 
 def pairs_maximization(universe: Dataset) -> str:
+    universe_copy = universe.copy()
     universe_separation = Separation(universe)
 
     def calculate_pairs_maximization_for(feature: str) -> float:
-        intersection = universe.intersection(universe_separation.S_star[feature])
+        intersection = universe_copy.intersection(universe_separation.S_star[feature])
         return (universe.pairs_number - intersection.pairs_number) / universe.costs[feature]
 
     maximum_eligible: dict[str, float] = {
