@@ -1,4 +1,5 @@
 import logging
+
 from src.budget import find_budget
 from src.dataset import Dataset
 from src.extraction import cheapest_separation
@@ -10,13 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 def build_decision_tree(
-    dataset: Dataset, separation: Separation, decision_tree=Tree(None)
+        dataset: Dataset, separation: Separation, decision_tree=Tree(None)
 ) -> Tree:
     """Recursively builds a (log)-optimal decision tree.
 
     Args:
         dataset (Dataset): The dataset used to train the model
-        separation (Separation): Dataset tripartition and sets
+        separation (Separation): Dataset tri-partition and observations subsets
         decision_tree (Tree): The tree to build
 
     Returns:
@@ -31,7 +32,7 @@ def build_decision_tree(
         # Create a tree labelled by the cheapest test that separates the two items
         terminal_tree = Tree(
             cheapest_separation(
-                dataset, dataset.pairs_list[0][0], dataset.pairs_list[0][1], separation
+                dataset, separation, dataset.pairs_list[0][0], dataset.pairs_list[0][1]
             )
         )
 
@@ -39,7 +40,7 @@ def build_decision_tree(
         terminal_tree.add_children(
             [
                 Tree(dataset.classes[dataset.pairs_list[0][0]]),
-                Tree(dataset.classes[dataset.pairs_list[0][1]]),
+                Tree(dataset.classes[dataset.pairs_list[0][1]])
             ]
         )
 
@@ -80,6 +81,7 @@ def build_decision_tree(
 
             if len(universe_intersection) > 0 and objects != separation.S_star[chosen_test]:
                 # Set the tree resulting from the recursive call as the child of chosen_test
+                logger.info("t_A recursive call")
                 decision_tree.last_added.add_child(
                     build_decision_tree(
                         universe_intersection,
@@ -110,6 +112,7 @@ def build_decision_tree(
 
                 if len(universe_intersection) > 0 and objects != separation.S_star[chosen_test]:
                     # Set the tree resulting from the recursive call as the child of chosen_test
+                    logger.info("t_B recursive call")
                     decision_tree.last_added.add_child(
                         build_decision_tree(
                             universe_intersection,
@@ -124,13 +127,12 @@ def build_decision_tree(
             del budgeted_features[chosen_test]
             k += 1
 
-            # If there are no tests left or we're running out of budget, break the loop
+            # If there are no tests left, or we're running out of budget, break the loop
             if budget - spent_2 < 0 or not budgeted_features:
                 break
 
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     decision_tree.add_child(
-        # FIXME: Separation andrebbe ricalcolato (?)
         build_decision_tree(universe, separation, decision_tree)
     )
 
