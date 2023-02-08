@@ -70,20 +70,6 @@ class Separation:
     def __getitem__(self, key: str) -> dict[Any, list[int]]:
         return self.S_label[key]
 
-    def check(self, feature: str, obj_idx1: int, obj_idx2: int) -> bool:
-        key_list = list(self.S_label[feature])
-
-        for idx, key1 in enumerate(key_list):
-            for key2 in key_list[idx:]:
-                if (obj_idx1 in self.S_label[feature][key1] and obj_idx2 in self.S_label[feature][key2]) or (
-                        obj_idx1 in self.S_label[feature][key2] and obj_idx2 in self.S_label[feature][key1]
-                ):
-                    return True
-
-                continue
-
-        return False
-
     def for_features_subset(self, features: list[str]) -> Self:
         separation_copy = deepcopy(self)
 
