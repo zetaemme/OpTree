@@ -74,26 +74,27 @@ def build_decision_tree(
             # Set chosen_test as child of the test added in the last iteration
             decision_tree.add_child(Tree(chosen_test))
 
-        # For each object in the possible outcomes of chosen_test
-        for objects in separation.S_label[chosen_test].values():
-            universe_intersection = universe.intersection(objects)
-            logger.debug(f"Intersection with {objects}: {universe_intersection}")
+        # For each label in the possible outcomes of chosen_test
+        for label in dataset.labels_for(chosen_test):
+            universe_intersection = universe.intersection(separation.S_label[chosen_test][label])
+            logger.debug(f"Universe intersect S[{chosen_test}][{label}]: {universe_intersection.indexes}")
 
-            if len(universe_intersection) > 0 and objects != separation.S_star[chosen_test]:
+            if len(universe_intersection) > 0 \
+                    and separation.S_label[chosen_test][label] != separation.S_star[chosen_test]:
                 # Set the tree resulting from the recursive call as the child of chosen_test
                 logger.info("t_A recursive call")
                 decision_tree.last_added.add_child(
                     build_decision_tree(
                         universe_intersection,
-                        # FIXME: Separation andrebbe ricalcolato (?)
                         separation,
                         decision_tree,
                     )
                 )
 
         universe = universe.intersection(separation.S_star[chosen_test])
-        spent += dataset.costs[chosen_test]
+        spent += universe.costs[chosen_test]
         del budgeted_features[chosen_test]
+        universe.drop_feature(chosen_test)
         k += 1
 
     # If there are still some tests with cost greater than budget
@@ -105,18 +106,18 @@ def build_decision_tree(
             # Set chosen_test as child of the test added in the last iteration
             decision_tree.add_child(Tree(chosen_test))
 
-            # For each object in the possible outcomes of chosen_test
-            for objects in separation.S_label[chosen_test].values():
-                universe_intersection = universe.intersection(objects)
-                logger.debug(f"Intersection with {objects}: {universe_intersection}")
+            # For each label in the possible outcomes of chosen_test
+            for label in dataset.labels_for(chosen_test):
+                universe_intersection = universe.intersection(separation.S_label[chosen_test][label])
+                logger.debug(f"Universe intersect S[{chosen_test}][{label}]: {universe_intersection.indexes}")
 
-                if len(universe_intersection) > 0 and objects != separation.S_star[chosen_test]:
+                if len(universe_intersection) > 0 \
+                        and separation.S_label[chosen_test][label] != separation.S_star[chosen_test]:
                     # Set the tree resulting from the recursive call as the child of chosen_test
                     logger.info("t_B recursive call")
                     decision_tree.last_added.add_child(
                         build_decision_tree(
                             universe_intersection,
-                            # FIXME: Separation andrebbe ricalcolato (?)
                             separation,
                             decision_tree,
                         )
@@ -125,6 +126,7 @@ def build_decision_tree(
             universe = universe.intersection(separation.S_star[chosen_test])
             spent_2 += dataset.costs[chosen_test]
             del budgeted_features[chosen_test]
+            universe.drop_feature(chosen_test)
             k += 1
 
             # If there are no tests left, or we're running out of budget, break the loop
