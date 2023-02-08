@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from itertools import chain
 from math import fsum
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 import numpy as np
 import pandas as pd
@@ -125,6 +125,14 @@ class Dataset:
         """
         return self._data
 
+    def drop_feature(self, feature: str) -> None:
+        feature_index = self.features.index(feature)
+
+        self._data = np.delete(self._data, feature_index + 1, 1)
+        self.features.remove(feature)
+        self._header.remove(feature)
+        del self.costs[feature]
+
     def drop_row(self, index: int) -> None:
         """Removes the row at given index
 
@@ -176,6 +184,10 @@ class Dataset:
             dataset_copy.drop_row(row)
 
         return dataset_copy
+
+    def labels_for(self, feature: str) -> set[Any]:
+        feature_index = self.features.index(feature)
+        return set(self._data[:, feature_index + 1])
 
     def pairs_number_for(self, objects: list[int]) -> int:
         """Number of pairs containing objects

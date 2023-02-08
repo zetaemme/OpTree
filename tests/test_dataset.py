@@ -27,6 +27,58 @@ class TestDataset(TestCase):
         self.assertEqual(self.dataset.total_probability, sum(default_probabilities))
         self.assertEqual(self.dataset.data().tolist(), default_data)
 
+    def test_drop_feature(self) -> None:
+        dataset_copy = self.dataset.copy()
+        dataset_copy.drop_feature("t1")
+        self.assertEqual(
+            dataset_copy.data().tolist(),
+            [
+                [0, 1, 2],
+                [1, 2, 1],
+                [2, 2, 1],
+                [3, 2, 2],
+                [4, 2, 2]
+            ]
+        )
+        self.assertListEqual(
+            dataset_copy.features,
+            ["t2", "t3"]
+        )
+
+        dataset_copy = self.dataset.copy()
+        dataset_copy.drop_feature("t2")
+        self.assertEqual(
+            dataset_copy.data().tolist(),
+            [
+                [0, 1, 2],
+                [1, 1, 1],
+                [2, 2, 1],
+                [3, 1, 2],
+                [4, 2, 2]
+            ]
+        )
+        self.assertListEqual(
+            dataset_copy.features,
+            ["t1", "t3"]
+        )
+
+        dataset_copy = self.dataset.copy()
+        dataset_copy.drop_feature("t3")
+        self.assertEqual(
+            dataset_copy.data().tolist(),
+            [
+                [0, 1, 1],
+                [1, 1, 2],
+                [2, 2, 2],
+                [3, 1, 2],
+                [4, 2, 2]
+            ]
+        )
+        self.assertListEqual(
+            dataset_copy.features,
+            ["t1", "t2"]
+        )
+
     def test_drop_row(self) -> None:
         dataset_copy = self.dataset.copy()
         dataset_copy.drop_row(0)
@@ -130,6 +182,13 @@ class TestDataset(TestCase):
             intersection.data().tolist(),
             [[4, 2, 2, 2]]
         )
+
+    def test_labels_for(self) -> None:
+        for feature in self.dataset.features:
+            self.assertSetEqual(
+                self.dataset.labels_for(feature),
+                {1, 2}
+            )
 
 
 if __name__ == '__main__':
