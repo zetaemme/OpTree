@@ -78,7 +78,7 @@ def build_decision_tree(
             universe_intersection = universe.intersection(objects)
             logger.debug(f"Intersection with {objects}: {universe_intersection}")
 
-            if universe_intersection and objects != separation.S_star[chosen_test]:
+            if len(universe_intersection) > 0 and objects != separation.S_star[chosen_test]:
                 # Set the tree resulting from the recursive call as the child of chosen_test
                 decision_tree.last_added.add_child(
                     build_decision_tree(
@@ -108,7 +108,7 @@ def build_decision_tree(
                 universe_intersection = universe.intersection(objects)
                 logger.debug(f"Intersection with {objects}: {universe_intersection}")
 
-                if universe_intersection and objects != separation.S_star[chosen_test]:
+                if len(universe_intersection) > 0 and objects != separation.S_star[chosen_test]:
                     # Set the tree resulting from the recursive call as the child of chosen_test
                     decision_tree.last_added.add_child(
                         build_decision_tree(

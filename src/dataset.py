@@ -73,7 +73,7 @@ class Dataset:
         self._probabilities = dataset_df["Probability"].to_list()
 
         # Add "Index" column
-        dataset_df.insert(loc=0, column="Index", value=range(dataset_df.shape[0]))
+        dataset_df.insert(loc=0, column="Index", value=range(dataset_df.shape[0]))  # type: ignore
 
         # Extract dataset's features
         self._header = dataset_df.columns.to_list()
@@ -106,6 +106,9 @@ class Dataset:
     def __getitem__(self, pos) -> np.ndarray:
         """[] operator overload"""
         return self._data.__getitem__(pos)
+
+    def __len__(self) -> int:
+        return self._data.__len__()
 
     def __repr__(self) -> str:
         return self._data.__repr__()
