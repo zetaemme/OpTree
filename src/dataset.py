@@ -96,10 +96,6 @@ class Dataset:
         for idx, column_name in enumerate(self.features):
             self.costs[column_name] = round(dataset_np[:, idx + 1].var(), 2) * 10
 
-        # self.costs = dict(sorted(self.costs.items(), key=lambda item: item[1]))
-        # NOTE: Those are the costs in the paper
-        self.costs = {'t1': 2, 't2': 1, 't3': 3}
-
         # del counter
         del dataset_df, dataset_np
 
