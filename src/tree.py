@@ -1,60 +1,56 @@
 from dataclasses import dataclass, field
-from typing import Self
+from typing import Literal, Self
+
+import matplotlib.pyplot as plt
+from networkx import draw, draw_networkx_edge_labels
+from networkx.drawing.nx_pydot import graphviz_layout
+from networkx.readwrite import json_graph
+
+from src.types import Edges, Nodes
 
 
-@dataclass(repr=False)
+@dataclass(init=False, repr=False)
 class Tree:
-    """
-    The decision tree. Implemented as in the following grammar:
-        TREE -> epsilon | "label" TREE*
-    """
+    """Inspired by: https://brandonrozek.com/blog/networkxtree/"""
+    root: dict[Literal["id", "name"], str] = field(default_factory=dict)
+    nodes: Nodes = field(default_factory=list)
+    edges: Edges = field(default_factory=list)
 
-    label: str | None
-    children: list[Self] | None = field(default=None)
-    last_added: Self = field(init=False)
+    def __init__(self):
+        self.nodes = []
+        self.edges = []
 
-    def add_child(self, child: Self) -> None:
-        """Adds the given node as a child of this tree.
+    def set_root(self, label: str) -> None:
+        assert len(self.nodes) == 0, "This method should be called only on empty trees"
+        self.nodes.append({"id": label, "name": label})
+        self.root = {"id": label, "name": label}
 
-        Args:
-            child (Self): The node to be added.
-        """
-        if self.children is None:
-            self.children = [child]
-        else:
-            self.children.append(child)
+    def add_child(self, *, parent_id: str | None = None, child_id: str, label: str) -> None:
+        if parent_id is None:
+            parent_id = self.last_added_node["id"]
 
-        self.last_added = child
+        self.nodes.append({"id": child_id, "name": child_id})
+        self.edges.append({"source": parent_id, "target": child_id, "label": label})
 
-    def add_children(self, children: list[Self]) -> None:
-        """Adds the given nodes as children of this tree.
+    def add_subtree(self, subtree: Self, label: str) -> None:
+        self.edges.append({"source": self.last_added_node["id"], "target": subtree.root["id"], "label": label})
+        self.nodes += subtree.nodes
+        self.edges += subtree.edges
 
-        Args:
-            children (list[Self]): The nodes to be added.
-        """
-        if self.children is None:
-            self.children = children
-        else:
-            self.children += children
+    def print(self) -> None:
+        node_labels = {node["id"]: node["name"] for node in self.nodes}
+        edge_labels = {(edge["source"], edge["target"]): edge["label"] for edge in self.edges}
 
-        self.last_added = children[-1]
+        for node in self.nodes:
+            del node["name"]
 
-    def set_label(self, label: str) -> None:
-        """Setter for the label field
+        tree = json_graph.node_link_graph({"nodes": self.nodes, "links": self.edges}, directed=True, multigraph=False)
+        pos = graphviz_layout(tree, prog="dot")
 
-        Args:
-            label (str): The root label
-        """
-        self.label = label
-        self.last_added = self
+        draw(tree.to_directed(), pos, labels=node_labels, with_labels=True)
+        draw_networkx_edge_labels(tree, pos, edge_labels=edge_labels)
+        plt.show()
 
-    def __repr__(self) -> str:
-        if self.children is not None:
-            child_repr = [child.__repr__() for child in self.children]
-        else:
-            child_repr = ""
-
-        if child_repr:
-            return f"({self.label} -> [ {', '.join(child_repr)} ])"
-        else:
-            return self.label
+    @property
+    def last_added_node(self) -> dict[Literal["id", "name"], str]:
+        return self.nodes[-1]

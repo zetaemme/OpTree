@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Literal
 
 from src.dataset import Dataset
 from src.separation import Separation
@@ -18,3 +18,6 @@ SubmodularFunction = Callable[[Dataset, Separation, list[str]], int]
 HeuristicFunction = Callable[
     [float, Dataset, Separation, SubmodularFunction], list[str]
 ]
+
+Nodes = list[dict[Literal["id", "name"], str]]
+Edges = list[dict[Literal["source", "target", "label"], str]]

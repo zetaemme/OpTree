@@ -26,7 +26,7 @@ def main(dataset_path: str) -> None:
     decision_tree = build_decision_tree(dataset, separation)
 
     logger.info("Done!")
-    print(decision_tree)
+    decision_tree.print()
 
     if decision_tree is not None:
         with open("model/decision_tree.obj", "wb") as obj_file:
