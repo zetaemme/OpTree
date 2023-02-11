@@ -75,7 +75,7 @@ def build_decision_tree(
             decision_tree.add_child(Tree(chosen_test))
 
         # For each label in the possible outcomes of chosen_test
-        for label in dataset.labels_for(chosen_test):
+        for label in eligible_labels(universe, separation, chosen_test):
             universe_intersection = universe.intersection(separation.S_label[chosen_test][label])
             logger.debug(f"Universe intersect S[{chosen_test}][{label}]: {universe_intersection.indexes}")
 
@@ -107,7 +107,7 @@ def build_decision_tree(
             decision_tree.add_child(Tree(chosen_test))
 
             # For each label in the possible outcomes of chosen_test
-            for label in dataset.labels_for(chosen_test):
+            for label in eligible_labels(universe, separation, chosen_test):
                 universe_intersection = universe.intersection(separation.S_label[chosen_test][label])
                 logger.debug(f"Universe intersect S[{chosen_test}][{label}]: {universe_intersection.indexes}")
 
