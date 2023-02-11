@@ -4,20 +4,16 @@ from src.budget import find_budget
 from src.dataset import Dataset
 from src.extraction import cheapest_separation, eligible_labels
 from src.maximization import pairs_maximization, probability_maximization
-from src.separation import Separation
 from src.tree import Tree
 
 logger = logging.getLogger(__name__)
 
 
-def build_decision_tree(
-        dataset: Dataset, separation: Separation, decision_tree=Tree()
-) -> Tree:
+def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
     """Recursively builds a (log)-optimal decision tree.
 
     Args:
         dataset (Dataset): The dataset used to train the model
-        separation (Separation): Dataset tri-partition and observations subsets
         decision_tree (Tree): The tree to build
 
     Returns:
@@ -33,7 +29,7 @@ def build_decision_tree(
     if dataset.pairs_number == 1:
         # Create a tree rooted by the cheapest test that separates the two items
         terminal_tree = Tree()
-        split = cheapest_separation(dataset, separation, dataset.pairs_list[0][0], dataset.pairs_list[0][1])
+        split = cheapest_separation(dataset, dataset.pairs_list[0][0], dataset.pairs_list[0][1])
 
         terminal_tree.set_root(split)
 
@@ -49,7 +45,7 @@ def build_decision_tree(
 
         return terminal_tree
 
-    budget = find_budget(dataset, separation)
+    budget = find_budget(dataset)
     logger.info("Using budget %f", budget)
 
     spent = 0.0
@@ -79,25 +75,22 @@ def build_decision_tree(
             decision_tree.add_child(child_id=chosen_test, label="")
 
         # For each label in the possible outcomes of chosen_test
-        for label in eligible_labels(universe, separation, chosen_test):
-            universe_intersection = universe.intersection(separation.S_label[chosen_test][label])
+        for label in eligible_labels(universe, chosen_test):
+            universe_intersection = universe.intersection(universe.S_label[chosen_test][label])
             logger.debug(f"Universe intersect S[{chosen_test}][{label}]: {universe_intersection.indexes}")
 
-            # if len(universe_intersection) > 0 \
-            #         and separation.S_label[chosen_test][label] != separation.S_star[chosen_test]:
             # Set the tree resulting from the recursive call as the child of chosen_test
             logger.info("t_A recursive call")
             universe_intersection.drop_feature(chosen_test)
             decision_tree.add_subtree(
                 build_decision_tree(
                     universe_intersection,
-                    separation,
                     decision_tree,
                 ),
                 label
             )
 
-        universe = universe.intersection(separation.S_star[chosen_test])
+        universe = universe.intersection(universe.S_star[chosen_test])
         spent += universe.costs[chosen_test]
         del budgeted_features[chosen_test]
         k += 1
@@ -113,25 +106,22 @@ def build_decision_tree(
             decision_tree.add_child(child_id=chosen_test, label="")
 
             # For each label in the possible outcomes of chosen_test
-            for label in eligible_labels(universe, separation, chosen_test):
-                universe_intersection = universe.intersection(separation.S_label[chosen_test][label])
+            for label in eligible_labels(universe, chosen_test):
+                universe_intersection = universe.intersection(universe.S_label[chosen_test][label])
                 logger.debug(f"Universe intersect S[{chosen_test}][{label}]: {universe_intersection.indexes}")
 
-                # if len(universe_intersection) > 0 \
-                #         and separation.S_label[chosen_test][label] != separation.S_star[chosen_test]:
                 # Set the tree resulting from the recursive call as the child of chosen_test
                 universe_intersection.drop_feature(chosen_test)
                 logger.info("t_B recursive call")
                 decision_tree.add_subtree(
                     build_decision_tree(
                         universe_intersection,
-                        separation,
                         decision_tree,
                     ),
                     label
                 )
 
-            universe = universe.intersection(separation.S_star[chosen_test])
+            universe = universe.intersection(universe.S_star[chosen_test])
             spent_2 += dataset.costs[chosen_test]
             del budgeted_features[chosen_test]
             k += 1
@@ -143,7 +133,7 @@ def build_decision_tree(
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     logger.info("Final recursive call")
     decision_tree.add_subtree(
-        build_decision_tree(universe, separation, decision_tree),
+        build_decision_tree(universe, decision_tree),
         # FIXME: Che label metto?
         ""
     )

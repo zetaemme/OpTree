@@ -1,20 +1,17 @@
 import logging
+from itertools import chain
 
 from src.dataset import Dataset
-from src.separation import Separation
 from src.types import Bounds, HeuristicFunction
-
-from itertools import chain
 
 logger = logging.getLogger(__name__)
 
 
-def submodular_function_1(dataset: Dataset, separation: Separation, features: list[str]) -> int:
+def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
     """Submodular function used by the heuristic
 
     Args:
         dataset (Dataset): The dataset on which the decision is being built
-        separation (Separation): Dataset tripartition and sets
         features (list[str]): The subset of features to consider
 
     Returns:
@@ -23,7 +20,8 @@ def submodular_function_1(dataset: Dataset, separation: Separation, features: li
     if not features:
         return dataset.pairs_number
 
-    submodular_separation = separation.for_features_subset(features)
+    # TODO: Pensare ad un alternativa, è unico punto in cui viene utilizzata
+    submodular_separation = dataset.separation_for_features_subset(features)
 
     if len(submodular_separation.S_star_intersection) < 2:
         return dataset.pairs_number
@@ -33,7 +31,6 @@ def submodular_function_1(dataset: Dataset, separation: Separation, features: li
 
 def binary_search_budget(
     dataset: Dataset,
-    separation: Separation,
     search_range: Bounds,
     heuristic: HeuristicFunction,
 ) -> float:
@@ -41,7 +38,6 @@ def binary_search_budget(
 
     Args:
         dataset (Dataset): The dataset on which the decision is being built
-        separation (Separation): Dataset tripartition and sets
         search_range (list[float]): Range in which the binary search is performed
         heuristic (HeuristicFunction): Heuristic function
 
@@ -56,11 +52,11 @@ def binary_search_budget(
     while search_range.upper >= search_range.lower + 1:
         current_budget = (search_range.lower + search_range.upper) / 2
 
-        heuristic_result = heuristic(current_budget, dataset, separation, submodular_function_1)
+        heuristic_result = heuristic(current_budget, dataset, submodular_function_1)
 
         logger.debug(f"Heuristic result: {heuristic_result}")
 
-        covered_pairs = [set(separation.kept[test] + separation.separated[test]) for test in heuristic_result]
+        covered_pairs = [set(dataset.kept[test] + dataset.separated[test]) for test in heuristic_result]
         covered_pairs = set(chain(*covered_pairs))
 
         logger.debug(f"Pairs covered by the heuristic: {covered_pairs}")

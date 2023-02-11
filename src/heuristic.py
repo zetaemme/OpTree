@@ -2,7 +2,6 @@ import logging
 
 from src.dataset import Dataset
 from src.maximization import submodular_maximization
-from src.separation import Separation
 from src.types import SubmodularFunction
 
 logger = logging.getLogger(__name__)
@@ -11,7 +10,6 @@ logger = logging.getLogger(__name__)
 def wolsey_greedy_heuristic(
     budget: float,
     dataset: Dataset,
-    separation: Separation,
     submodular_function: SubmodularFunction,
 ) -> list[str]:
     """Implementation of the Wolsey greedy algorithm
@@ -19,7 +17,6 @@ def wolsey_greedy_heuristic(
     Args:
         budget (float): Budget threshold
         dataset (Dataset): Dataset
-        separation (Separation): Dataset separation object
         submodular_function (SubmodularFunction): Submodular function to apply
 
     Returns:
@@ -42,7 +39,6 @@ def wolsey_greedy_heuristic(
             # Select t_k
             chosen_test = submodular_maximization(
                 dataset,
-                separation,
                 heuristic_features,
                 auxiliary_array,
                 submodular_function,
@@ -66,9 +62,9 @@ def wolsey_greedy_heuristic(
         return []
 
     # Compute f({t_k})
-    single_result = submodular_function(dataset, separation, [auxiliary_array[k]])
+    single_result = submodular_function(dataset, [auxiliary_array[k]])
     # Compute f(A \ {t_k})
-    difference_result = submodular_function(dataset, separation, auxiliary_array)
+    difference_result = submodular_function(dataset, auxiliary_array)
 
     if single_result >= difference_result:
         # Return {t_k}
