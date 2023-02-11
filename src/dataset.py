@@ -1,4 +1,5 @@
 import logging
+import numbers
 # from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
@@ -94,7 +95,13 @@ class Dataset:
         #       To avoid the problem, we multiply by 10 the variance.
         #       Other cost metrics should be considered!
         for idx, column_name in enumerate(self.features):
-            self.costs[column_name] = round(dataset_np[:, idx + 1].var(), 2) * 10
+            if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
+                # self.costs[column_name] = round(dataset_np[:, idx + 1].var(), 2) * 10
+                self.costs[column_name] = 1
+            else:
+                self.costs[column_name] = 1
+
+        self.costs = {"t1": 5, "t2": 0.1, "t3": 1}
 
         # del counter
         del dataset_df, dataset_np
@@ -139,6 +146,7 @@ class Dataset:
         drop_index = np.where(self.indexes == index)
         self._data = np.delete(self._data, drop_index[0][0], axis=0)
         self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
+        del self._probabilities[drop_index[0][0]]
 
     def difference(self, other: list[int], *, axis=0) -> np.ndarray:
         """Computes the set difference between two datasets
