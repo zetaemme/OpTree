@@ -21,7 +21,6 @@ class Tree:
         self.edges = []
 
     def set_root(self, label: str) -> None:
-        assert len(self.nodes) == 0, "This method should be called only on empty trees"
         self.nodes.append({"id": label, "name": label})
         self.root = {"id": label, "name": label}
 
