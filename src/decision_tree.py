@@ -22,7 +22,11 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
     # BASE CASE: If no pairs, return a leaf labelled by a class
     if dataset.pairs_number == 0:
         tree = Tree()
-        tree.add_leaf(dataset.classes[0], dataset.classes[0])
+
+        # NOTE: Avoids insertion of a wrong leaf when the dataset contains a value with just the "index" column
+        if dataset.features:
+            tree.add_leaf(dataset.classes[0], dataset.classes[0])
+
         return tree
 
     # BASE CASE: If just one pair
@@ -34,12 +38,10 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
         terminal_tree.add_node(split, split)
 
         # Add the two items as leafs labelled with the respective class
-        split_index = dataset.features.index(split)
-
         class_1 = dataset.classes[dataset.pairs_list[0][0]]
-        label_1 = str(dataset[split_index, dataset.pairs_list[0][0]])
+        label_1 = str(dataset[0, dataset.features.index(split) + 1])
         class_2 = dataset.classes[dataset.pairs_list[0][1]]
-        label_2 = str(dataset[split_index, dataset.pairs_list[0][1]])
+        label_2 = str(dataset[1, dataset.features.index(split) + 1])
 
         terminal_tree.add_leaf(class_1, label_1)
         terminal_tree.add_leaf(class_2, label_2)
@@ -95,6 +97,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
         universe = universe.intersection(universe.S_star[chosen_test])
         spent += universe.costs[chosen_test]
+        universe.drop_feature(chosen_test)
         del budgeted_features[chosen_test]
         k += 1
 
@@ -126,6 +129,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
             universe = universe.intersection(universe.S_star[chosen_test])
             spent_2 += dataset.costs[chosen_test]
+            universe.drop_feature(chosen_test)
             del budgeted_features[chosen_test]
             k += 1
 
