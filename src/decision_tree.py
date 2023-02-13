@@ -22,7 +22,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
     # BASE CASE: If no pairs, return a leaf labelled by a class
     if dataset.pairs_number == 0:
         tree = Tree()
-        tree.set_root(dataset.classes[0])
+        tree.add_leaf(dataset.classes[0], dataset.classes[0])
         return tree
 
     # BASE CASE: If just one pair
@@ -31,15 +31,18 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
         terminal_tree = Tree()
         split = cheapest_separation(dataset, dataset.pairs_list[0][0], dataset.pairs_list[0][1])
 
-        terminal_tree.set_root(split)
+        terminal_tree.add_node(split, split)
 
         # Add the two items as leafs labelled with the respective class
-        # FIXME: Che label metto?
-        class_1 = dataset.classes[dataset.pairs_list[0][0]]
-        class_2 = dataset.classes[dataset.pairs_list[0][1]]
+        split_index = dataset.features.index(split)
 
-        terminal_tree.add_child(parent_id=split, child_id=dataset.classes[dataset.pairs_list[0][0]], label="")
-        terminal_tree.add_child(parent_id=split, child_id=dataset.classes[dataset.pairs_list[0][1]], label="")
+        class_1 = dataset.classes[dataset.pairs_list[0][0]]
+        label_1 = str(dataset[split_index, dataset.pairs_list[0][0]])
+        class_2 = dataset.classes[dataset.pairs_list[0][1]]
+        label_2 = str(dataset[split_index, dataset.pairs_list[0][1]])
+
+        terminal_tree.add_leaf(class_1, label_1)
+        terminal_tree.add_leaf(class_2, label_2)
 
         dataset.drop_feature(split)
 
@@ -68,11 +71,11 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
         if k == 1:
             # Set chosen_test as the root of the tree
-            decision_tree.set_root(chosen_test)
+            decision_tree.add_node(chosen_test, chosen_test)
         else:
             # Set chosen_test as child of the test added in the last iteration
-            # FIXME: Che label metto?
-            decision_tree.add_child(child_id=chosen_test, label="")
+            # FIXME: Serve la label che inserisce "2" come edge per "t3"
+            decision_tree.add_node(chosen_test, "2")
 
         # For each label in the possible outcomes of chosen_test
         for label in eligible_labels(universe, chosen_test):
@@ -81,13 +84,13 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
             # Set the tree resulting from the recursive call as the child of chosen_test
             logger.info("t_A recursive call")
-            universe_intersection.drop_feature(chosen_test)
             decision_tree.add_subtree(
                 build_decision_tree(
                     universe_intersection,
                     decision_tree,
                 ),
-                label
+                label,
+                True
             )
 
         universe = universe.intersection(universe.S_star[chosen_test])
@@ -103,7 +106,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
             # Set chosen_test as child of the test added in the last iteration
             # FIXME: Che label metto?
-            decision_tree.add_child(child_id=chosen_test, label="")
+            decision_tree.add_node(chosen_test, chosen_test)
 
             # For each label in the possible outcomes of chosen_test
             for label in eligible_labels(universe, chosen_test):
@@ -111,14 +114,14 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
                 logger.debug(f"Universe intersect S[{chosen_test}][{label}]: {universe_intersection.indexes}")
 
                 # Set the tree resulting from the recursive call as the child of chosen_test
-                universe_intersection.drop_feature(chosen_test)
                 logger.info("t_B recursive call")
                 decision_tree.add_subtree(
                     build_decision_tree(
                         universe_intersection,
-                        decision_tree,
+                        decision_tree
                     ),
-                    label
+                    label,
+                    False
                 )
 
             universe = universe.intersection(universe.S_star[chosen_test])
@@ -135,7 +138,8 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
     decision_tree.add_subtree(
         build_decision_tree(universe, decision_tree),
         # FIXME: Che label metto?
-        ""
+        "FINAL",
+        False
     )
 
     return decision_tree
