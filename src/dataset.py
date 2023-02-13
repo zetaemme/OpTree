@@ -189,7 +189,8 @@ class Dataset:
         return self._data.__len__()
 
     def __repr__(self) -> str:
-        return self._data.__repr__()
+        full_data = np.vstack((np.array(self._header[:-2]), self._data))
+        return full_data.__repr__()
 
     def copy(self) -> Self:
         """Returns a deep copy of the dataset"""
