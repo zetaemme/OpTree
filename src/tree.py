@@ -47,6 +47,9 @@ class Tree:
         self.nodes.append({"id": leaf_id, "name": leaf_id})
 
     def add_subtree(self, subtree: Self, label: str, ta: bool) -> None:
+        if subtree.is_empty:
+            return
+
         if ta:
             self.edges.append({"source": self.nodes[-1]["id"], "target": subtree.root["id"], "label": label})
         else:
@@ -84,3 +87,7 @@ class Tree:
         draw(bfs_tree(tree.to_directed(), self.root["id"]), pos, labels=node_labels | leaf_labels, with_labels=True)
         draw_networkx_edge_labels(tree, pos, edge_labels=edge_labels)
         plt.show()
+
+    @property
+    def is_empty(self) -> bool:
+        return not self.edges and not self.nodes and not self.leaves and self.root is None
