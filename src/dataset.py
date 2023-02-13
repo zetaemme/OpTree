@@ -216,6 +216,11 @@ class Dataset:
         self.features.remove(feature)
         self._header.remove(feature)
         del self.costs[feature]
+        del self.S_label[feature]
+        del self.S_star[feature]
+        del self.sigma[feature]
+        del self.separated[feature]
+        del self.kept[feature]
 
     def drop_row(self, index: int) -> None:
         """Removes the row at given index
@@ -228,6 +233,35 @@ class Dataset:
         self._data = np.delete(self._data, drop_index[0][0], axis=0)
         self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
         del self._probabilities[drop_index[0][0]]
+
+        for feature in self.features:
+            for label in self.S_label[feature]:
+                try:
+                    self.S_label[feature][label].remove(index)
+                except ValueError:
+                    pass
+
+            try:
+                self.S_star[feature].remove(index)
+            except ValueError:
+                pass
+
+            try:
+                self.sigma[feature].remove(index)
+            except ValueError:
+                pass
+
+            self.separated[feature] = [
+                pair
+                for pair in self.separated[feature]
+                if index not in pair
+            ]
+
+            self.kept[feature] = [
+                pair
+                for pair in self.kept[feature]
+                if index not in pair
+            ]
 
     def difference(self, other: list[int], *, axis=0) -> np.ndarray:
         """Computes the set difference between two datasets
@@ -284,6 +318,15 @@ class Dataset:
             int: Number of pairs
         """
         return len({pair for obj in objects for pair in self.pairs_list if obj in pair})
+
+    def print_separation(self) -> None:
+        print()
+        print(f"S_label: {self.S_label}")
+        print(f"S_star: {self.S_star}")
+        print(f"sigma: {self.sigma}")
+        print(f"separated: {self.separated}")
+        print(f"kept: {self.kept}")
+        print()
 
     @property
     def classes(self) -> dict[int, str]:
