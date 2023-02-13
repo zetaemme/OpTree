@@ -7,7 +7,6 @@ from pickle import HIGHEST_PROTOCOL, dump
 from src import DEBUG
 from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
-from src.separation import Separation
 
 logging.basicConfig(
     level=logging.DEBUG if DEBUG else logging.INFO,
@@ -21,9 +20,8 @@ def main(dataset_path: str) -> None:
     """Inits dataset and test list in order to pass them to the algorithm"""
     path = Path(dirname(__file__) + "/" + dataset_path)
     dataset = Dataset(path)
-    separation = Separation(dataset)
 
-    decision_tree = build_decision_tree(dataset, separation)
+    decision_tree = build_decision_tree(dataset)
 
     logger.info("Done!")
     decision_tree.print()

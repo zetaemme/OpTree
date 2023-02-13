@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Callable, Literal
 
 from src.dataset import Dataset
-from src.separation import Separation
 
 
 @dataclass(repr=False, slots=True)
@@ -13,10 +12,10 @@ class Bounds:
     upper: float
 
 
-SubmodularFunction = Callable[[Dataset, Separation, list[str]], int]
+SubmodularFunction = Callable[[Dataset, list[str]], int]
 
 HeuristicFunction = Callable[
-    [float, Dataset, Separation, SubmodularFunction], list[str]
+    [float, Dataset, SubmodularFunction], list[str]
 ]
 
 Nodes = list[dict[Literal["id", "name"], str]]
