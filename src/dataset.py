@@ -1,6 +1,5 @@
 import logging
 import numbers
-# from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import reduce
@@ -161,10 +160,6 @@ class Dataset:
 
         dataset_np = dataset_df.to_numpy()
 
-        # Calculate probability of each class
-        # counter = Counter(dataset_np[:, -1, None].flatten().tolist())
-        # self.class_probabilities = {key: (value / sum(counter.values())) for key, value in counter.items()}
-
         self._pairs = self.Pairs(dataset_np)
         self._data = dataset_np[:, :-2]
 
@@ -182,7 +177,6 @@ class Dataset:
 
         self.costs = {"t1": 5, "t2": 0.1, "t3": 1}
 
-        # del counter
         del dataset_df, dataset_np
 
         self._separation = self.Separation(self)
