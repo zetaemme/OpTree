@@ -25,7 +25,9 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
         # NOTE: Avoids insertion of a wrong leaf when the dataset contains a value with just the "index" column
         if dataset.features:
-            tree.add_leaf(dataset.classes[0], dataset.classes[0])
+            leaf = list(dataset.classes.values())[0]
+            logger.info("No pairs in dataset, setting leaf \"%s\"", leaf)
+            tree.add_leaf(leaf, leaf)
 
         return tree
 
