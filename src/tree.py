@@ -39,7 +39,7 @@ class Tree:
         self.leaves.append({"id": leaf_id, "name": leaf_id})
 
     def add_node(self, leaf_id: str, label: str) -> None:
-        if not self.root:
+        if self.root is None:
             self.root = {"id": leaf_id, "name": leaf_id}
         else:
             self.edges.append({"source": self.nodes[-1]["id"], "target": leaf_id, "label": label})
@@ -53,7 +53,7 @@ class Tree:
         if ta:
             self.edges.append({"source": self.nodes[-1]["id"], "target": subtree.root["id"], "label": label})
         else:
-            # FIXME: This is a workaround, work on actual fix
+            # FIXME: This is a workaround, work on an actual fix
             self.edges.append({"source": self.nodes[-3]["id"], "target": subtree.root["id"], "label": label})
 
         self.nodes += subtree.nodes
