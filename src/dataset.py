@@ -227,6 +227,7 @@ class Dataset:
         drop_index = np.where(self.indexes == index)
         self._data = np.delete(self._data, drop_index[0][0], axis=0)
         self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
+        del self._classes[index]
         del self._probabilities[drop_index[0][0]]
 
         for feature in self.features:
