@@ -9,7 +9,7 @@ from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
 
 logging.basicConfig(
-    level=logging.DEBUG if DEBUG else logging.INFO,
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] - OpSion @ {%(module)s.py -> %(funcName)s} - %(message)s",
     datefmt="%H:%M:%S",
 )
