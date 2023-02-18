@@ -27,7 +27,7 @@ def main(dataset_path: str) -> None:
     path = Path(dirname(__file__) + "/" + dataset_path)
     dataset = Dataset(path)
 
-    decision_tree = build_decision_tree(dataset)
+    decision_tree, _ = build_decision_tree(dataset)
 
     logger.info("Done!")
     decision_tree.print()

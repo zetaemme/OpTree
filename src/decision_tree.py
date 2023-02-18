@@ -9,7 +9,7 @@ from src.tree import Tree
 logger = logging.getLogger(__name__)
 
 
-def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
+def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> tuple[Tree, bool]:
     """Recursively builds a (log)-optimal decision tree.
 
     Args:
@@ -28,8 +28,10 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
             leaf = list(dataset.classes.values())[0]
             logger.info("No pairs in dataset, setting leaf \"%s\"", leaf)
             tree.add_leaf(leaf, leaf)
+        else:
+            logger.info("No more objects in dataset")
 
-        return tree
+        return tree, False
 
     # BASE CASE: If just one pair
     if dataset.pairs_number == 1:
@@ -54,7 +56,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
         dataset.drop_feature(split)
 
-        return terminal_tree
+        return terminal_tree, True
 
     budget = find_budget(dataset)
     logger.info("Using budget %f", budget)
@@ -79,12 +81,10 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
         if k == 1:
             # Set chosen_test as the root of the tree
-            # FIXME: Capire come evitare aggiunta edge (t1, t1): t1
             decision_tree.add_node(chosen_test, chosen_test)
         else:
             # Set chosen_test as child of the test added in the last iteration
-            # FIXME: Serve la label che inserisce "2" come edge per "t3"
-            decision_tree.add_node(chosen_test, "2")
+            decision_tree.add_node(chosen_test, "t_A ?")
 
         # For each label in the possible outcomes of chosen_test
         for label in eligible_labels(universe, chosen_test):
@@ -94,14 +94,13 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
             # Set the tree resulting from the recursive call as the child of chosen_test
             logger.info("t_A recursive call with test \"%s\"", chosen_test)
-            decision_tree.add_subtree(
-                build_decision_tree(
-                    universe_intersection,
-                    decision_tree,
-                ),
-                label,
-                True
-            )
+            subtree, is_split_base_case = build_decision_tree(universe_intersection, decision_tree)
+
+            if is_split_base_case and subtree.root["id"] in universe.features:
+                # universe.drop_feature(subtree.root["id"])
+                del budgeted_features[subtree.root["id"]]
+
+            decision_tree.add_subtree(subtree, label, True)
 
         universe = universe.intersection(universe.S_star[chosen_test])
         spent += universe.costs[chosen_test]
@@ -129,14 +128,13 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
 
                 # Set the tree resulting from the recursive call as the child of chosen_test
                 logger.info("t_B recursive call with test \"%s\"", chosen_test)
-                decision_tree.add_subtree(
-                    build_decision_tree(
-                        universe_intersection,
-                        decision_tree
-                    ),
-                    label,
-                    False
-                )
+                subtree, is_split_base_case = build_decision_tree(universe_intersection, decision_tree)
+
+                if is_split_base_case and subtree.root["id"] in universe.features:
+                    # universe.drop_feature(subtree.root["id"])
+                    del budgeted_features[subtree.root["id"]]
+
+                decision_tree.add_subtree(subtree, label, False)
 
             universe = universe.intersection(universe.S_star[chosen_test])
             spent_2 += dataset.costs[chosen_test]
@@ -148,15 +146,11 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree()) -> Tree:
             if budget - spent_2 < 0 or not budgeted_features:
                 break
 
-    logger.info("End of t_A part of the procedure!")
+    logger.info("End of t_B part of the procedure!")
 
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     logger.info("Final recursive call")
-    decision_tree.add_subtree(
-        build_decision_tree(universe, decision_tree),
-        # FIXME: Che label metto?
-        "FINAL",
-        False
-    )
+    subtree, _ = build_decision_tree(universe, decision_tree)
+    decision_tree.add_subtree(subtree, "t_F ?", False)
 
-    return decision_tree
+    return decision_tree, False
