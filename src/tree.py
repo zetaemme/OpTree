@@ -14,6 +14,7 @@ from src.types import Edges, Nodes
 class Tree:
     """Inspired by: https://brandonrozek.com/blog/networkxtree/"""
     anti_replace_idx = 1
+    _height = 0
 
     root: dict[Literal["id", "name"], str] | None = field(default_factory=dict)
     nodes: Nodes = field(default_factory=list)
@@ -30,19 +31,21 @@ class Tree:
     def add_leaf(self, leaf_id: str, label: str) -> None:
         leaf_id += str(self.anti_replace_idx)
 
+        Tree.anti_replace_idx += 1
+        self.leaves.append({"id": leaf_id, "name": leaf_id})
+
         if self.root is None:
             self.root = {"id": leaf_id, "name": leaf_id}
         else:
             self.edges.append({"source": self.nodes[-1]["id"], "target": leaf_id, "label": label})
-
-        Tree.anti_replace_idx += 1
-        self.leaves.append({"id": leaf_id, "name": leaf_id})
+            self._height += 1
 
     def add_node(self, leaf_id: str, label: str) -> None:
         if self.root is None:
             self.root = {"id": leaf_id, "name": leaf_id}
         else:
             self.edges.append({"source": self.nodes[-1]["id"], "target": leaf_id, "label": label})
+            self._height += 1
 
         self.nodes.append({"id": leaf_id, "name": leaf_id})
 
@@ -53,8 +56,7 @@ class Tree:
         if ta:
             self.edges.append({"source": self.nodes[-1]["id"], "target": subtree.root["id"], "label": label})
         else:
-            # FIXME: This is a workaround, work on an actual fix
-            self.edges.append({"source": self.nodes[-3]["id"], "target": subtree.root["id"], "label": label})
+            self.edges.append({"source": self.nodes[-self.height]["id"], "target": subtree.root["id"], "label": label})
 
         self.nodes += subtree.nodes
         self.leaves += subtree.leaves
@@ -87,6 +89,10 @@ class Tree:
         draw(bfs_tree(tree.to_directed(), self.root["id"]), pos, labels=node_labels | leaf_labels, with_labels=True)
         draw_networkx_edge_labels(tree, pos, edge_labels=edge_labels)
         plt.show()
+
+    @property
+    def height(self) -> int:
+        return 0 if self.root is None else self._height + 1
 
     @property
     def is_empty(self) -> bool:
