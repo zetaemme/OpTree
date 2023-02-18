@@ -175,8 +175,6 @@ class Dataset:
             else:
                 self.costs[column_name] = 1
 
-        self.costs = {"t1": 5, "t2": 0.1, "t3": 1}
-
         del dataset_df, dataset_np
 
         self._separation = self.Separation(self)
