@@ -2,7 +2,7 @@ import logging
 import numbers
 from copy import deepcopy
 from dataclasses import dataclass, field
-from functools import reduce
+from functools import cached_property, reduce
 from itertools import chain
 from math import fsum
 from pathlib import Path
@@ -124,7 +124,7 @@ class Dataset:
 
             return separation_copy
 
-        @property
+        @cached_property
         def S_star_intersection(self) -> list[int]:
             """Returns the intersection on the tests of S^*_t"""
             return reduce(np.intersect1d, self.S_star.values())  # type: ignore
@@ -324,6 +324,9 @@ class Dataset:
         print(f"kept: {self.kept}")
         print()
 
+    def separation_for_features_subset(self, features: list[str]) -> Separation:
+        return self._separation.for_features_subset(features)
+
     @property
     def classes(self) -> dict[int, str]:
         """Returns a dict of all the possible classes with relative object index"""
@@ -333,13 +336,9 @@ class Dataset:
     def indexes(self) -> np.ndarray:
         return self._data[:, 0]  # type: ignore
 
-    @property
+    @cached_property
     def kept(self) -> dict[str, list[tuple[int]]]:
         return self._separation.kept
-
-    @property
-    def mean(self) -> float:
-        return self.data().mean()
 
     @property
     def pairs_list(self) -> list[tuple]:
@@ -351,22 +350,19 @@ class Dataset:
         """Return the number of pairs in the dataset"""
         return self._pairs.number
 
-    @property
+    @cached_property
     def S_label(self) -> dict[str, dict[Any, list[int]]]:
         return self._separation.S_label
 
-    @property
+    @cached_property
     def S_star(self) -> dict[str, list[int]]:
         return self._separation.S_star
 
-    @property
+    @cached_property
     def separated(self) -> dict[str, list[tuple[int]]]:
         return self._separation.separated
 
-    def separation_for_features_subset(self, features: list[str]) -> Separation:
-        return self._separation.for_features_subset(features)
-
-    @property
+    @cached_property
     def sigma(self) -> dict[str, list[int]]:
         return self._separation.sigma
 
