@@ -40,14 +40,14 @@ class Tree:
             self.edges.append({"source": self.nodes[-1]["id"], "target": leaf_id, "label": label})
             self._height += 1
 
-    def add_node(self, leaf_id: str, label: str) -> None:
+    def add_node(self, node_id: str, label: str) -> None:
         if self.root is None:
-            self.root = {"id": leaf_id, "name": leaf_id}
+            self.root = {"id": node_id, "name": node_id}
         else:
-            self.edges.append({"source": self.nodes[-1]["id"], "target": leaf_id, "label": label})
+            self.edges.append({"source": self.nodes[-1]["id"], "target": node_id, "label": label})
             self._height += 1
 
-        self.nodes.append({"id": leaf_id, "name": leaf_id})
+        self.nodes.append({"id": node_id, "name": node_id})
 
     def add_subtree(self, subtree: Self, label: str, ta: bool) -> None:
         if subtree.is_empty:
