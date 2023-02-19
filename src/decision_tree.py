@@ -88,6 +88,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
         else:
             # Set chosen_test as child of the test added in the last iteration
             decision_tree.add_node(last_added_node, chosen_test, "t_A ?")
+            last_added_node = chosen_test
 
         # For each label in the possible outcomes of chosen_test
         for label in eligible_labels(universe, chosen_test):
@@ -97,10 +98,11 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
             # Set the tree resulting from the recursive call as the child of chosen_test
             logger.info("t_A recursive call with test \"%s\"", chosen_test)
-            subtree, is_split_base_case = build_decision_tree(universe_intersection, decision_tree, chosen_test)
+            subtree, is_split_base_case = build_decision_tree(universe_intersection, decision_tree, last_added_node)
 
+            # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
             if is_split_base_case and subtree.root["id"] in universe.features:
-                # universe.drop_feature(subtree.root["id"])
+                # NOTE: Punto di interesse per domanda 2)
                 del budgeted_features[subtree.root["id"]]
 
             decision_tree.add_subtree(chosen_test, subtree, label)
@@ -121,7 +123,8 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
             # Set chosen_test as child of the test added in the last iteration
             # FIXME: Che label metto?
-            decision_tree.add_node(last_added_node, chosen_test, chosen_test)
+            decision_tree.add_node(last_added_node, chosen_test, "")
+            last_added_node = chosen_test
 
             # For each label in the possible outcomes of chosen_test
             for label in eligible_labels(universe, chosen_test):
@@ -131,10 +134,11 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
                 # Set the tree resulting from the recursive call as the child of chosen_test
                 logger.info("t_B recursive call with test \"%s\"", chosen_test)
-                subtree, is_split_base_case = build_decision_tree(universe_intersection, decision_tree)
+                subtree, is_split_base_case = build_decision_tree(universe_intersection, decision_tree, last_added_node)
 
+                # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
                 if is_split_base_case and subtree.root["id"] in universe.features:
-                    # universe.drop_feature(subtree.root["id"])
+                    # NOTE: Punto di interesse per domanda 2)
                     del budgeted_features[subtree.root["id"]]
 
                 decision_tree.add_subtree(chosen_test, subtree, label)
@@ -153,7 +157,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     logger.info("Final recursive call")
-    subtree, _ = build_decision_tree(universe, decision_tree, chosen_test)
-    decision_tree.add_subtree(chosen_test, subtree, "t_F ?")
+    subtree, _ = build_decision_tree(universe, decision_tree, last_added_node)
+    decision_tree.add_subtree(last_added_node, subtree, "t_F")
 
     return decision_tree, False
