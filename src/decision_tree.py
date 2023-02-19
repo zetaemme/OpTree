@@ -158,6 +158,6 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     logger.info("Final recursive call")
     subtree, _ = build_decision_tree(universe, decision_tree, last_added_node)
-    decision_tree.add_subtree(last_added_node, subtree, "t_F")
+    decision_tree.add_subtree(last_added_node, subtree, "t_F ?")
 
     return decision_tree, False

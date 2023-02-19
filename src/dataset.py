@@ -3,7 +3,7 @@ import numbers
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property, reduce
-from itertools import chain
+from itertools import chain, combinations
 from pathlib import Path
 from typing import Any, Self
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(init=False, repr=False)
 class Dataset:
-    """A general purpose dataset implementation that doesn't (more or less) rely on Pandas"""
+    """A dataset implementation that doesn't (more or less) rely on Pandas"""
 
     @dataclass(init=False)
     class Pairs:
@@ -26,22 +26,16 @@ class Dataset:
 
         def __init__(self, dataset: np.ndarray) -> None:
             logger.info("Computing dataset pairs")
-            item_classes: np.ndarray = dataset[:, [0, -2]]
-
             if dataset.shape[0] == 1:
                 self.pairs_list = []
-
-                del item_classes
                 return
 
-            self.pairs_list: list[tuple[int, int]] = [
-                (idx1, idx2)
-                for idx1, class1 in item_classes
-                for idx2, class2 in item_classes[idx1:]
-                if class1 != class2
-            ]
-
-            del item_classes
+            self.pairs_list = list(
+                filter(
+                    lambda pair: dataset[pair[0], -2] != dataset[pair[1], -2],
+                    combinations(dataset[:, 0], 2)
+                )
+            )
 
         @property
         def number(self) -> int:
@@ -75,7 +69,7 @@ class Dataset:
 
             for feature_idx, feature in enumerate(self._all_features):
                 self.S_label[feature] = {
-                    value: [observation[0] for observation in dataset.data() if observation[feature_idx + 1] == value]
+                    value: [item[0] for item in dataset.data() if item[feature_idx + 1] == value]
                     for value in set(dataset.data()[:, feature_idx + 1])
                 }
 
@@ -87,25 +81,19 @@ class Dataset:
 
                 self.sigma[feature] = [row[0] for row in dataset.difference(self.S_star[feature])]
 
-                # FIXME: Find a better way to do this (itertools)
                 self.kept[feature] = list(
-                    {
-                        pair
-                        for pair in dataset.pairs_list
-                        if pair[0] in self.sigma[feature] and pair[1] in self.sigma[feature]
-                    }
+                    filter(
+                        lambda pair: all(idx in self.sigma[feature] for idx in pair),
+                        dataset.pairs_list
+                    )
                 )
 
-                # FIXME: Find a better way to do this (itertools)
                 self.separated[feature] = list(
-                    {
-                        pair
-                        for pair in dataset.pairs_list
-                        if pair[0] in self.sigma[feature]
-                           and pair[1] in self.S_star[feature]
-                           or pair[1] in self.sigma[feature]
-                           and pair[0] in self.S_star[feature]
-                    }
+                    filter(
+                        lambda pair: pair[0] in self.sigma[feature] and pair[1] in self.S_star[feature] or
+                                     pair[1] in self.sigma[feature] and pair[0] in self.S_star[feature],
+                        dataset.pairs_list
+                    )
                 )
 
         def __getitem__(self, key: str) -> dict[Any, list[int]]:
