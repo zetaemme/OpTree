@@ -14,7 +14,6 @@ from src.types import Edges, Nodes
 class Tree:
     """Inspired by: https://brandonrozek.com/blog/networkxtree/"""
     anti_replace_idx = 1
-    _height = 0
 
     root: dict[Literal["id", "name"], str] | None = field(default_factory=dict)
     nodes: Nodes = field(default_factory=list)
@@ -38,25 +37,20 @@ class Tree:
             self.root = {"id": leaf_id, "name": leaf_id}
         else:
             self.edges.append({"source": self.nodes[-1]["id"], "target": leaf_id, "label": label})
-            self._height += 1
 
-    def add_node(self, node_id: str, label: str) -> None:
+    def add_node(self, parent_id: str | None, node_id: str, label: str) -> None:
         if self.root is None:
             self.root = {"id": node_id, "name": node_id}
         else:
-            self.edges.append({"source": self.nodes[-1]["id"], "target": node_id, "label": label})
-            self._height += 1
+            self.edges.append({"source": parent_id, "target": node_id, "label": label})
 
         self.nodes.append({"id": node_id, "name": node_id})
 
-    def add_subtree(self, subtree: Self, label: str, ta: bool) -> None:
+    def add_subtree(self, parent_id: str, subtree: Self, label: str) -> None:
         if subtree.is_empty:
             return
 
-        if ta:
-            self.edges.append({"source": self.nodes[-1]["id"], "target": subtree.root["id"], "label": label})
-        else:
-            self.edges.append({"source": self.nodes[-self.height]["id"], "target": subtree.root["id"], "label": label})
+        self.edges.append({"source": parent_id, "target": subtree.root["id"], "label": label})
 
         self.nodes += subtree.nodes
         self.leaves += subtree.leaves
@@ -89,10 +83,6 @@ class Tree:
         draw(bfs_tree(tree.to_directed(), self.root["id"]), pos, labels=node_labels | leaf_labels, with_labels=True)
         draw_networkx_edge_labels(tree, pos, edge_labels=edge_labels)
         plt.show()
-
-    @property
-    def height(self) -> int:
-        return 0 if self.root is None else self._height + 1
 
     @property
     def is_empty(self) -> bool:
