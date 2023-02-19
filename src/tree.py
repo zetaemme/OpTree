@@ -28,6 +28,12 @@ class Tree:
         self.root = None
 
     def add_leaf(self, leaf_id: str, label: str) -> None:
+        """Adds a terminal node to the tree
+
+        Args:
+            leaf_id (str): The leaf to add
+            label (str): The label of the edge that joins self with subtree
+        """
         leaf_id += str(self.anti_replace_idx)
 
         Tree.anti_replace_idx += 1
@@ -39,6 +45,13 @@ class Tree:
             self.edges.append({"source": self.nodes[-1]["id"], "target": leaf_id, "label": label})
 
     def add_node(self, parent_id: str | None, node_id: str, label: str) -> None:
+        """Adds a not-terminal node to the tree
+
+        Args:
+            parent_id (str): The parent of the given tree
+            node_id (str): The non-terminal node to add
+            label (str): The label of the edge that joins self with subtree
+        """
         if self.root is None:
             self.root = {"id": node_id, "name": node_id}
         else:
@@ -47,6 +60,13 @@ class Tree:
         self.nodes.append({"id": node_id, "name": node_id})
 
     def add_subtree(self, parent_id: str, subtree: Self, label: str) -> None:
+        """Adds a given tree as child of the node with id equal to 'parent_id' and labels the edge with 'label'
+
+        Args:
+            parent_id (str): The parent of the given tree
+            subtree (Self): The tree to add as a child of parent
+            label (str): The label of the edge that joins self with subtree
+        """
         if subtree.is_empty:
             return
 
@@ -57,6 +77,7 @@ class Tree:
         self.edges += subtree.edges
 
     def print(self) -> None:
+        """Plots the tree"""
         node_labels = {node["id"]: node["name"] for node in self.nodes}
         leaf_labels = {
             leaf["id"]: leaf["name"].translate(str.maketrans("", "", digits))

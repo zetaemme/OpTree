@@ -198,7 +198,7 @@ class Dataset:
         """Removes useless infos from dataset and returns it
 
         Returns:
-            npt.NDArray: The content of the dataset.
+            ndarray: The content of the dataset.
         """
         return self._data
 
@@ -265,7 +265,7 @@ class Dataset:
             axis (int, optional): 0 for rows, 1 for columns. Defaults to 0.
 
         Returns:
-            npt.NDArray: the set difference between two datasets
+            ndarray: the set difference between two datasets
         """
         logger.debug("Computing datasets difference")
         drop_indexes = np.array([
