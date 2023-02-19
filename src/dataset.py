@@ -4,12 +4,12 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property, reduce
 from itertools import chain
-from math import fsum
 from pathlib import Path
 from typing import Any, Self
 
 import numpy as np
 import pandas as pd
+from math import fsum
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class Dataset:
 
         def __init__(self, dataset: np.ndarray) -> None:
             logger.info("Computing dataset pairs")
-            item_classes: list[str] = dataset[:, -2, None].ravel().tolist()
+            item_classes: np.ndarray = dataset[:, [0, -2]]
 
             if dataset.shape[0] == 1:
                 self.pairs_list = []
@@ -35,9 +35,9 @@ class Dataset:
                 return
 
             self.pairs_list: list[tuple[int, int]] = [
-                (idx1, idx1 + idx2)
-                for idx1, class1 in enumerate(item_classes)
-                for idx2, class2 in enumerate(item_classes[idx1:])
+                (idx1, idx2)
+                for idx1, class1 in item_classes
+                for idx2, class2 in item_classes[idx1:]
                 if class1 != class2
             ]
 
