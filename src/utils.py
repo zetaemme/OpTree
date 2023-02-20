@@ -20,7 +20,6 @@ def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
     if not features:
         return dataset.pairs_number
 
-    # TODO: Pensare ad un alternativa, è unico punto in cui viene utilizzata
     submodular_separation = dataset.separation_for_features_subset(features)
 
     if len(submodular_separation.S_star_intersection) < 2:
