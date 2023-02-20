@@ -35,8 +35,8 @@ class Tree:
             label (str): The label of the edge that joins self with subtree
         """
         leaf_id += str(self.anti_replace_idx)
-
         Tree.anti_replace_idx += 1
+
         self.leaves.append({"id": leaf_id, "name": leaf_id})
 
         if self.root is None:
@@ -76,9 +76,12 @@ class Tree:
         self.leaves += subtree.leaves
         self.edges += subtree.edges
 
-    def print(self) -> None:
+    def print(self, as_tree: bool = True) -> None:
         """Plots the tree"""
-        node_labels = {node["id"]: node["name"] for node in self.nodes}
+        node_labels = {
+            node["id"]: node["name"]
+            for node in self.nodes
+        }
         leaf_labels = {
             leaf["id"]: leaf["name"].translate(str.maketrans("", "", digits))
             for leaf in self.leaves
@@ -101,7 +104,10 @@ class Tree:
         )
         pos = graphviz_layout(tree, prog="dot")
 
-        draw(bfs_tree(tree.to_directed(), self.root["id"]), pos, labels=node_labels | leaf_labels, with_labels=True)
+        if as_tree:
+            draw(bfs_tree(tree.to_directed(), self.root["id"]), pos, labels=node_labels | leaf_labels, with_labels=True)
+        else:
+            draw(tree.to_directed(), pos, labels=node_labels | leaf_labels, with_labels=True)
         draw_networkx_edge_labels(tree, pos, edge_labels=edge_labels)
         plt.show()
 
