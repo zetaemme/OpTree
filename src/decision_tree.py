@@ -55,8 +55,6 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
         logger.info("Adding leaf \"%s\"", class_2)
         terminal_tree.add_leaf(class_2, label_2)
 
-        dataset.drop_feature(split)
-
         return terminal_tree, True
 
     budget = find_budget(dataset)
@@ -103,6 +101,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
             if is_split_base_case and subtree.root["id"] in universe.features:
                 # NOTE: Punto di interesse per domanda 2)
+                # universe.drop_feature(subtree.root["id"])
                 del budgeted_features[subtree.root["id"]]
 
             decision_tree.add_subtree(chosen_test, subtree, label)
@@ -139,6 +138,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
                 if is_split_base_case and subtree.root["id"] in universe.features:
                     # NOTE: Punto di interesse per domanda 2)
+                    # universe.drop_feature(subtree.root["id"])
                     del budgeted_features[subtree.root["id"]]
 
                 decision_tree.add_subtree(chosen_test, subtree, label)
