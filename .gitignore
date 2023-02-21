@@ -136,6 +136,7 @@ dmypy.json
 # Dataset
 data/*.csv
 data/pairs/*.json
+data/separation/*.json
 !tests/data/test.csv
 
 # Model
