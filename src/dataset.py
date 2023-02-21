@@ -37,6 +37,15 @@ class Dataset:
                 )
             )
 
+        @classmethod
+        def from_precomputed(cls, pairs: list[tuple[int]]) -> Self:
+            # NOTE: This is a workaround to construct a Pairs object without an explicit call to the constructor.
+            #       Needed since we allow a pre-computation of the pairs for the dataset, given as an input to
+            #       the procedure.
+            pairs_obj = cls(np.ndarray((1, 1)))
+            pairs_obj.pairs_list = pairs  # type: ignore
+            return pairs_obj
+
         @property
         def number(self) -> int:
             """Number of paris
@@ -127,7 +136,7 @@ class Dataset:
     _probabilities: list[float]
     _separation: Separation
 
-    def __init__(self, dataset_path: Path) -> None:
+    def __init__(self, dataset_path: Path, pairs: list[tuple[int]] | None = None) -> None:
         logger.info("Initializing dataset")
         dataset_df: pd.DataFrame = pd.read_csv(dataset_path)
 
@@ -148,14 +157,18 @@ class Dataset:
 
         dataset_np = dataset_df.to_numpy()
 
-        self._pairs = self.Pairs(dataset_np)
+        if pairs is None:
+            self._pairs = self.Pairs(dataset_np)
+        else:
+            self._pairs = self.Pairs.from_precomputed(pairs)
+
         self._data = dataset_np[:, :-2]
 
         self.costs = {}
 
         # FIXME: Cannot use variance, it sums up to 1.
-        #       To avoid the problem, we multiply by 10 the variance.
-        #       Other cost metrics should be considered!
+        #        To avoid the problem, we multiply by 10 the variance.
+        #        Other cost metrics should be considered!
         for idx, column_name in enumerate(self.features):
             if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
                 # self.costs[column_name] = round(dataset_np[:, idx + 1].var(), 2) * 10
@@ -165,7 +178,9 @@ class Dataset:
 
         del dataset_df, dataset_np
 
+        # FIXME: Needs speedup
         self._separation = self.Separation(self)
+        self.print_separation()
 
     def __getitem__(self, pos) -> np.ndarray:
         """[] operator overload"""

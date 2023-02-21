@@ -33,7 +33,7 @@ def main(dataset_path: str) -> None:
     data = {"pairs": pairs.pairs_list}
 
     dataset_name = dataset_path.replace('data/', '').replace('.csv', '')
-    with open(dirname(__file__) + f"data/pairs/{dataset_name}_pairs.json", "w") as f:
+    with open(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.json", "w") as f:
         dump(data, f)
 
 
