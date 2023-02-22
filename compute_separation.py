@@ -24,8 +24,8 @@ class Separation:
         self.S_label = {}
         self.S_star = {}
         self.sigma = {}
-        self.kept = {}
-        self.separated = {}
+        self.kept = {}  # type: ignore
+        self.separated = {}  # type: ignore
 
         if "Probability" in dataset.columns:
             self._all_features = dataset.columns.values[:-2]
@@ -46,11 +46,11 @@ class Separation:
 
             self.sigma[feature] = [int(idx) for idx in set(dataset.index.values) - set(self.S_star[feature])]
 
-            self.kept[feature] = list(
+            self.kept[feature] = list(  # type: ignore
                 filter(lambda pair: all(idx in self.sigma[feature] for idx in pair), pairs)
             )
 
-            self.separated[feature] = list(
+            self.separated[feature] = list(  # type: ignore
                 filter(
                     lambda pair: pair[0] in self.sigma[feature]
                                  and pair[1] in self.S_star[feature]
@@ -58,14 +58,14 @@ class Separation:
                                  and pair[0] in self.S_star[feature],
                     pairs,
                 )
-            )  # type: ignore
+            )
 
 
 def number_of_pairs_for(pairs: list[tuple[int, int]], objects: list[int]) -> int:
     return len({pair for obj in objects for pair in pairs if int(obj) in pair})
 
 
-def main(dataset_path: str, pairs: PairsJson) -> None:
+def main(dataset_path: str, pairs: list[tuple[int, int]]) -> None:
     dataset = pd.read_csv(dirname(__file__) + f"/{dataset_path}")
 
     separation = Separation(dataset, pairs)
