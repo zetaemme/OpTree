@@ -19,10 +19,7 @@ class Pairs:
             return
 
         self.pairs_list = list(
-            filter(
-                lambda pair: dataset["Class"][pair[0]] != dataset["Class"][pair[1]],
-                combinations(dataset.index, 2)
-            )
+            filter(lambda pair: dataset["Class"][pair[0]] != dataset["Class"][pair[1]], combinations(dataset.index, 2))
         )
 
 
@@ -32,13 +29,13 @@ def main(dataset_path: str) -> None:
 
     data = {"pairs": pairs.pairs_list}
 
-    dataset_name = dataset_path.replace('data/', '').replace('.csv', '')
+    dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
     with open(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.json", "w") as f:
         dump(data, f)
 
 
-if __name__ == '__main__':
-    parser = ArgumentParser(prog="main.py", description="Builds (log-)optimal decision trees")
+if __name__ == "__main__":
+    parser = ArgumentParser(prog="compute_pairs.py", description="Computes the pairs for the procedure")
     parser.add_argument("-f", "--filename", type=str, help="The CSV file containing the dataset")
 
     args = parser.parse_args()
