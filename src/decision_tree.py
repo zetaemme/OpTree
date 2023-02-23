@@ -5,6 +5,7 @@ from src.dataset import Dataset
 from src.extraction import cheapest_separation, eligible_labels
 from src.maximization import pairs_maximization, probability_maximization
 from src.tree import Tree
+from src.utils import get_backbone_label
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +66,6 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
     universe = dataset.copy()
 
-    k = 1
-    chosen_test = ""
-
     # Removes from T all tests with cost greater than budget
     budgeted_features = {
         test: cost for test, cost in dataset.costs.items() if cost <= budget
@@ -79,13 +77,14 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
         chosen_test = probability_maximization(universe, budget, spent)
         logger.debug("Chosen test: %s", chosen_test)
 
-        if k == 1:
+        if decision_tree.is_empty:
             # Set chosen_test as the root of the tree
             decision_tree.add_node(None, chosen_test, chosen_test)
             last_added_node = decision_tree.root["id"]
         else:
             # Set chosen_test as child of the test added in the last iteration
-            decision_tree.add_node(last_added_node, chosen_test, "t_A ?")
+            label = get_backbone_label(dataset, chosen_test)
+            decision_tree.add_node(last_added_node, chosen_test, label)
             last_added_node = chosen_test
 
         # For each label in the possible outcomes of chosen_test
@@ -100,8 +99,6 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
             if is_split_base_case and subtree.root["id"] in universe.features:
-                # NOTE: Punto di interesse per domanda 2)
-                # universe.drop_feature(subtree.root["id"])
                 del budgeted_features[subtree.root["id"]]
 
             decision_tree.add_subtree(chosen_test, subtree, label)
@@ -110,7 +107,6 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
         spent += universe.costs[chosen_test]
         universe.drop_feature(chosen_test)
         del budgeted_features[chosen_test]
-        k += 1
 
     logger.info("End of t_A part of the procedure!")
 
@@ -121,8 +117,8 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
             logger.debug("Chosen test: %s", chosen_test)
 
             # Set chosen_test as child of the test added in the last iteration
-            # FIXME: Che label metto?
-            decision_tree.add_node(last_added_node, chosen_test, "")
+            label = get_backbone_label(dataset, chosen_test)
+            decision_tree.add_node(last_added_node, chosen_test, label)
             last_added_node = chosen_test
 
             # For each label in the possible outcomes of chosen_test
@@ -137,8 +133,6 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
                 if is_split_base_case and subtree.root["id"] in universe.features:
-                    # NOTE: Punto di interesse per domanda 2)
-                    # universe.drop_feature(subtree.root["id"])
                     del budgeted_features[subtree.root["id"]]
 
                 decision_tree.add_subtree(chosen_test, subtree, label)
@@ -147,7 +141,6 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
             spent_2 += dataset.costs[chosen_test]
             universe.drop_feature(chosen_test)
             del budgeted_features[chosen_test]
-            k += 1
 
             # If there are no tests left, or we're running out of budget, break the loop
             if budget - spent_2 < 0 or not budgeted_features:
@@ -158,6 +151,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     logger.info("Final recursive call")
     subtree, _ = build_decision_tree(universe, decision_tree, last_added_node)
-    decision_tree.add_subtree(last_added_node, subtree, "t_F ?")
+    label = get_backbone_label(dataset, last_added_node)
+    decision_tree.add_subtree(last_added_node, subtree, label)
 
     return decision_tree, False
