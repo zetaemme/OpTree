@@ -70,8 +70,6 @@ def main(dataset_path: str, pairs: list[tuple[int, int]]) -> None:
 
     separation = Separation(dataset, pairs)
 
-    print(separation)
-
     dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
     with open(f"./data/separation/{dataset_name}_separation.json", "w") as f:
         dump(
