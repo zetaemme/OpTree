@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable, Literal
+from typing import Any, Callable, Literal
 
 from src.dataset import Dataset
 
@@ -20,3 +20,9 @@ HeuristicFunction = Callable[
 
 Nodes = list[dict[Literal["id", "name"], str]]
 Edges = list[dict[Literal["source", "target", "label"], str]]
+
+PairsJson = dict[Literal["pairs"], list[list[int]]]
+SeparationJson = dict[
+    Literal["S_label", "S_star", "sigma", "separated", "kept"],
+    dict[str, list[Any | tuple]]
+]

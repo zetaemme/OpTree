@@ -54,7 +54,7 @@ class Tree:
         """
         if self.root is None:
             self.root = {"id": node_id, "name": node_id}
-        else:
+        elif parent_id is not None:
             self.edges.append({"source": parent_id, "target": node_id, "label": label})
 
         self.nodes.append({"id": node_id, "name": node_id})

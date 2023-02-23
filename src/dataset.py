@@ -4,12 +4,13 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property, reduce
 from itertools import chain, combinations
+from json import dump
+from math import fsum
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 import pandas as pd
-from math import fsum
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class Dataset:
 
         pairs_list: list[tuple[int, int]]
 
-        def __init__(self, dataset: np.ndarray) -> None:
-            logger.info("Computing dataset pairs")
+        def __init__(self, dataset: np.ndarray, name: str = None) -> None:
+            logger.debug("Computing dataset pairs")
             if dataset.shape[0] == 1:
                 self.pairs_list = []
                 return
@@ -37,13 +38,18 @@ class Dataset:
                 )
             )
 
+            # Saves the pairs, so we don't need to recompute them in future executions
+            if name is not None and not Path(f"./data/pairs/{name}_pairs.json").is_file():
+                with open(f"./data/pairs/{name}_pairs.json", "w") as f:
+                    dump({"pairs": self.pairs_list}, f)
+
         @classmethod
         def from_precomputed(cls, pairs: list[tuple[int]]) -> Self:
             # NOTE: This is a workaround to construct a Pairs object without an explicit call to the constructor.
-            #       Needed since we allow a pre-computation of the pairs for the dataset, given as an input to
+            #       Needed since we allow a pre-computation of the pairs for the dataset, giving it as an input to
             #       the procedure.
             pairs_obj = cls(np.ndarray((1, 1)))
-            pairs_obj.pairs_list = pairs  # type: ignore
+            pairs_obj.pairs_list = pairs
             return pairs_obj
 
         @property
@@ -66,7 +72,10 @@ class Dataset:
         kept: dict[str, list[tuple[int]]] = field(default_factory=dict)
         separated: dict[str, list[tuple[int]]] = field(default_factory=dict)
 
-        def __init__(self, dataset: 'Dataset') -> None:
+        def __init__(self, dataset: 'Dataset', name: str = None) -> None:
+            if not dataset._path:
+                return
+
             logger.debug("Computing dataset separation")
             self.S_label = {}
             self.S_star = {}
@@ -105,8 +114,39 @@ class Dataset:
                     )
                 )
 
+            # Saves the pairs, so we don't need to recompute them in future executions
+            if name is not None and not Path(f"./data/separation/{name}_separation.json").is_file():
+                with open(f"./data/separation/{name}_separation.json", "w") as f:
+                    dump({
+                        "S_label": self.S_label,
+                        "S_star": self.S_star,
+                        "sigma": self.sigma,
+                        "separated": self.separated,
+                        "kept": self.kept
+                    }, f)
+
         def __getitem__(self, key: str) -> dict[Any, list[int]]:
             return self.S_label[key]
+
+        @classmethod
+        def from_precomputed(
+                cls,
+                separation: dict[
+                    Literal["S_label", "S_star", "sigma", "separated", "kept"],
+                    dict[str, list[Any | tuple]]
+                ],
+                features: list[str]
+        ) -> Self:
+            separation_obj = cls(Dataset(Path(""), None, None))
+
+            separation_obj.S_label = separation["S_label"]
+            separation_obj.S_star = separation["S_star"]
+            separation_obj.sigma = separation["sigma"]
+            separation_obj.separated = separation["separated"]
+            separation_obj.kept = separation["kept"]
+            separation_obj._all_features = features
+
+            return separation_obj
 
         def for_features_subset(self, features: list[str]) -> Self:
             separation_copy = deepcopy(self)
@@ -133,10 +173,23 @@ class Dataset:
     _data: np.ndarray
     _header: list[str]
     _pairs: Pairs
+    _path: str
     _probabilities: list[float]
     _separation: Separation
 
-    def __init__(self, dataset_path: Path, pairs: list[tuple[int]] | None = None) -> None:
+    def __init__(
+            self,
+            dataset_path: Path,
+            pairs: dict[Literal["pairs"], list[list[int]]] | None = None,
+            separation: dict[
+                            Literal["S_label", "S_star", "sigma", "separated", "kept"],
+                            dict[str, list[Any | tuple]]
+                        ] | None = None
+    ) -> None:
+        self._path = dataset_path.name
+        if dataset_path.name == "":
+            return
+
         logger.info("Initializing dataset")
         dataset_df: pd.DataFrame = pd.read_csv(dataset_path)
 
@@ -158,9 +211,11 @@ class Dataset:
         dataset_np = dataset_df.to_numpy()
 
         if pairs is None:
-            self._pairs = self.Pairs(dataset_np)
+            logger.info("No pairs JSON found")
+            self._pairs = self.Pairs(dataset_np, dataset_path.stem)
         else:
-            self._pairs = self.Pairs.from_precomputed(pairs)
+            logger.info("Using pairs from JSON file")
+            self._pairs = self.Pairs.from_precomputed(pairs)  # type: ignore
 
         self._data = dataset_np[:, :-2]
 
@@ -178,9 +233,12 @@ class Dataset:
 
         del dataset_df, dataset_np
 
-        # FIXME: Needs speedup
-        self._separation = self.Separation(self)
-        self.print_separation()
+        if separation is None:
+            logger.info("No separation JSON found")
+            self._separation = self.Separation(self, dataset_path.stem)
+        else:
+            logger.info("Using separation from JSON file")
+            self._separation = self.Separation.from_precomputed(separation, self.features)
 
     def __getitem__(self, pos) -> np.ndarray:
         """[] operator overload"""
