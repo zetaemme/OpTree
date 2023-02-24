@@ -98,4 +98,4 @@ if __name__ == "__main__":
             for pair in json_pairs["pairs"]
         ]
 
-    main(args.filename, pairs)
+    main(args.filename, pairs)  # type: ignore

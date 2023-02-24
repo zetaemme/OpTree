@@ -83,8 +83,8 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
             last_added_node = decision_tree.root["id"]
         else:
             # Set chosen_test as child of the test added in the last iteration
-            label = get_backbone_label(dataset, chosen_test)
-            decision_tree.add_node(last_added_node, chosen_test, label)
+            backbone_label = get_backbone_label(dataset, chosen_test)
+            decision_tree.add_node(last_added_node, chosen_test, backbone_label)
             last_added_node = chosen_test
 
         # For each label in the possible outcomes of chosen_test
@@ -117,8 +117,8 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
             logger.debug("Chosen test: %s", chosen_test)
 
             # Set chosen_test as child of the test added in the last iteration
-            label = get_backbone_label(dataset, chosen_test)
-            decision_tree.add_node(last_added_node, chosen_test, label)
+            backbone_label = get_backbone_label(dataset, chosen_test)
+            decision_tree.add_node(last_added_node, chosen_test, backbone_label)
             last_added_node = chosen_test
 
             # For each label in the possible outcomes of chosen_test
@@ -151,7 +151,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     logger.info("Final recursive call")
     subtree, _ = build_decision_tree(universe, decision_tree, last_added_node)
-    label = get_backbone_label(dataset, last_added_node)
-    decision_tree.add_subtree(last_added_node, subtree, label)
+    backbone_label = get_backbone_label(dataset, last_added_node)
+    decision_tree.add_subtree(last_added_node, subtree, backbone_label)
 
     return decision_tree, False
