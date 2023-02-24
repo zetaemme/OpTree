@@ -73,11 +73,13 @@ def binary_search_budget(
 
 
 def parse(value: dict[str, list]) -> dict[Any, list]:
-    def cast(key: str) -> int | float:
+    def cast(key: str) -> int | float | str:
         if bool(match(r"^(-)?\d+.\d+$", key)):
             return float(key)
-        else:
+        elif key.isnumeric():
             return int(key)
+        else:
+            return key
 
     return {cast(key): val for key, val in value.items()}
 
