@@ -13,6 +13,7 @@ pytest
 python-dateutil
 pytz
 requests
+scikit-learn
 scipy
 six
 treelib

@@ -2,33 +2,21 @@ from argparse import ArgumentParser
 from os.path import dirname
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
+from sklearn.preprocessing import KBinsDiscretizer
 
 
-def main(dataset_path: str) -> None:
+def main(dataset_path: str, bins: int) -> None:
     dataset = pd.read_csv(dataset_path)
+    discretizer = KBinsDiscretizer(n_bins=bins, strategy="kmeans", encode="ordinal")
 
-    discrete_dataset = pd.DataFrame()
-    for feature in dataset.select_dtypes(include='float').columns:
-        # Select the optimal bins to tripartite the dataset's column
-        sorted_column = dataset[feature].sort_values(kind='mergesort')
-        # NOTE: We use the 0.00000000001 subtraction to avoid unlabeled values
-        bins = [split.min() - 0.00000000001 for split in np.array_split(sorted_column, 3)[1:]]
-        bins.insert(0, sorted_column.min() - 0.00000000001)
-        bins.append(float("inf"))
+    # Compute discrete columns
+    continuous = dataset.select_dtypes(include="float")
+    discrete_dataset_np = discretizer.fit_transform(continuous)
+    discrete_dataset = pd.DataFrame(discrete_dataset_np.astype(int), columns=continuous.columns)
 
-        # Creates column tri-partition and labels the values
-        discrete_dataset[feature] = pd.cut(
-            x=dataset[feature].astype(float),
-            bins=bins,
-            labels=["Low", "Medium", "High"]
-        )
-        dataset.drop(labels=feature, axis=1, inplace=True)
-
-    # Adds back the discrete features
-    for feature in dataset.columns:
-        discrete_dataset[feature] = dataset[feature]
+    # Merge new discrete columns with original discrete columns
+    discrete_dataset = pd.concat([discrete_dataset, dataset.select_dtypes(exclude="float")], axis=1)
 
     # Saves the discrete dataset to csv
     dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
@@ -42,7 +30,8 @@ if __name__ == '__main__':
         description="Discretize the continuous columns in the dataset"
     )
     parser.add_argument("-f", "--filename", type=str, help="The CSV file containing the dataset")
+    parser.add_argument("-b", "--bins", type=int, help="The number of bins in which divide the continuous feature")
 
     args = parser.parse_args()
 
-    main(args.filename)
+    main(args.filename, args.bins)
