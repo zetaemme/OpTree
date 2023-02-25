@@ -232,10 +232,10 @@ class Dataset:
         dataset_np = dataset_df.to_numpy()
 
         if pairs is None:
-            logger.info("No pairs JSON found")
+            logger.info("No pairs file found")
             self._pairs = self.Pairs(dataset_np, dataset_path.stem)
         else:
-            logger.info("Using pairs from JSON file")
+            logger.info("Using pairs from Pickle file")
             self._pairs = self.Pairs.from_precomputed(pairs)  # type: ignore
 
         self._data = dataset_np[:, :-2]
@@ -256,10 +256,10 @@ class Dataset:
         del dataset_df, dataset_np
 
         if separation is None:
-            logger.info("No separation JSON found")
+            logger.info("No separation file found")
             self._separation = self.Separation(self, dataset_path.stem)
         else:
-            logger.info("Using separation from JSON file")
+            logger.info("Using separation from Pickle file")
             self._separation = self.Separation.from_precomputed(separation, self.features)
 
     def __getitem__(self, pos) -> np.ndarray:
