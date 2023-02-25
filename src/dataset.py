@@ -380,9 +380,8 @@ class Dataset:
 
         return dataset_copy
 
-    def labels_for(self, feature: str) -> set[Any]:
-        feature_index = self.features.index(feature)
-        return set(self._data[:, feature_index + 1])
+    def labels_for(self, feature: str) -> np.ndarray:
+        return np.unique(self._data[:, self.features.index(feature) + 1])
 
     def pairs_number_for(self, objects: list[int]) -> int:
         """Number of pairs containing objects

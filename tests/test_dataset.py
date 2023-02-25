@@ -185,9 +185,9 @@ class TestDataset(TestCase):
 
     def test_labels_for(self) -> None:
         for feature in self.dataset.features:
-            self.assertSetEqual(
-                self.dataset.labels_for(feature),
-                {1, 2}
+            self.assertEqual(
+                self.dataset.labels_for(feature).tolist(),
+                [1, 2]
             )
 
 
