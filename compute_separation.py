@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
-from json import dump, load
 from os.path import dirname
+from pickle import HIGHEST_PROTOCOL, dump, load
 from typing import Any
 
 import pandas as pd
 
-from src.types import PairsJson
+from src.types import PicklePairs
 
 
 @dataclass(init=False)
@@ -71,7 +71,7 @@ def main(dataset_path: str, pairs: list[tuple[int, int]]) -> None:
     separation = Separation(dataset, pairs)
 
     dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
-    with open(f"./data/separation/{dataset_name}_separation.json", "w") as f:
+    with open(f"./data/separation/{dataset_name}_separation.pkl", "wb") as f:
         dump(
             {
                 "S_label": separation.S_label,
@@ -80,7 +80,8 @@ def main(dataset_path: str, pairs: list[tuple[int, int]]) -> None:
                 "separated": separation.separated,
                 "kept": separation.kept,
             },
-            f
+            f,
+            HIGHEST_PROTOCOL
         )
 
 
@@ -91,11 +92,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    with open(dirname(__file__) + f"/{args.pairs}", "r") as f:
-        json_pairs: PairsJson = load(f)
+    with open(dirname(__file__) + f"/{args.pairs}", "rb") as f:
+        pickle_pairs: PicklePairs = load(f)
         pairs = [
             tuple(pair)
-            for pair in json_pairs["pairs"]
+            for pair in pickle_pairs["pairs"]
         ]
 
     main(args.filename, pairs)  # type: ignore

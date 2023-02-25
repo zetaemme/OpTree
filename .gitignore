@@ -135,12 +135,12 @@ dmypy.json
 
 # Dataset
 data/*.csv
-data/pairs/*.json
-data/separation/*.json
+data/pairs/*.pkl
+data/separation/*.pkl
 !tests/data/test.csv
 
 # Model
-model/*.obj
+model/*.pkl
 
 # Tests
 !tests/.pytest_cache

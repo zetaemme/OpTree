@@ -1,15 +1,13 @@
 import logging
 from argparse import ArgumentParser, BooleanOptionalAction
-from json import load
 from os.path import dirname
 from pathlib import Path
-from pickle import HIGHEST_PROTOCOL, dump
+from pickle import HIGHEST_PROTOCOL, Unpickler, dump
 from timeit import timeit
 
 from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
-from src.types import PairsJson, SeparationJson
-from src.utils import parse
+from src.types import PicklePairs, PickleSeparation
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +23,7 @@ def benchmark_main() -> None:
     build_decision_tree(dataset)
 
 
-def main(dataset_path: str, dataset_pairs: PairsJson | None, dataset_separation: SeparationJson | None) -> None:
+def main(dataset_path: str, dataset_pairs: PicklePairs | None, dataset_separation: PickleSeparation | None) -> None:
     """Inits dataset and runs the algorithm"""
     path = Path(dirname(__file__) + f"/{dataset_path}")
 
@@ -42,7 +40,7 @@ def main(dataset_path: str, dataset_pairs: PairsJson | None, dataset_separation:
     decision_tree.print()
 
     dataset_name = dataset_path.replace('data/', '').replace('.csv', '')
-    with open(f"model/decision_tree_{dataset_name}.obj", "wb") as obj_file:
+    with open(f"model/decision_tree_{dataset_name}.pkl", "wb") as obj_file:
         dump(decision_tree, obj_file, HIGHEST_PROTOCOL)
 
 
@@ -62,40 +60,18 @@ if __name__ == "__main__":
         pairs = None
         separation = None
 
-        if Path(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.json").is_file():
-            with open(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.json", "r") as f:
-                logger.info("Loading pairs from JSON file")
-                json_pairs: PairsJson = load(f)
-                pairs = [
-                    tuple(pair)
-                    for pair in json_pairs["pairs"]
-                ]
+        if Path(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.pkl").is_file():
+            with open(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.pkl", "rb") as pairs_f:
+                logger.info("Loading pairs from Pickle file")
+                unpickler = Unpickler(pairs_f)
+                pickle_pairs: PicklePairs = unpickler.load()
+                pairs = pickle_pairs["pairs"]
 
-        if Path(dirname(__file__) + f"/data/separation/{dataset_name}_separation.json").is_file():
-            with open(dirname(__file__) + f"/data/separation/{dataset_name}_separation.json", "r") as f:
-                logger.info("Loading separation from JSON file")
-                json_separation: SeparationJson = load(f)
-                separation = {
-                    "S_label": {
-                        key: parse(value)
-                        for key, value in json_separation["S_label"].items()
-                    },
-                    "S_star": {
-                        key: value
-                        for key, value in json_separation["S_star"].items()
-                    },
-                    "sigma": {
-                        key: value
-                        for key, value in json_separation["sigma"].items()
-                    },
-                    "separated": {
-                        key: [tuple(pair) for pair in value]
-                        for key, value in json_separation["separated"].items()
-                    },
-                    "kept": {
-                        key: [tuple(pair) for pair in value]
-                        for key, value in json_separation["kept"].items()
-                    }
-                }
+        if Path(dirname(__file__) + f"/data/separation/{dataset_name}_separation.pkl").is_file():
+            print("HEREEE")
+            with open(dirname(__file__) + f"/data/separation/{dataset_name}_separation.pkl", "rb") as separation_f:
+                logger.info("Loading separation from Pickle file")
+                unpickler = Unpickler(separation_f)
+                separation: PickleSeparation = unpickler.load()
 
         main(args.filename, pairs, separation)

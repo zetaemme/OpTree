@@ -4,9 +4,9 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property, reduce
 from itertools import chain, combinations
-from json import dump
 from math import fsum
 from pathlib import Path
+from pickle import HIGHEST_PROTOCOL, dump
 from typing import Any, Literal, Self
 
 import numpy as np
@@ -40,8 +40,8 @@ class Dataset:
 
             # Saves the pairs, so we don't need to recompute them in future executions
             if name is not None and not Path(f"./data/pairs/{name}_pairs.json").is_file():
-                with open(f"./data/pairs/{name}_pairs.json", "w") as f:
-                    dump({"pairs": self.pairs_list}, f)
+                with open(f"./data/pairs/{name}_pairs.pkl", "w") as f:
+                    dump({"pairs": self.pairs_list}, f, HIGHEST_PROTOCOL)
 
         @classmethod
         def from_precomputed(cls, pairs: list[tuple[int]]) -> Self:
@@ -116,14 +116,18 @@ class Dataset:
 
             # Saves the pairs, so we don't need to recompute them in future executions
             if name is not None and not Path(f"./data/separation/{name}_separation.json").is_file():
-                with open(f"./data/separation/{name}_separation.json", "w") as f:
-                    dump({
-                        "S_label": self.S_label,
-                        "S_star": self.S_star,
-                        "sigma": self.sigma,
-                        "separated": self.separated,
-                        "kept": self.kept
-                    }, f)
+                with open(f"./data/separation/{name}_separation.pkl", "w") as f:
+                    dump(
+                        {
+                            "S_label": self.S_label,
+                            "S_star": self.S_star,
+                            "sigma": self.sigma,
+                            "separated": self.separated,
+                            "kept": self.kept
+                        },
+                        f,
+                        HIGHEST_PROTOCOL
+                    )
 
         def __getitem__(self, key: str) -> dict[Any, list[int]]:
             return self.S_label[key]

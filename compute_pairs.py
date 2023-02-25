@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass
 from itertools import combinations
-from json import dump
 from os.path import dirname
+from pickle import HIGHEST_PROTOCOL, dump
 
 import pandas as pd
 
@@ -30,8 +30,8 @@ def main(dataset_path: str) -> None:
     data = {"pairs": pairs.pairs_list}
 
     dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
-    with open(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.json", "w") as f:
-        dump(data, f)
+    with open(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.pkl", "wb") as f:
+        dump(data, f, HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":

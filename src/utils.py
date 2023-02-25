@@ -1,7 +1,5 @@
 import logging
 from itertools import chain
-from re import match
-from typing import Any
 
 from src.dataset import Dataset
 from src.types import Bounds, HeuristicFunction
@@ -70,18 +68,6 @@ def binary_search_budget(
         result = current_budget
 
     return result
-
-
-def parse(value: dict[str, list]) -> dict[Any, list]:
-    def cast(key: str) -> int | float | str:
-        if bool(match(r"^(-)?\d+.\d+$", key)):
-            return float(key)
-        elif key.isnumeric():
-            return int(key)
-        else:
-            return key
-
-    return {cast(key): val for key, val in value.items()}
 
 
 def get_backbone_label(dataset: Dataset, feature: str) -> str:
