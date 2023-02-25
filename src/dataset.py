@@ -45,6 +45,14 @@ class Dataset:
 
         @classmethod
         def from_precomputed(cls, pairs: list[tuple[int]]) -> Self:
+            """Constructs a Pairs object from the pre-computed pickled file
+
+            Args:
+                pairs: The pre-computed Pairs object
+
+            Returns:
+                An instance of Pairs from the pre-computed object
+            """
             # NOTE: This is a workaround to construct a Pairs object without an explicit call to the constructor.
             #       Needed since we allow a pre-computation of the pairs for the dataset, giving it as an input to
             #       the procedure.
@@ -141,6 +149,15 @@ class Dataset:
                 ],
                 features: list[str]
         ) -> Self:
+            """Constructs a Separation object from the pre-computed pickled file
+
+            Args:
+                separation: The pre-computed Separation object
+                features(list[str]): The features of the dataset
+
+            Returns:
+                An instance of Separation from the pre-computed object
+            """
             separation_obj = cls(Dataset(Path(""), None, None))
 
             separation_obj.S_label = separation["S_label"]
