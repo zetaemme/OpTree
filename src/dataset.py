@@ -248,9 +248,9 @@ class Dataset:
         for idx, column_name in enumerate(self.features):
             if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
                 # self.costs[column_name] = round(dataset_np[:, idx + 1].var(), 2) * 10
-                self.costs[column_name] = 1
+                self.costs[column_name] = len(np.unique(self._data[:, idx + 1]))
             else:
-                self.costs[column_name] = 1
+                self.costs[column_name] = len(np.unique(self._data[:, idx + 1]))
 
         del dataset_df, dataset_np
 

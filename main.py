@@ -68,7 +68,6 @@ if __name__ == "__main__":
                 pairs = pickle_pairs["pairs"]
 
         if Path(dirname(__file__) + f"/data/separation/{dataset_name}_separation.pkl").is_file():
-            print("HEREEE")
             with open(dirname(__file__) + f"/data/separation/{dataset_name}_separation.pkl", "rb") as separation_f:
                 logger.info("Loading separation from Pickle file")
                 unpickler = Unpickler(separation_f)
