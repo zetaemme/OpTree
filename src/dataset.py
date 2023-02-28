@@ -247,7 +247,7 @@ class Dataset:
         for idx, column_name in enumerate(self.features):
             if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
                 self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) + (
-                        ceil(self._data[:, idx + 1].var()) * 10
+                        ceil(self._data[:, idx + 1].var() * 10)
                 )
                 # self.costs[column_name] = 1
             else:
@@ -287,6 +287,16 @@ class Dataset:
         return self._data
 
     def drop_feature(self, feature: str) -> None:
+        if len(self.features) == 1 and self.features[0] == feature:
+            self._data = np.ndarray([])
+            self._header = []
+            # self._classes = {}
+            self._probabilities = []
+
+            self._pairs.pairs_list = []
+
+            return
+
         feature_index = self.features.index(feature)
 
         self._data = np.delete(self._data, feature_index + 1, 1)

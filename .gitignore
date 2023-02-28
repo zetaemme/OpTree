@@ -141,6 +141,7 @@ data/separation/*.pkl
 
 # Model
 model/*.pkl
+model/pictures/*.png
 
 # Tests
 !tests/.pytest_cache
