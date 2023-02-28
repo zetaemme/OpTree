@@ -43,15 +43,17 @@ def binary_search_budget(
     Returns:
         float: The optimal budget for the procedure
     """
-    result = 0.0
 
     # Should be (1 - e^{chi}), approximated with 0.35 in the paper
     alpha = 0.35
 
-    while search_range.upper >= search_range.lower + 1:
-        current_budget = (search_range.lower + search_range.upper) / 2
+    budgets = [search_range.upper]
+    i = 1
 
-        heuristic_result = heuristic(current_budget, dataset, submodular_function_1)
+    while search_range.upper >= search_range.lower + 1:
+        budgets.append((search_range.lower + search_range.upper) / 2)
+
+        heuristic_result = heuristic(budgets[i], dataset, submodular_function_1)
 
         logger.debug(f"Heuristic result: {heuristic_result}")
 
@@ -61,13 +63,13 @@ def binary_search_budget(
         logger.debug(f"Pairs covered by the heuristic: {covered_pairs}")
 
         if len(covered_pairs) < (alpha * dataset.pairs_number):
-            search_range.upper = current_budget
+            search_range.upper = budgets[i]
         else:
-            search_range.lower = current_budget
+            search_range.lower = budgets[i]
 
-        result = current_budget
+        i += 1
 
-    return result
+    return budgets[i - 1]
 
 
 def get_backbone_label(dataset: Dataset, feature: str) -> str:
