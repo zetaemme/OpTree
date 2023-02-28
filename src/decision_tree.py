@@ -95,7 +95,14 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
             # Set the tree resulting from the recursive call as the child of chosen_test
             logger.info("t_A recursive call with test \"%s\"", chosen_test)
-            subtree, is_split_base_case = build_decision_tree(universe_intersection, decision_tree, last_added_node)
+            subtree, is_split_base_case = build_decision_tree(
+                # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
+                #       Instead of removing it from the dataset just to add it back after the return an updated copy
+                #       of the dataset is passed as parameter.
+                universe_intersection.without_feature(chosen_test),
+                decision_tree,
+                last_added_node
+            )
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
             if is_split_base_case and subtree.root["id"] in universe.features:
@@ -129,7 +136,14 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
                 # Set the tree resulting from the recursive call as the child of chosen_test
                 logger.info("t_B recursive call with test \"%s\"", chosen_test)
-                subtree, is_split_base_case = build_decision_tree(universe_intersection, decision_tree, last_added_node)
+                subtree, is_split_base_case = build_decision_tree(
+                    # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
+                    #       Instead of removing it from the dataset just to add it back after the return an updated copy
+                    #       of the dataset is passed as parameter.
+                    universe_intersection.without_feature(chosen_test),
+                    decision_tree,
+                    last_added_node
+                )
 
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
                 if is_split_base_case and subtree.root["id"] in universe.features:

@@ -187,7 +187,6 @@ class Dataset:
             """Returns the intersection on the tests of S^*_t"""
             return reduce(np.intersect1d, self.S_star.values())  # type: ignore
 
-    # class_probabilities: dict[str, float]
     costs: dict[str, float]
     features: list[str]
     _classes: dict[int, str]
@@ -225,7 +224,7 @@ class Dataset:
         # Add "Index" column
         dataset_df.insert(loc=0, column="Index", value=range(dataset_df.shape[0]))  # type: ignore
 
-        # Extract dataset's features
+        # Extract dataset's features and "header"
         self._header = dataset_df.columns.to_list()
         self.features = self._header[1:-2]
 
@@ -242,16 +241,18 @@ class Dataset:
 
         self.costs = {}
 
-        # FIXME: Cannot use variance, it sums up to 1.
+        # NOTE: Cannot use variance, it sums up to 1.
         #        To avoid the problem, we multiply by 10 the variance.
         #        Other cost metrics should be considered!
         for idx, column_name in enumerate(self.features):
             if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
-                # self.costs[column_name] = round(dataset_np[:, idx + 1].var(), 2) * 10
                 self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) + (
-                            ceil(self._data[:, idx + 1].var()) * 10)
+                        ceil(self._data[:, idx + 1].var()) * 10
+                )
+                # self.costs[column_name] = 1
             else:
                 self.costs[column_name] = len(np.unique(self._data[:, idx + 1]))
+                # self.costs[column_name] = 1
 
         del dataset_df, dataset_np
 
@@ -406,6 +407,11 @@ class Dataset:
 
     def separation_for_features_subset(self, features: list[str]) -> Separation:
         return self._separation.for_features_subset(features)
+
+    def without_feature(self, feature: str) -> Self:
+        dataset_copy = self.copy()
+        dataset_copy.drop_feature(feature)
+        return dataset_copy
 
     @property
     def classes(self) -> dict[int, str]:
