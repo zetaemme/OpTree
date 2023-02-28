@@ -42,7 +42,7 @@ def submodular_maximization(
     auxiliary_features: list[str],
     submodular_function: SubmodularFunction,
 ) -> str:
-    logger.info(f"Maximizing submodular function in {heuristic_features}")
+    logger.debug(f"Maximizing submodular function in {heuristic_features}")
 
     maximum_eligible: dict[str, float] = {}
     for feature in heuristic_features:
