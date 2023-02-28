@@ -6,22 +6,31 @@ import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer
 
 
+def concat_onehot_cols(columns, bin_edges_):
+    new_columns = []
+    for idx, column in enumerate(columns):
+        label = bin_edges_[idx]
+        new_columns += ['{}=[{:.2f}-{:.2f}]'.format(column, label[i], label[i + 1]) for i in range(len(label) - 1)]
+    return new_columns
+
+
 def main(dataset_path: str, bins: int) -> None:
     dataset = pd.read_csv(dataset_path)
-    discretizer = KBinsDiscretizer(n_bins=bins, strategy="kmeans", encode="ordinal")
+    discretizer = KBinsDiscretizer(n_bins=bins, strategy="kmeans", encode="onehot-dense")
 
     # Compute discrete columns
     continuous = dataset.select_dtypes(include="float")
-    discrete_dataset_np = discretizer.fit_transform(continuous)
-    discrete_dataset = pd.DataFrame(discrete_dataset_np.astype(int), columns=continuous.columns)
+    discrete_dataset = discretizer.fit_transform(continuous)
+    new_columns = concat_onehot_cols(continuous.columns, discretizer.bin_edges_)
+    discrete_dataset_df = pd.DataFrame(discrete_dataset.astype(int), columns=new_columns)
 
     # Merge new discrete columns with original discrete columns
-    discrete_dataset = pd.concat([discrete_dataset, dataset.select_dtypes(exclude="float")], axis=1)
+    discrete = pd.concat([discrete_dataset_df, dataset.select_dtypes(exclude="float")], axis=1)
 
     # Saves the discrete dataset to csv
     dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
     filepath = Path(dirname(__file__) + f"/data/{dataset_name}_discrete.csv")
-    discrete_dataset.to_csv(filepath, index=False)
+    discrete.to_csv(filepath, index=False)
 
 
 if __name__ == '__main__':
