@@ -32,7 +32,7 @@ def wolsey_greedy_heuristic(
         feature for feature in dataset.features if dataset.costs[feature] <= budget
     ]
 
-    if heuristic_features:
+    if len(heuristic_features) > 0:
         while True:
             k += 1
 
@@ -44,27 +44,19 @@ def wolsey_greedy_heuristic(
                 submodular_function,
             )
 
-            logger.debug("Chosen feature: %s", chosen_test)
-
             # Remove t_k from T
-            heuristic_features.remove(chosen_test)
+            auxiliary_array.append(heuristic_features.pop(heuristic_features.index(chosen_test)))
             # Update spent
             spent += dataset.costs[chosen_test]
-            # Update A
-            auxiliary_array.append(chosen_test)
 
-            logger.debug(f"Auxiliary array (A): {auxiliary_array}")
-            logger.debug("Spent: %f", spent)
-
-            if spent > budget or not heuristic_features:
+            if spent > budget or len(heuristic_features) == 0:
                 break
-    else:
-        return []
 
     # Compute f({t_k})
     single_result = submodular_function(dataset, [auxiliary_array[k]])
     # Compute f(A \ {t_k})
-    difference_result = submodular_function(dataset, auxiliary_array)
+    # NOTE: We can use [:-1] since t_K is the last element of the list
+    difference_result = submodular_function(dataset, auxiliary_array[:-1])
 
     if single_result >= difference_result:
         # Return {t_k}
