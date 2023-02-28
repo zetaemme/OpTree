@@ -51,6 +51,8 @@ def wolsey_greedy_heuristic(
 
             if spent > budget or len(heuristic_features) == 0:
                 break
+    else:
+        return []
 
     # Compute f({t_k})
     single_result = submodular_function(dataset, [auxiliary_array[k]])
