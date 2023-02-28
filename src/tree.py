@@ -77,6 +77,21 @@ class Tree:
         self.edges += subtree.edges
 
     def print(self, as_tree: bool = True) -> None:
+        def remove_key(data: list[dict], key: str) -> None:
+            # checking if data is a dictionary or list
+            if isinstance(data, dict):
+                # if key is present in dictionary then remove it
+                data.pop(key, None)
+                # iterating over all the keys in the dictionary
+                for key in data:
+                    # calling function recursively for nested dictionaries
+                    remove_key(data[key], key)
+            elif isinstance(data, list):
+                # iterating over all the items of the list
+                for item in data:
+                    # calling function recursively for all elements of the list
+                    remove_key(item, key)
+
         """Plots the tree"""
         node_labels = {
             node["id"]: node["name"]
@@ -88,11 +103,8 @@ class Tree:
         }
         edge_labels = {(edge["source"], edge["target"]): edge["label"] for edge in self.edges}
 
-        for node in self.nodes:
-            del node["name"]
-
-        for leaf in self.leaves:
-            del leaf["name"]
+        remove_key(self.nodes, "name")
+        remove_key(self.leaves, "name")
 
         tree = json_graph.node_link_graph(
             {
