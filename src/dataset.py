@@ -39,7 +39,7 @@ class Dataset:
             )
 
             # Saves the pairs, so we don't need to recompute them in future executions
-            if name is not None and not Path(f"./data/pairs/{name}_pairs.json").is_file():
+            if name is not None and not Path(f"./data/pairs/{name}_pairs.pkl").is_file():
                 with open(f"./data/pairs/{name}_pairs.pkl", "w") as f:
                     dump({"pairs": self.pairs_list}, f, HIGHEST_PROTOCOL)
 
@@ -95,21 +95,25 @@ class Dataset:
 
             for feature_idx, feature in enumerate(self._all_features):
                 self.S_label[feature] = {
-                    value: [item[0] for item in dataset.data() if item[feature_idx + 1] == value]
+                    value: [item[0] for item in dataset.data(
+                    ) if item[feature_idx + 1] == value]
                     for value in set(dataset.data()[:, feature_idx + 1])
                 }
 
                 feature_pairs = {
                     label: dataset.pairs_number_for(objects) for label, objects in self.S_label[feature].items()
                 }
-                max_pairs = max(feature_pairs, key=feature_pairs.get)  # type: ignore
+                # type: ignore
+                max_pairs = max(feature_pairs, key=feature_pairs.get)
                 self.S_star[feature] = self.S_label[feature][max_pairs]
 
-                self.sigma[feature] = [row[0] for row in dataset.difference(self.S_star[feature])]
+                self.sigma[feature] = [row[0]
+                                       for row in dataset.difference(self.S_star[feature])]
 
                 self.kept[feature] = list(
                     filter(
-                        lambda pair: all(idx in self.sigma[feature] for idx in pair),
+                        lambda pair: all(
+                            idx in self.sigma[feature] for idx in pair),
                         dataset.pairs_list
                     )
                 )
@@ -117,13 +121,13 @@ class Dataset:
                 self.separated[feature] = list(
                     filter(
                         lambda pair: pair[0] in self.sigma[feature] and pair[1] in self.S_star[feature] or
-                                     pair[1] in self.sigma[feature] and pair[0] in self.S_star[feature],
+                        pair[1] in self.sigma[feature] and pair[0] in self.S_star[feature],
                         dataset.pairs_list
                     )
                 )
 
             # Saves the pairs, so we don't need to recompute them in future executions
-            if name is not None and not Path(f"./data/separation/{name}_separation.json").is_file():
+            if name is not None and not Path(f"./data/separation/{name}_separation.pkl").is_file():
                 with open(f"./data/separation/{name}_separation.pkl", "w") as f:
                     dump(
                         {
@@ -202,9 +206,9 @@ class Dataset:
             dataset_path: Path,
             pairs: dict[Literal["pairs"], list[list[int]]] | None = None,
             separation: dict[
-                            Literal["S_label", "S_star", "sigma", "separated", "kept"],
-                            dict[str, list[Any | tuple]]
-                        ] | None = None
+                Literal["S_label", "S_star", "sigma", "separated", "kept"],
+                dict[str, list[Any | tuple]]
+            ] | None = None
     ) -> None:
         self._path = dataset_path.name
         if dataset_path.name == "":
@@ -222,7 +226,8 @@ class Dataset:
         self._probabilities = dataset_df["Probability"].to_list()
 
         # Add "Index" column
-        dataset_df.insert(loc=0, column="Index", value=range(dataset_df.shape[0]))  # type: ignore
+        dataset_df.insert(loc=0, column="Index", value=range(
+            dataset_df.shape[0]))  # type: ignore
 
         # Extract dataset's features and "header"
         self._header = dataset_df.columns.to_list()
@@ -247,11 +252,12 @@ class Dataset:
         for idx, column_name in enumerate(self.features):
             if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
                 self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) + (
-                        ceil(self._data[:, idx + 1].var() * 10)
+                    ceil(self._data[:, idx + 1].var() * 10)
                 )
                 # self.costs[column_name] = 1
             else:
-                self.costs[column_name] = len(np.unique(self._data[:, idx + 1]))
+                self.costs[column_name] = len(
+                    np.unique(self._data[:, idx + 1]))
                 # self.costs[column_name] = 1
 
         del dataset_df, dataset_np
@@ -261,7 +267,8 @@ class Dataset:
             self._separation = self.Separation(self, dataset_path.stem)
         else:
             logger.info("Using separation from Pickle file")
-            self._separation = self.Separation.from_precomputed(separation, self.features)
+            self._separation = self.Separation.from_precomputed(
+                separation, self.features)
 
     def __getitem__(self, pos) -> np.ndarray:
         """[] operator overload"""
@@ -318,7 +325,8 @@ class Dataset:
         logger.debug("Dropping row %i", index)
         drop_index = np.where(self.indexes == index)
         self._data = np.delete(self._data, drop_index[0][0], axis=0)
-        self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
+        self._pairs.pairs_list = [
+            pair for pair in self._pairs.pairs_list if index not in pair]
         del self._classes[index]
         del self._probabilities[drop_index[0][0]]
 
