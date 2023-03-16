@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
-from os.path import dirname
 from pickle import HIGHEST_PROTOCOL, dump, load
 from typing import Any
 
@@ -65,10 +64,17 @@ def number_of_pairs_for(pairs: list[tuple[int, int]], objects: list[int]) -> int
     return len({pair for obj in objects for pair in pairs if int(obj) in pair})
 
 
-def main(dataset_path: str, pairs: list[tuple[int, int]]) -> None:
-    dataset = pd.read_csv(dirname(__file__) + f"/{dataset_path}")
+def compute_separation(dataset_path: str, pairs_path: str) -> None:
+    dataset = pd.read_csv(dataset_path)
 
-    separation = Separation(dataset, pairs)
+    with open(pairs_path, "rb") as f:
+        pickle_pairs: PicklePairs = load(f)
+        pairs = [
+            tuple(pair)
+            for pair in pickle_pairs["pairs"]
+        ]
+
+    separation = Separation(dataset, pairs)  # type: ignore
 
     dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
     with open(f"./data/separation/{dataset_name}_separation.pkl", "wb") as f:
@@ -92,11 +98,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    with open(dirname(__file__) + f"/{args.pairs}", "rb") as f:
-        pickle_pairs: PicklePairs = load(f)
-        pairs = [
-            tuple(pair)
-            for pair in pickle_pairs["pairs"]
-        ]
-
-    main(args.filename, pairs)  # type: ignore
+    compute_separation(args.filename, args.pairs)  # type: ignore
