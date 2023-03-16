@@ -14,7 +14,7 @@ def concat_onehot_cols(columns, bin_edges_):
     return new_columns
 
 
-def main(dataset_path: str, bins: int) -> None:
+def discretize(dataset_path: str, bins: int) -> None:
     dataset = pd.read_csv(dataset_path)
     discretizer = KBinsDiscretizer(n_bins=bins, strategy="kmeans", encode="onehot-dense")
 
@@ -29,7 +29,7 @@ def main(dataset_path: str, bins: int) -> None:
 
     # Saves the discrete dataset to csv
     dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
-    filepath = Path(dirname(__file__) + f"/data/{dataset_name}_discrete.csv")
+    filepath = Path(dirname(__file__) + f"../data/{dataset_name}_discrete.csv")
     discrete.to_csv(filepath, index=False)
 
 
@@ -43,4 +43,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(args.filename, args.bins)
+    discretize(args.filename, args.bins)

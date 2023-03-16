@@ -23,7 +23,7 @@ class Pairs:
         )
 
 
-def main(dataset_path: str) -> None:
+def compute_pairs(dataset_path: str) -> None:
     dataset = pd.read_csv(dirname(__file__) + "/" + dataset_path)
     pairs = Pairs(dataset)
 
@@ -40,4 +40,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.filename)
+    compute_pairs(args.filename)
