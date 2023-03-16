@@ -77,6 +77,7 @@ class Tree:
         self.edges += subtree.edges
 
     def print(self, as_tree: bool = True) -> None:
+        """Plots the tree"""
         def remove_key(data: list[dict], key: str) -> None:
             # checking if data is a dictionary or list
             if isinstance(data, dict):
@@ -92,7 +93,8 @@ class Tree:
                     # calling function recursively for all elements of the list
                     remove_key(item, key)
 
-        """Plots the tree"""
+        plt.rcParams['figure.figsize'] = [16, 9]
+
         node_labels = {
             node["id"]: node["name"]
             for node in self.nodes
