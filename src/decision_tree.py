@@ -40,7 +40,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
         logger.info(f"Just one pair in dataset: {dataset.pairs_list[0]}")
         # Create a tree rooted by the cheapest test that separates the two items
         terminal_tree = Tree()
-        split = cheapest_separation(dataset, dataset.pairs_list[0][0], dataset.pairs_list[0][1])
+        split = cheapest_separation(dataset, dataset.pairs_list[0])
 
         logger.info("Setting node \"%s\" as root of subtree", split)
         terminal_tree.add_node(None, split, split)
@@ -106,6 +106,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
             if is_split_base_case and subtree.root["id"] in universe.features:
+                universe.drop_feature(subtree.root["id"])
                 del budgeted_features[subtree.root["id"]]
 
             decision_tree.add_subtree(chosen_test, subtree, label)
@@ -147,6 +148,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
                 if is_split_base_case and subtree.root["id"] in universe.features:
+                    universe.drop_feature(subtree.root["id"])
                     del budgeted_features[subtree.root["id"]]
 
                 decision_tree.add_subtree(chosen_test, subtree, label)

@@ -1,12 +1,12 @@
 from src.dataset import Dataset
 
 
-def cheapest_separation(dataset: Dataset, obj_idx1: int, obj_idx2: int, ) -> str:
+def cheapest_separation(dataset: Dataset, pair: tuple[int, int]) -> str:
     if len(dataset.features) == 1:
         return dataset.features[0]
 
     for feature, _ in sorted(dataset.costs.items(), key=lambda x: x[1]):
-        if tuple([obj_idx1, obj_idx2]) in dataset.separated[feature]:
+        if pair in dataset.separated[feature]:
             return feature
 
 
