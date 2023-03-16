@@ -44,7 +44,7 @@ def wolsey_greedy_heuristic(
                 submodular_function,
             )
 
-            # Remove t_k from T
+            # Remove t_k from T and add it to A
             auxiliary_array.append(heuristic_features.pop(heuristic_features.index(chosen_test)))
             # Update spent
             spent += dataset.costs[chosen_test]
