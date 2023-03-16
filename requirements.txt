@@ -16,5 +16,4 @@ requests
 scikit-learn
 scipy
 six
-treelib
 urllib3
