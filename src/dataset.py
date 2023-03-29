@@ -226,8 +226,7 @@ class Dataset:
         self._probabilities = dataset_df["Probability"].to_list()
 
         # Add "Index" column
-        dataset_df.insert(loc=0, column="Index", value=range(
-            dataset_df.shape[0]))  # type: ignore
+        dataset_df.insert(loc=0, column="Index", value=range(dataset_df.shape[0]))  # type: ignore
 
         # Extract dataset's features and "header"
         self._header = dataset_df.columns.to_list()
