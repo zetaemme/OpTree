@@ -1,6 +1,5 @@
 import logging
 
-from src import memory
 from src.dataset import Dataset
 from src.maximization import submodular_maximization
 from src.types import SubmodularFunction
@@ -8,7 +7,6 @@ from src.types import SubmodularFunction
 logger = logging.getLogger(__name__)
 
 
-@memory.cache
 def wolsey_greedy_heuristic(
     budget: float,
     dataset: Dataset,

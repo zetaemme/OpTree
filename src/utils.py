@@ -1,14 +1,12 @@
 import logging
 from itertools import chain
 
-from src import memory
 from src.dataset import Dataset
 from src.types import Bounds, HeuristicFunction
 
 logger = logging.getLogger(__name__)
 
 
-@memory.cache
 def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
     """Submodular function used by the heuristic
 
