@@ -95,8 +95,7 @@ class Dataset:
 
             for feature_idx, feature in enumerate(self._all_features):
                 self.S_label[feature] = {
-                    value: [item[0] for item in dataset.data(
-                    ) if item[feature_idx + 1] == value]
+                    value: [item[0] for item in dataset.data() if item[feature_idx + 1] == value]
                     for value in set(dataset.data()[:, feature_idx + 1])
                 }
 
@@ -324,8 +323,7 @@ class Dataset:
         logger.debug("Dropping row %i", index)
         drop_index = np.where(self.indexes == index)
         self._data = np.delete(self._data, drop_index[0][0], axis=0)
-        self._pairs.pairs_list = [
-            pair for pair in self._pairs.pairs_list if index not in pair]
+        self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
         del self._classes[index]
         del self._probabilities[drop_index[0][0]]
 
