@@ -56,7 +56,11 @@ def submodular_maximization(
         union_result = submodular_function(dataset, auxiliary_features + [feature])
         logger.debug("f(A U {t}): %i", union_result)
 
-        submodular_result = (union_result - feature_result) / dataset.costs[feature]
+        # NOTE: 22/03/23 - We discovered a type in the original paper.
+        #       To avoid issues with the budget the following was changed:
+        #           (f(A U {t}) - f(A))  ->  (f(A) - f(A U {t}))
+        #       Doing so, we avoid negative numbers in maximum_eligible
+        submodular_result = (feature_result - union_result) / dataset.costs[feature]
         maximum_eligible[feature] = submodular_result
 
     return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
