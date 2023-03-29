@@ -1,5 +1,6 @@
 import logging
 
+from src import memory
 from src.dataset import Dataset
 from src.heuristic import wolsey_greedy_heuristic
 from src.types import Bounds
@@ -8,6 +9,7 @@ from src.utils import binary_search_budget
 logger = logging.getLogger(__name__)
 
 
+@memory.cache
 def find_budget(dataset: Dataset) -> float:
     """Finds the optimal threshold for tests costs during decision tree creation.
 

@@ -136,15 +136,18 @@ dmypy.json
 # Dataset
 data/*.csv
 data/**/*.pkl
-tests/data/**/*.pkl
-!tests/data/test.csv
 
 # Model
 model/*.pkl
 model/pictures/**/*.png
 
 # Tests
+tests/data/**/*.pkl
 !tests/.pytest_cache
+!tests/data/test.csv
+
+# Cache
+cache/joblib
 
 # macOS
 .DS_Store
