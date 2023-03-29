@@ -29,7 +29,7 @@ def discretize(dataset_path: str, bins: int) -> None:
 
     # Saves the discrete dataset to csv
     dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
-    filepath = Path(dirname(__file__) + f"../data/{dataset_name}_discrete.csv")
+    filepath = Path(dirname(__file__) + f"/data/{dataset_name}_discrete.csv")
     discrete.to_csv(filepath, index=False)
 
 
