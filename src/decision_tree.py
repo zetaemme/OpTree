@@ -1,7 +1,6 @@
 import logging
 
-from src import memory
-from src.budget import find_budget as uncached_find_budget
+from src.budget import find_budget
 from src.dataset import Dataset
 from src.extraction import cheapest_separation, eligible_labels
 from src.maximization import pairs_maximization, probability_maximization
@@ -9,9 +8,6 @@ from src.tree import Tree
 from src.utils import get_backbone_label
 
 logger = logging.getLogger(__name__)
-
-# NOTE: 29/03/2023 - Using caching for the "FindBudget" procedure almost halves the benchmark result
-find_budget = memory.cache(uncached_find_budget)
 
 
 def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node: str = None) -> tuple[Tree, bool]:
@@ -110,7 +106,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
             if is_split_base_case and subtree.root["id"] in universe.features:
-                # universe.drop_feature(subtree.root["id"])
+                universe.drop_feature(subtree.root["id"])
                 del budgeted_features[subtree.root["id"]]
 
             decision_tree.add_subtree(chosen_test, subtree, label)
@@ -152,7 +148,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
                 if is_split_base_case and subtree.root["id"] in universe.features:
-                    # universe.drop_feature(subtree.root["id"])
+                    universe.drop_feature(subtree.root["id"])
                     del budgeted_features[subtree.root["id"]]
 
                 decision_tree.add_subtree(chosen_test, subtree, label)
