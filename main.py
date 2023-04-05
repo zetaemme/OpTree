@@ -34,7 +34,14 @@ def main(dataset_path: str, dataset_pairs: PicklePairs | None, dataset_separatio
     else:
         dataset = Dataset(path)
 
-    decision_tree, _ = build_decision_tree(dataset)
+    # NOTE: 31/03/2023 - Since it happens to have structurally equal objects with different class label, we remove the
+    #                    most represented one. Doing so, we assure the purity of the leaves while keeping intact the
+    #                    variance of data.
+    dataset.drop_equal_objects_with_different_class()
+
+    src.TESTS = dataset.features
+    src.COSTS = dataset.costs
+    decision_tree, _ = build_decision_tree(dataset, src.TESTS, src.COSTS)
 
     logger.info("Done!")
     decision_tree.print()

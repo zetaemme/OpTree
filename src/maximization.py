@@ -56,7 +56,7 @@ def submodular_maximization(
         union_result = submodular_function(dataset, auxiliary_features + [feature])
         logger.debug("f(A U {t}): %i", union_result)
 
-        # NOTE: 22/03/23 - We discovered a type in the original paper.
+        # NOTE: 22/03/2023 - We discovered a type in the original paper.
         #       To avoid issues with the budget the following was changed:
         #           (f(A U {t}) - f(A))  ->  (f(A) - f(A U {t}))
         #       Doing so, we avoid negative numbers in maximum_eligible

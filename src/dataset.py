@@ -1,5 +1,6 @@
 import logging
 import numbers
+from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property, reduce
@@ -225,8 +226,7 @@ class Dataset:
         self._probabilities = dataset_df["Probability"].to_list()
 
         # Add "Index" column
-        dataset_df.insert(loc=0, column="Index", value=range(
-            dataset_df.shape[0]))  # type: ignore
+        dataset_df.insert(loc=0, column="Index", value=range(dataset_df.shape[0]))  # type: ignore
 
         # Extract dataset's features and "header"
         self._header = dataset_df.columns.to_list()
@@ -292,13 +292,42 @@ class Dataset:
         """
         return self._data
 
+    def drop_equal_objects_with_different_class(self) -> None:
+        # Checks if there's any row having the same structure along all features
+        unique, count = np.unique(self._data[:, 1:].astype('int16'), axis=0, return_counts=True)
+        repeated_rows = unique[count > 1]
+
+        if len(repeated_rows) != 0:
+            # If so, extracts the index number of those rows
+            impure_objs = [np.argwhere(np.all(self._data[:, 1:] == row, axis=1)).ravel() for row in repeated_rows]
+
+            impure_indexes = []
+            for obj in impure_objs:
+                if len(obj) > 2:
+                    combinations_list = [np.array(cmb) for cmb in list(combinations(obj.tolist(), 2))]
+                    impure_indexes.extend(combinations_list)
+
+            for obj in impure_indexes:
+                counter = Counter(self._classes.values())
+
+                # FIXME: Rimuovi i duplicati tra le coppie di "impure_indexes" prima di questo passaggio
+                if obj[0] in self.indexes and obj[1] in self.indexes and self._classes[obj[0]] != self._classes[obj[1]]:
+                    obj_idx_1 = self._data[obj[0], 0]
+                    obj_idx_2 = self._data[obj[1], 0]
+
+                    # For each of those, if their class label is different, removes the one with the most common class
+                    self.drop_row(
+                        obj_idx_1
+                        if counter.most_common(1)[0][0] == self._classes[obj_idx_1]
+                        else obj_idx_2
+                    )
+
     def drop_feature(self, feature: str) -> None:
         if len(self.features) == 1 and self.features[0] == feature:
             self._data = np.ndarray([])
             self._header = []
             # self._classes = {}
             self._probabilities = []
-
             self._pairs.pairs_list = []
 
             return
