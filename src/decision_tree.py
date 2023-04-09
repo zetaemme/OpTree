@@ -1,5 +1,6 @@
 import logging
 
+import src
 from src.budget import find_budget
 from src.dataset import Dataset
 from src.extraction import cheapest_separation, eligible_labels
@@ -10,11 +11,19 @@ from src.utils import get_backbone_label
 logger = logging.getLogger(__name__)
 
 
-def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node: str = None) -> tuple[Tree, bool]:
+def build_decision_tree(
+        dataset: Dataset,
+        tests: list[str],
+        costs: dict[str, float],
+        decision_tree=Tree(),
+        last_added_node: str = None
+) -> tuple[Tree, bool]:
     """Recursively builds a (log)-optimal decision tree.
 
     Args:
         dataset (Dataset): The dataset used to train the model
+        tests (list[str]): The features from which the tree will be built
+        costs (doct[str, float]): The costs for the tests
         decision_tree (Tree): The tree to build
         last_added_node (str): Last node added to the tree. Defaults to None
 
@@ -47,9 +56,9 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
         # Add the two items as leafs labelled with the respective class
         class_1 = dataset.classes[dataset.pairs_list[0][0]]
-        label_1 = str(dataset[0, dataset.features.index(split) + 1])
+        label_1 = str(dataset[0, tests.index(split) + 1])
         class_2 = dataset.classes[dataset.pairs_list[0][1]]
-        label_2 = str(dataset[1, dataset.features.index(split) + 1])
+        label_2 = str(dataset[1, tests.index(split) + 1])
 
         logger.info("Adding leaf \"%s\"", class_1)
         terminal_tree.add_leaf(class_1, label_1)
@@ -58,7 +67,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
         return terminal_tree, True
 
-    budget = find_budget(dataset)
+    budget = find_budget(dataset, tests, costs)
     logger.info("Using budget %f", budget)
 
     spent = 0.0
@@ -68,7 +77,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
     # Removes from T all tests with cost greater than budget
     budgeted_features = {
-        test: cost for test, cost in dataset.costs.items() if cost <= budget
+        test: cost for test, cost in costs.items() if cost <= budget
     }
     logger.info(f"Features within budget {list(budgeted_features.keys())}")
 
@@ -100,6 +109,8 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
                 #       Instead of removing it from the dataset just to add it back after the return an updated copy
                 #       of the dataset is passed as parameter.
                 universe_intersection.without_feature(chosen_test),
+                list(budgeted_features.keys()),
+                costs,
                 decision_tree,
                 last_added_node
             )
@@ -112,7 +123,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
             decision_tree.add_subtree(chosen_test, subtree, label)
 
         universe = universe.intersection(universe.S_star[chosen_test])
-        spent += universe.costs[chosen_test]
+        spent += costs[chosen_test]
         universe.drop_feature(chosen_test)
         del budgeted_features[chosen_test]
 
@@ -142,6 +153,8 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
                     #       Instead of removing it from the dataset just to add it back after the return an updated copy
                     #       of the dataset is passed as parameter.
                     universe_intersection.without_feature(chosen_test),
+                    list(budgeted_features.keys()),
+                    costs,
                     decision_tree,
                     last_added_node
                 )
@@ -154,7 +167,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
                 decision_tree.add_subtree(chosen_test, subtree, label)
 
             universe = universe.intersection(universe.S_star[chosen_test])
-            spent_2 += dataset.costs[chosen_test]
+            spent_2 += costs[chosen_test]
             universe.drop_feature(chosen_test)
             del budgeted_features[chosen_test]
 
@@ -166,7 +179,7 @@ def build_decision_tree(dataset: Dataset, decision_tree=Tree(), last_added_node:
 
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     logger.info("Final recursive call")
-    subtree, _ = build_decision_tree(universe, decision_tree, last_added_node)
+    subtree, _ = build_decision_tree(universe, src.TESTS, src.COSTS, decision_tree, last_added_node)
     backbone_label = get_backbone_label(dataset, last_added_node)
     decision_tree.add_subtree(last_added_node, subtree, backbone_label)
 

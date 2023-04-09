@@ -29,14 +29,18 @@ def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
 
 
 def binary_search_budget(
-    dataset: Dataset,
-    search_range: Bounds,
-    heuristic: HeuristicFunction,
+        dataset: Dataset,
+        tests: list[str],
+        costs: dict[str, float],
+        search_range: Bounds,
+        heuristic: HeuristicFunction,
 ) -> float:
     """Calculates the procedure's budget via Binary Search
 
     Args:
         dataset (Dataset): The dataset on which the decision is being built
+        tests (list[str]): The tests for the given dataset
+        costs (dict[str, float]): The costs for the tests
         search_range (list[float]): Range in which the binary search is performed
         heuristic (HeuristicFunction): Heuristic function
 
@@ -53,7 +57,7 @@ def binary_search_budget(
     while search_range.upper >= search_range.lower + 1:
         budgets.append((search_range.lower + search_range.upper) / 2)
 
-        heuristic_result = heuristic(budgets[i], dataset, submodular_function_1)
+        heuristic_result = heuristic(budgets[i], dataset, tests, costs, submodular_function_1)
 
         logger.debug(f"Heuristic result: {heuristic_result}")
 

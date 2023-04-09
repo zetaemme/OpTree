@@ -8,15 +8,19 @@ logger = logging.getLogger(__name__)
 
 
 def wolsey_greedy_heuristic(
-    budget: float,
-    dataset: Dataset,
-    submodular_function: SubmodularFunction,
+        budget: float,
+        dataset: Dataset,
+        tests: list[str],
+        costs: dict[str, float],
+        submodular_function: SubmodularFunction,
 ) -> list[str]:
     """Implementation of the Wolsey greedy algorithm
 
     Args:
         budget (float): Budget threshold
         dataset (Dataset): Dataset
+        tests (list[str]): The tests for the given dataset
+        costs (dict[str, float]): The costs for the tests
         submodular_function (SubmodularFunction): Submodular function to apply
 
     Returns:
@@ -29,7 +33,7 @@ def wolsey_greedy_heuristic(
     k = -1
 
     heuristic_features = [
-        feature for feature in dataset.features if dataset.costs[feature] <= budget
+        feature for feature in tests if costs[feature] <= budget
     ]
 
     if len(heuristic_features) > 0:
@@ -39,6 +43,7 @@ def wolsey_greedy_heuristic(
             # Select t_k
             chosen_test = submodular_maximization(
                 dataset,
+                costs,
                 heuristic_features,
                 auxiliary_array,
                 submodular_function,
@@ -47,7 +52,7 @@ def wolsey_greedy_heuristic(
             # Remove t_k from T and add it to A
             auxiliary_array.append(heuristic_features.pop(heuristic_features.index(chosen_test)))
             # Update spent
-            spent += dataset.costs[chosen_test]
+            spent += costs[chosen_test]
 
             if spent > budget or len(heuristic_features) == 0:
                 break
@@ -65,4 +70,4 @@ def wolsey_greedy_heuristic(
         return [auxiliary_array[k]]
 
     # Return {t_1, ..., t_(k - 1)}
-    return dataset.features[:k]
+    return auxiliary_array[:k]

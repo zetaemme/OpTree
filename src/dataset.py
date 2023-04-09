@@ -186,9 +186,12 @@ class Dataset:
 
             return separation_copy
 
-        @cached_property
+        @property
         def S_star_intersection(self) -> list[int]:
             """Returns the intersection on the tests of S^*_t"""
+            if len(self.S_star.values()) == 0 or any(len(value) == 0 for value in self.S_star.values()):
+                return []
+
             return reduce(np.intersect1d, self.S_star.values())  # type: ignore
 
     costs: dict[str, float]
@@ -329,7 +332,6 @@ class Dataset:
             # self._classes = {}
             self._probabilities = []
             self._pairs.pairs_list = []
-
             return
 
         feature_index = self.features.index(feature)
@@ -341,8 +343,6 @@ class Dataset:
         del self.S_label[feature]
         del self.S_star[feature]
         del self.sigma[feature]
-        del self.separated[feature]
-        del self.kept[feature]
 
     def drop_row(self, index: int) -> None:
         """Removes the row at given index
@@ -373,18 +373,6 @@ class Dataset:
                 self.sigma[feature].remove(index)
             except ValueError:
                 pass
-
-            self.separated[feature] = [
-                pair
-                for pair in self.separated[feature]
-                if index not in pair
-            ]
-
-            self.kept[feature] = [
-                pair
-                for pair in self.kept[feature]
-                if index not in pair
-            ]
 
     def difference(self, other: list[int], *, axis=0) -> np.ndarray:
         """Computes the set difference between two datasets
@@ -418,7 +406,7 @@ class Dataset:
         logger.debug("Computing datasets intersection")
         dataset_copy = self.copy()
 
-        data_as_set = set(self.indexes)
+        data_as_set = set(self.indexes if np.any(self.indexes) else [])
 
         difference = data_as_set - set(other)
 
@@ -428,6 +416,8 @@ class Dataset:
         return dataset_copy
 
     def labels_for(self, feature: str) -> np.ndarray:
+        if len(self._data.shape) <= 1:
+            return np.array([])
         return np.unique(self._data[:, self.features.index(feature) + 1])
 
     def pairs_number_for(self, objects: list[int]) -> int:
@@ -465,6 +455,8 @@ class Dataset:
 
     @property
     def indexes(self) -> np.ndarray:
+        if len(self._data.shape) <= 1:
+            return np.array([])
         return self._data[:, 0]  # type: ignore
 
     @cached_property

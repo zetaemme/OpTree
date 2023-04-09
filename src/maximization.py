@@ -37,10 +37,11 @@ def pairs_maximization(universe: Dataset) -> str:
 
 
 def submodular_maximization(
-    dataset: Dataset,
-    heuristic_features: list[str],
-    auxiliary_features: list[str],
-    submodular_function: SubmodularFunction,
+        dataset: Dataset,
+        costs: dict[str, float],
+        heuristic_features: list[str],
+        auxiliary_features: list[str],
+        submodular_function: SubmodularFunction,
 ) -> str:
     logger.debug(f"Maximizing submodular function in {heuristic_features}")
 
@@ -60,7 +61,7 @@ def submodular_maximization(
         #       To avoid issues with the budget the following was changed:
         #           (f(A U {t}) - f(A))  ->  (f(A) - f(A U {t}))
         #       Doing so, we avoid negative numbers in maximum_eligible
-        submodular_result = (feature_result - union_result) / dataset.costs[feature]
+        submodular_result = (feature_result - union_result) / costs[feature]
         maximum_eligible[feature] = submodular_result
 
     return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore

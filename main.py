@@ -5,6 +5,7 @@ from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, Unpickler, dump
 from timeit import timeit
 
+import src
 from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
 from src.types import PicklePairs, PickleSeparation
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 def benchmark_main() -> None:
     path = Path("data/test.csv")
     dataset = Dataset(path)
-    build_decision_tree(dataset)
+    build_decision_tree(dataset, src.TESTS, src.COSTS)
 
 
 def main(dataset_path: str, dataset_pairs: PicklePairs | None, dataset_separation: PickleSeparation | None) -> None:

@@ -11,7 +11,8 @@ Functions:
     wolsey_greedy_heuristic
     submodular_function_1
 """
-
 from joblib import Memory
 
 memory = Memory("./cache", verbose=0)
+TESTS = []
+COSTS = {}

@@ -15,7 +15,7 @@ class Bounds:
 SubmodularFunction = Callable[[Dataset, list[str]], int]
 
 HeuristicFunction = Callable[
-    [float, Dataset, SubmodularFunction], list[str]
+    [float, Dataset, list[str], dict[str, float], SubmodularFunction], list[str]
 ]
 
 Nodes = list[dict[Literal["id", "name"], str]]
