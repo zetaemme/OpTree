@@ -23,7 +23,7 @@ def find_budget(
     Returns:
         float: The optimal budget for the decision tree test costs
     """
-    logger.info("Starting budget computation")
+    logger.info(f"Starting budget computation | Lower bound: 1.0 | Upper bound: {dataset.total_cost}")
     search_bounds = Bounds(1.0, dataset.total_cost)
     return binary_search_budget(
         dataset, tests, costs, search_bounds, wolsey_greedy_heuristic
