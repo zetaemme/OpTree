@@ -22,7 +22,8 @@ def probability_maximization(
     maximum_eligible = {
         feature: calculate_probability_maximization_for(feature)
         for feature in tests
-        if costs[feature] <= budget - spent
+        # NOTE: Not sure if second condition works or even if it's something that can happen
+        if costs[feature] <= budget - spent and feature in universe_copy.S_star.keys()
     }
 
     return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
@@ -36,7 +37,10 @@ def pairs_maximization(universe: Dataset, tests: list[str], costs: dict[str, flo
         return (universe.pairs_number - intersection.pairs_number) / costs[feature]
 
     maximum_eligible = {
-        feature: calculate_pairs_maximization_for(feature) for feature in tests
+        feature: calculate_pairs_maximization_for(feature)
+        for feature in tests
+        # NOTE: Not sure if second condition works or even if it's something that can happen
+        if feature in universe_copy.S_star.keys()
     }
 
     return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore

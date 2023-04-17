@@ -104,12 +104,11 @@ def build_decision_tree(
 
             # Set the tree resulting from the recursive call as the child of chosen_test
             logger.info("t_A recursive call with test \"%s\"", chosen_test)
-            universe_wo_chosen_test = universe_intersection.without_feature(chosen_test)
             subtree, is_split_base_case = build_decision_tree(
                 # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
                 #       Instead of removing it from the dataset just to add it back after the return an updated copy
                 #       of the dataset is passed as parameter.
-                universe_wo_chosen_test,
+                universe_intersection.without_feature(chosen_test),
                 list(budgeted_features.keys()),
                 src.COSTS,
                 decision_tree,
@@ -149,12 +148,11 @@ def build_decision_tree(
 
                 # Set the tree resulting from the recursive call as the child of chosen_test
                 logger.info("t_B recursive call with test \"%s\"", chosen_test)
-                universe_wo_chosen_test = universe_intersection.without_feature(chosen_test)
                 subtree, is_split_base_case = build_decision_tree(
                     # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
                     #       Instead of removing it from the dataset just to add it back after the return an updated copy
                     #       of the dataset is passed as parameter.
-                    universe_wo_chosen_test,
+                    universe_intersection.without_feature(chosen_test),
                     list(budgeted_features.keys()),
                     src.COSTS,
                     decision_tree,
