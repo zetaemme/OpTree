@@ -175,7 +175,7 @@ class TestDataset(TestCase):
         dataset_copy_2.drop_row(1)
 
         intersection = dataset_copy_1.intersection(
-            dataset_copy_2.indexes.tolist()  # type: ignore
+            dataset_copy_2.indexes.flatten().tolist()  # type: ignore
         )
 
         self.assertEqual(
