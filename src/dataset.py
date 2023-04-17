@@ -5,13 +5,13 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property, reduce
 from itertools import chain, combinations
-from math import ceil, fsum
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
 from typing import Any, Literal, Self
 
 import numpy as np
 import pandas as pd
+from math import ceil, fsum
 
 logger = logging.getLogger(__name__)
 
@@ -338,6 +338,7 @@ class Dataset:
         self._data = np.delete(self._data, feature_index + 1, 1)
         self.features.remove(feature)
         self._header.remove(feature)
+        del self.costs[feature]
         del self.S_label[feature]
         del self.S_star[feature]
         del self.sigma[feature]
@@ -410,7 +411,7 @@ class Dataset:
         return dataset_copy
 
     def labels_for(self, feature: str) -> np.ndarray:
-        if len(self._data.shape) <= 1:
+        if not np.any(self._data):
             return np.array([])
         return np.unique(self._data[:, self.features.index(feature) + 1])
 
@@ -424,15 +425,6 @@ class Dataset:
             int: Number of pairs
         """
         return len({pair for obj in objects for pair in self.pairs_list if obj in pair})
-
-    def print_separation(self) -> None:
-        print()
-        print(f"S_label: {self.S_label}")
-        print(f"S_star: {self.S_star}")
-        print(f"sigma: {self.sigma}")
-        print(f"separated: {self.separated}")
-        print(f"kept: {self.kept}")
-        print()
 
     def separation_for_features_subset(self, features: list[str]) -> Separation:
         return self._separation.for_features_subset(features)
@@ -449,9 +441,11 @@ class Dataset:
 
     @property
     def indexes(self) -> np.ndarray:
-        if not np.any(self._data):
-            return np.array([])
-        return self._data[:, 0, None].flatten()  # type: ignore
+        return self._data[:, 0].flatten()  # type: ignore
+
+    @property
+    def is_empty(self) -> bool:
+        return not np.any(self._data[:, 1:-2])
 
     @cached_property
     def kept(self) -> dict[str, list[tuple[int]]]:
