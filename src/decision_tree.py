@@ -67,7 +67,7 @@ def build_decision_tree(
 
         return terminal_tree, True
 
-    budget = find_budget(dataset, tests, costs)
+    budget = find_budget(dataset, tests, src.COSTS)
     logger.info("Using budget %f", budget)
 
     spent = 0.0
@@ -83,7 +83,7 @@ def build_decision_tree(
 
     # While exists at least a test with cost equal or less than (budget - spent)
     while any(cost <= budget - spent for cost in budgeted_features.values()):
-        chosen_test = probability_maximization(universe, budget, spent)
+        chosen_test = probability_maximization(universe, list(budgeted_features.keys()), costs, budget, spent)
         logger.debug("Chosen test: %s", chosen_test)
 
         if decision_tree.is_empty:
@@ -104,20 +104,20 @@ def build_decision_tree(
 
             # Set the tree resulting from the recursive call as the child of chosen_test
             logger.info("t_A recursive call with test \"%s\"", chosen_test)
+            universe_wo_chosen_test = universe_intersection.without_feature(chosen_test)
             subtree, is_split_base_case = build_decision_tree(
                 # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
                 #       Instead of removing it from the dataset just to add it back after the return an updated copy
                 #       of the dataset is passed as parameter.
-                universe_intersection.without_feature(chosen_test),
+                universe_wo_chosen_test,
                 list(budgeted_features.keys()),
-                costs,
+                src.COSTS,
                 decision_tree,
                 last_added_node
             )
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
             if is_split_base_case and subtree.root["id"] in universe.features:
-                universe.drop_feature(subtree.root["id"])
                 del budgeted_features[subtree.root["id"]]
 
             decision_tree.add_subtree(chosen_test, subtree, label)
@@ -130,9 +130,10 @@ def build_decision_tree(
     logger.info("End of t_A part of the procedure!")
 
     # If there are still some tests with cost greater than budget
+    logger.info(f"Starting t_B part of the procedure? {len(budgeted_features) > 0}")
     if budgeted_features:
         while True:
-            chosen_test = pairs_maximization(universe)
+            chosen_test = pairs_maximization(universe, list(budgeted_features.keys()), costs)
             logger.debug("Chosen test: %s", chosen_test)
 
             # Set chosen_test as child of the test added in the last iteration
@@ -148,20 +149,20 @@ def build_decision_tree(
 
                 # Set the tree resulting from the recursive call as the child of chosen_test
                 logger.info("t_B recursive call with test \"%s\"", chosen_test)
+                universe_wo_chosen_test = universe_intersection.without_feature(chosen_test)
                 subtree, is_split_base_case = build_decision_tree(
                     # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
                     #       Instead of removing it from the dataset just to add it back after the return an updated copy
                     #       of the dataset is passed as parameter.
-                    universe_intersection.without_feature(chosen_test),
+                    universe_wo_chosen_test,
                     list(budgeted_features.keys()),
-                    costs,
+                    src.COSTS,
                     decision_tree,
                     last_added_node
                 )
 
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
                 if is_split_base_case and subtree.root["id"] in universe.features:
-                    universe.drop_feature(subtree.root["id"])
                     del budgeted_features[subtree.root["id"]]
 
                 decision_tree.add_subtree(chosen_test, subtree, label)
@@ -172,7 +173,7 @@ def build_decision_tree(
             del budgeted_features[chosen_test]
 
             # If there are no tests left, or we're running out of budget, break the loop
-            if budget - spent_2 < 0 or not budgeted_features:
+            if budget - spent_2 < 0 or len(budgeted_features) == 0:
                 break
 
     logger.info("End of t_B part of the procedure!")

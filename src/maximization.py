@@ -6,31 +6,37 @@ from src.types import SubmodularFunction
 logger = logging.getLogger(__name__)
 
 
-def probability_maximization(universe: Dataset, budget: float, spent: float) -> str:
+def probability_maximization(
+        universe: Dataset,
+        tests: list[str],
+        costs: dict[str, float],
+        budget: float,
+        spent: float
+) -> str:
     universe_copy = universe.copy()
 
     def calculate_probability_maximization_for(feature: str) -> float:
         intersection = universe_copy.intersection(universe_copy.S_star[feature])
-        return (universe.total_probability - intersection.total_probability) / universe.costs[feature]
+        return (universe.total_probability - intersection.total_probability) / costs[feature]
 
-    maximum_eligible: dict[str, float] = {
+    maximum_eligible = {
         feature: calculate_probability_maximization_for(feature)
-        for feature in universe.features
-        if universe.costs[feature] <= budget - spent
+        for feature in tests
+        if costs[feature] <= budget - spent
     }
 
     return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
 
 
-def pairs_maximization(universe: Dataset) -> str:
+def pairs_maximization(universe: Dataset, tests: list[str], costs: dict[str, float]) -> str:
     universe_copy = universe.copy()
 
     def calculate_pairs_maximization_for(feature: str) -> float:
         intersection = universe_copy.intersection(universe_copy.S_star[feature])
-        return (universe.pairs_number - intersection.pairs_number) / universe.costs[feature]
+        return (universe.pairs_number - intersection.pairs_number) / costs[feature]
 
-    maximum_eligible: dict[str, float] = {
-        feature: calculate_pairs_maximization_for(feature) for feature in universe.features
+    maximum_eligible = {
+        feature: calculate_pairs_maximization_for(feature) for feature in tests
     }
 
     return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore

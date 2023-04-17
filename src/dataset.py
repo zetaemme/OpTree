@@ -57,7 +57,7 @@ class Dataset:
             # NOTE: This is a workaround to construct a Pairs object without an explicit call to the constructor.
             #       Needed since we allow a pre-computation of the pairs for the dataset, giving it as an input to
             #       the procedure.
-            pairs_obj = cls(np.ndarray((1, 1)))
+            pairs_obj = cls(np.array([1]))
             pairs_obj.pairs_list = pairs
             return pairs_obj
 
@@ -107,8 +107,7 @@ class Dataset:
                 max_pairs = max(feature_pairs, key=feature_pairs.get)
                 self.S_star[feature] = self.S_label[feature][max_pairs]
 
-                self.sigma[feature] = [row[0]
-                                       for row in dataset.difference(self.S_star[feature])]
+                self.sigma[feature] = [row[0] for row in dataset.difference(self.S_star[feature])]
 
                 self.kept[feature] = list(
                     filter(
@@ -327,7 +326,7 @@ class Dataset:
 
     def drop_feature(self, feature: str) -> None:
         if len(self.features) == 1 and self.features[0] == feature:
-            self._data = np.ndarray([])
+            self._data = np.array([])
             self._header = []
             # self._classes = {}
             self._probabilities = []
@@ -339,7 +338,6 @@ class Dataset:
         self._data = np.delete(self._data, feature_index + 1, 1)
         self.features.remove(feature)
         self._header.remove(feature)
-        del self.costs[feature]
         del self.S_label[feature]
         del self.S_star[feature]
         del self.sigma[feature]
@@ -378,20 +376,15 @@ class Dataset:
         """Computes the set difference between two datasets
 
         Args:
-            other (npt.NDArray): The set to subtract from the dataset
+            other (np.ndarray): The set to subtract from the dataset
             axis (int, optional): 0 for rows, 1 for columns. Defaults to 0.
 
         Returns:
             ndarray: the set difference between two datasets
         """
         logger.debug("Computing datasets difference")
-        drop_indexes = np.array([
-            arr
-            for arr in chain(
-                np.where(self.indexes == index)
-                for index in other
-            )
-        ]).flatten()
+        drop_indexes = np.array(list(chain(np.where(self.indexes == index) for index in other))).flatten()
+
         return np.delete(self.data(), drop_indexes, axis)
 
     def intersection(self, other: list[int]) -> Self:
@@ -406,7 +399,8 @@ class Dataset:
         logger.debug("Computing datasets intersection")
         dataset_copy = self.copy()
 
-        data_as_set = set(self.indexes if np.any(self.indexes) else [])
+        # NOTE: The "flatten()" is mandatory since np.ndarray is unhashable
+        data_as_set = set(self.indexes)  # type: ignore
 
         difference = data_as_set - set(other)
 
@@ -455,9 +449,9 @@ class Dataset:
 
     @property
     def indexes(self) -> np.ndarray:
-        if len(self._data.shape) <= 1:
+        if not np.any(self._data):
             return np.array([])
-        return self._data[:, 0]  # type: ignore
+        return self._data[:, 0, None].flatten()  # type: ignore
 
     @cached_property
     def kept(self) -> dict[str, list[tuple[int]]]:
