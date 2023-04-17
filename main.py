@@ -4,6 +4,7 @@ from os.path import dirname
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, Unpickler, dump
 from timeit import timeit
+from typing import Optional
 
 import src
 from src.dataset import Dataset
@@ -24,7 +25,8 @@ def benchmark_main() -> None:
     build_decision_tree(dataset, src.TESTS, src.COSTS)
 
 
-def main(dataset_path: str, dataset_pairs: PicklePairs | None, dataset_separation: PickleSeparation | None) -> None:
+def main(dataset_path: str, dataset_pairs: Optional[PicklePairs],
+         dataset_separation: Optional[PickleSeparation]) -> None:
     """Inits dataset and runs the algorithm"""
     path = Path(dirname(__file__) + f"/{dataset_path}")
 
