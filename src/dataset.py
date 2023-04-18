@@ -5,13 +5,13 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property, reduce
 from itertools import chain, combinations
+from math import ceil, fsum
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
 from typing import Any, Literal, Self
 
 import numpy as np
 import pandas as pd
-from math import ceil, fsum
 
 logger = logging.getLogger(__name__)
 
@@ -308,6 +308,8 @@ class Dataset:
                 if len(obj) > 2:
                     combinations_list = [np.array(cmb) for cmb in list(combinations(obj.tolist(), 2))]
                     impure_indexes.extend(combinations_list)
+                else:
+                    impure_indexes.append(obj)
 
             for obj in impure_indexes:
                 counter = Counter(self._classes.values())

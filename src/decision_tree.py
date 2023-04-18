@@ -47,6 +47,7 @@ def build_decision_tree(
     # BASE CASE: If just one pair
     if dataset.pairs_number == 1:
         logger.info(f"Just one pair in dataset: {dataset.pairs_list[0]}")
+
         # Create a tree rooted by the cheapest test that separates the two items
         terminal_tree = Tree()
         split = cheapest_separation(dataset, dataset.pairs_list[0])
