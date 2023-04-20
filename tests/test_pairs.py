@@ -18,28 +18,13 @@ class TestPairs(TestCase):
 
     def test_pairs_number_for(self) -> None:
         self.assertEqual(
-            self.dataset.pairs_number_for([0]),
-            3
+            self.dataset.pairs_number_for([0, 1, 3]),
+            2
         )
 
         self.assertEqual(
-            self.dataset.pairs_number_for([1]),
-            3
-        )
-
-        self.assertEqual(
-            self.dataset.pairs_number_for([2]),
-            4
-        )
-
-        self.assertEqual(
-            self.dataset.pairs_number_for([3]),
-            3
-        )
-
-        self.assertEqual(
-            self.dataset.pairs_number_for([4]),
-            3
+            self.dataset.pairs_number_for([2, 4]),
+            1
         )
 
 

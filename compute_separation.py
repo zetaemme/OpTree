@@ -33,8 +33,12 @@ class Separation:
 
         for feature_idx, feature in enumerate(self._all_features):
             self.S_label[feature] = {
-                value: [idx for idx, item in dataset.iterrows() if item[feature] == value]
-                for value in dataset[feature].unique().tolist()
+                value: [
+                    int(idx)
+                    for idx, item in dataset.iterrows()
+                    if item[feature] == value
+                ]
+                for value in dataset[feature].unique()
             }
 
             feature_pairs = {
@@ -61,7 +65,12 @@ class Separation:
 
 
 def number_of_pairs_for(pairs: list[tuple[int, int]], objects: list[int]) -> int:
-    return len({pair for obj in objects for pair in pairs if int(obj) in pair})
+    return len({
+        pair
+        for obj in objects
+        for pair in pairs
+        if int(obj) in pair and pair[0] in objects and pair[1] in objects
+    })
 
 
 def compute_separation(dataset_path: str, pairs_path: str) -> None:
