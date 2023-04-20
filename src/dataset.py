@@ -426,7 +426,12 @@ class Dataset:
         Returns:
             int: Number of pairs
         """
-        return len({pair for obj in objects for pair in self.pairs_list if obj in pair})
+        return len({
+            pair
+            for obj in objects
+            for pair in self.pairs_list
+            if int(obj) in pair and pair[0] in objects and pair[1] in objects
+        })
 
     def separation_for_features_subset(self, features: list[str]) -> Separation:
         return self._separation.for_features_subset(features)
