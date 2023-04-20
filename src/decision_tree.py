@@ -34,8 +34,8 @@ def build_decision_tree(
     if dataset.pairs_number == 0:
         tree = Tree()
 
-        # NOTE: Avoids insertion of a wrong leaf when the dataset contains a value with just the "index" column
-        if dataset.features:
+        # NOTE: Avoids insertion needless leaf
+        if dataset.features and len(dataset) != 0:
             leaf = list(dataset.classes.values())[0]
             logger.info("No pairs in dataset, setting leaf \"%s\"", leaf)
             tree.add_leaf(leaf, leaf)
@@ -50,16 +50,16 @@ def build_decision_tree(
 
         # Create a tree rooted by the cheapest test that separates the two items
         terminal_tree = Tree()
-        split = cheapest_separation(dataset, dataset.pairs_list[0])
+        split = cheapest_separation(dataset, costs, dataset.pairs_list[0])
 
         logger.info("Setting node \"%s\" as root of subtree", split)
         terminal_tree.add_node(None, split, split)
 
         # Add the two items as leafs labelled with the respective class
         class_1 = dataset.classes[dataset.pairs_list[0][0]]
-        label_1 = str(dataset[0, tests.index(split) + 1])
+        label_1 = str(dataset[0, dataset.features.index(split) + 1])
         class_2 = dataset.classes[dataset.pairs_list[0][1]]
-        label_2 = str(dataset[1, tests.index(split) + 1])
+        label_2 = str(dataset[1, dataset.features.index(split) + 1])
 
         logger.info("Adding leaf \"%s\"", class_1)
         terminal_tree.add_leaf(class_1, label_1)
@@ -77,14 +77,13 @@ def build_decision_tree(
     universe = dataset.copy()
 
     # Removes from T all tests with cost greater than budget
-    budgeted_features = {
-        test: cost for test, cost in costs.items() if cost <= budget
-    }
-    logger.info(f"Features within budget {list(budgeted_features.keys())}")
+    budgeted_features = [test for test in tests if costs[test] <= budget]
+    logger.info(f"{len(budgeted_features)} features within budget: {budgeted_features}")
 
     # While exists at least a test with cost equal or less than (budget - spent)
-    while any(cost <= budget - spent for cost in budgeted_features.values()):
-        chosen_test = probability_maximization(universe, list(budgeted_features.keys()), costs, budget, spent)
+    while any(cost <= budget - spent for test, cost in costs.items() if test in budgeted_features) and len(
+            universe) != 0:
+        chosen_test = probability_maximization(universe, budgeted_features, costs, budget, spent)
         logger.debug("Chosen test: %s", chosen_test)
 
         if decision_tree.is_empty:
@@ -93,7 +92,7 @@ def build_decision_tree(
             last_added_node = decision_tree.root["id"]
         else:
             # Set chosen_test as child of the test added in the last iteration
-            backbone_label = get_backbone_label(dataset, chosen_test)
+            backbone_label = get_backbone_label(universe, chosen_test)
             decision_tree.add_node(last_added_node, chosen_test, backbone_label)
             last_added_node = chosen_test
 
@@ -110,7 +109,7 @@ def build_decision_tree(
                 #       Instead of removing it from the dataset just to add it back after the return an updated copy
                 #       of the dataset is passed as parameter.
                 universe_intersection.without_feature(chosen_test),
-                list(budgeted_features.keys()),
+                [test for test in budgeted_features if test != chosen_test],
                 src.COSTS,
                 decision_tree,
                 last_added_node
@@ -118,26 +117,26 @@ def build_decision_tree(
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
             if is_split_base_case and subtree.root["id"] in universe.features:
-                del budgeted_features[subtree.root["id"]]
+                budgeted_features.remove(subtree.root["id"])
 
-            decision_tree.add_subtree(chosen_test, subtree, label)
+            decision_tree.add_subtree(chosen_test, subtree, str(label))
 
         universe = universe.intersection(universe.S_star[chosen_test])
         spent += costs[chosen_test]
         universe.drop_feature(chosen_test)
-        del budgeted_features[chosen_test]
+        budgeted_features.remove(chosen_test)
 
     logger.info("End of t_A part of the procedure!")
 
     # If there are still some tests with cost greater than budget
     logger.info(f"Starting t_B part of the procedure? {len(budgeted_features) > 0}")
-    if budgeted_features:
+    if len(budgeted_features) != 0 and len(universe) != 0:
         while True:
-            chosen_test = pairs_maximization(universe, list(budgeted_features.keys()), costs)
+            chosen_test = pairs_maximization(universe, budgeted_features, costs)
             logger.debug("Chosen test: %s", chosen_test)
 
             # Set chosen_test as child of the test added in the last iteration
-            backbone_label = get_backbone_label(dataset, chosen_test)
+            backbone_label = get_backbone_label(universe, chosen_test)
             decision_tree.add_node(last_added_node, chosen_test, backbone_label)
             last_added_node = chosen_test
 
@@ -154,7 +153,7 @@ def build_decision_tree(
                     #       Instead of removing it from the dataset just to add it back after the return an updated copy
                     #       of the dataset is passed as parameter.
                     universe_intersection.without_feature(chosen_test),
-                    list(budgeted_features.keys()),
+                    [test for test in budgeted_features if test != chosen_test],
                     src.COSTS,
                     decision_tree,
                     last_added_node
@@ -162,14 +161,14 @@ def build_decision_tree(
 
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
                 if is_split_base_case and subtree.root["id"] in universe.features:
-                    del budgeted_features[subtree.root["id"]]
+                    budgeted_features.remove(subtree.root["id"])
 
-                decision_tree.add_subtree(chosen_test, subtree, label)
+                decision_tree.add_subtree(chosen_test, subtree, str(label))
 
             universe = universe.intersection(universe.S_star[chosen_test])
             spent_2 += costs[chosen_test]
             universe.drop_feature(chosen_test)
-            del budgeted_features[chosen_test]
+            budgeted_features.remove(chosen_test)
 
             # If there are no tests left, or we're running out of budget, break the loop
             if budget - spent_2 < 0 or len(budgeted_features) == 0:
