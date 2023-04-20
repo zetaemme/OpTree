@@ -93,7 +93,7 @@ class Tree:
                     # calling function recursively for all elements of the list
                     remove_key(item, key)
 
-        plt.rcParams['figure.figsize'] = [16, 9]
+        plt.rcParams['figure.figsize'] = [39.96, 21.6]
 
         node_labels = {
             node["id"]: node["name"]
