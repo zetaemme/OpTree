@@ -1,21 +1,26 @@
 from src.dataset import Dataset
 
 
-def cheapest_separation(dataset: Dataset, pair: tuple[int, int]) -> str:
+def cheapest_separation(dataset: Dataset, costs: dict[str, float], pair: tuple[int, int]) -> str:
     if len(dataset.features) == 1:
         return dataset.features[0]
 
-    for feature, _ in sorted(dataset.costs.items(), key=lambda x: x[1]):
-        if pair in dataset.separated[feature]:
-            return feature
+    separating_tests = [test for test, pairs in dataset.separated.items() if pair in pairs]
+
+    if len(separating_tests) == 1:
+        return separating_tests[0]
+
+    separating_dict = {test: cost for test, cost in costs.items() if test in separating_tests}
+
+    return min(separating_dict, key=separating_dict.get)  # type: ignore
 
 
-def eligible_labels(dataset: Dataset, test: str) -> list[str]:
+def eligible_labels(dataset: Dataset, test: str) -> list[int]:
     eligible = []
 
     for label in dataset.labels_for(test):
         inter = dataset.intersection(dataset.S_label[test][label])
-        if inter:
+        if len(inter) != 0:
             eligible.append(label)
 
     if len(eligible) == 0:
