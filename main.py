@@ -25,8 +25,12 @@ def benchmark_main() -> None:
     build_decision_tree(dataset, src.TESTS, src.COSTS)
 
 
-def main(dataset_path: str, dataset_pairs: Optional[PicklePairs],
-         dataset_separation: Optional[PickleSeparation]) -> None:
+def main(
+        dataset_path: str,
+        dataset_pairs: Optional[PicklePairs],
+        dataset_separation: Optional[PickleSeparation],
+        name: str
+) -> None:
     """Inits dataset and runs the algorithm"""
     path = Path(dirname(__file__) + f"/{dataset_path}")
 
@@ -49,8 +53,7 @@ def main(dataset_path: str, dataset_pairs: Optional[PicklePairs],
     logger.info("Done!")
     decision_tree.print()
 
-    dataset_name = dataset_path.replace('data/', '').replace('.csv', '')
-    with open(f"model/decision_tree_{dataset_name}.pkl", "wb") as obj_file:
+    with open(f"model/decision_tree_{name}.pkl", "wb") as obj_file:
         dump(decision_tree, obj_file, HIGHEST_PROTOCOL)
 
 
@@ -83,4 +86,4 @@ if __name__ == "__main__":
                 unpickler = Unpickler(separation_f)
                 separation: PickleSeparation = unpickler.load()
 
-        main(args.filename, pairs, separation)
+        main(args.filename, pairs, separation, dataset_name)
