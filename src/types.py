@@ -18,9 +18,6 @@ HeuristicFunction = Callable[
     [float, Dataset, list[str], dict[str, float], SubmodularFunction], list[str]
 ]
 
-Nodes = list[dict[Literal["id", "name"], str]]
-Edges = list[dict[Literal["source", "target", "label"], str]]
-
 PicklePairs = dict[Literal["pairs"], list[list[int]]]
 PickleSeparation = dict[
     Literal["S_label", "S_star", "sigma", "separated", "kept"],

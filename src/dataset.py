@@ -1,11 +1,10 @@
 import logging
-import numbers
 from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property, reduce
 from itertools import chain, combinations
-from math import ceil, fsum
+from math import fsum
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
 from typing import Any, Literal, Self
@@ -251,15 +250,15 @@ class Dataset:
         #        To avoid the problem, we multiply by 10 the variance.
         #        Other cost metrics should be considered!
         for idx, column_name in enumerate(self.features):
-            if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
-                self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) + (
-                    ceil(self._data[:, idx + 1].var() * 10)
-                )
-                # self.costs[column_name] = 1
-            else:
-                self.costs[column_name] = len(
-                    np.unique(self._data[:, idx + 1]))
-                # self.costs[column_name] = 1
+            # if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
+            # self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) + (
+            #     ceil(self._data[:, idx + 1].var() * 10)
+            # )
+            self.costs[column_name] = 1
+            # else:
+            # self.costs[column_name] = len(
+            #     np.unique(self._data[:, idx + 1]))
+            # self.costs[column_name] = 1
 
         del dataset_df, dataset_np
 

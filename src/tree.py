@@ -1,130 +1,66 @@
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from string import digits
-from typing import Literal, Self
+from typing import Optional, Self
 
 import matplotlib.pyplot as plt
-from networkx import bfs_tree, draw, draw_networkx_edge_labels
-from networkx.drawing.nx_pydot import graphviz_layout
-from networkx.readwrite import json_graph
-
-from src.types import Edges, Nodes
+import networkx as nx
 
 
 @dataclass(init=False, repr=False)
 class Tree:
-    """Inspired by: https://brandonrozek.com/blog/networkxtree/"""
-    anti_replace_idx = 1
-
-    root: dict[Literal["id", "name"], str] | None = field(default_factory=dict)
-    nodes: Nodes = field(default_factory=list)
-    leaves: Nodes = field(default_factory=list)
-    edges: Edges = field(default_factory=list)
+    tree: nx.DiGraph
+    anti_replace_idx: int = 1
+    edge_labels: dict[tuple[str, str], str] = field(default_factory=dict)
 
     def __init__(self):
-        self.nodes = []
-        self.leaves = []
-        self.edges = []
+        self.tree = nx.DiGraph()
+        self.edge_labels = {}
 
-        self.root = None
+    def add_node(
+            self,
+            node_label: str,
+            parent_node_label: Optional[str] = None,
+            edge_label: Optional[str] = None
+    ) -> None:
+        label = node_label + "_" + str(self.anti_replace_idx)
+        self.tree.add_node(label)
 
-    def add_leaf(self, leaf_id: str, label: str) -> None:
-        """Adds a terminal node to the tree
+        if self.has_root and len(self.tree.nodes()) != 1:
+            self.tree.add_edge(parent_node_label, label)
+            self.edge_labels[(parent_node_label, label)] = edge_label
 
-        Args:
-            leaf_id (str): The leaf to add
-            label (str): The label of the edge that joins self with subtree
-        """
-        leaf_id += str(self.anti_replace_idx)
-        Tree.anti_replace_idx += 1
+        self.anti_replace_idx += 1
 
-        self.leaves.append({"id": leaf_id, "name": leaf_id})
+    def add_subtree(self, last_added_node: str, subtree: Self, label: str) -> None:
+        self.tree.add_nodes_from(subtree.nodes(data=True))
+        self.tree.add_edges_from(subtree.tree.edges(data=True))
+        self.edge_labels.update(subtree.edge_labels)
 
-        if self.root is None:
-            self.root = {"id": leaf_id, "name": leaf_id}
-        else:
-            self.edges.append({"source": self.nodes[-1]["id"], "target": leaf_id, "label": label})
+        self.tree.add_edge(last_added_node, subtree.root)
+        self.edge_labels[(last_added_node, subtree.root)] = label
 
-    def add_node(self, parent_id: str | None, node_id: str, label: str) -> None:
-        """Adds a not-terminal node to the tree
+    def nodes(self, data: bool = False) -> Iterable[str]:
+        return self.tree.nodes(data)
 
-        Args:
-            parent_id (str): The parent of the given tree
-            node_id (str): The non-terminal node to add
-            label (str): The label of the edge that joins self with subtree
-        """
-        if self.root is None:
-            self.root = {"id": node_id, "name": node_id}
-        elif parent_id is not None:
-            self.edges.append({"source": parent_id, "target": node_id, "label": label})
+    def print(self) -> None:
+        pos = nx.spring_layout(self.tree)
+        nx.draw_networkx_nodes(self.tree, pos)
+        nx.draw_networkx_edges(self.tree, pos)
+        nx.draw_networkx_edge_labels(self.tree, pos, self.edge_labels)
+        nx.draw_networkx_labels(self.tree, pos)
 
-        self.nodes.append({"id": node_id, "name": node_id})
-
-    def add_subtree(self, parent_id: str, subtree: Self, label: str) -> None:
-        """Adds a given tree as child of the node with id equal to 'parent_id' and labels the edge with 'label'
-
-        Args:
-            parent_id (str): The parent of the given tree
-            subtree (Self): The tree to add as a child of parent
-            label (str): The label of the edge that joins self with subtree
-        """
-        if subtree.is_empty:
-            return
-
-        self.edges.append({"source": parent_id, "target": subtree.root["id"], "label": label})
-
-        self.nodes += subtree.nodes
-        self.leaves += subtree.leaves
-        self.edges += subtree.edges
-
-    def print(self, as_tree: bool = True) -> None:
-        """Plots the tree"""
-        def remove_key(data: list[dict], key: str) -> None:
-            # checking if data is a dictionary or list
-            if isinstance(data, dict):
-                # if key is present in dictionary then remove it
-                data.pop(key, None)
-                # iterating over all the keys in the dictionary
-                for key in data:
-                    # calling function recursively for nested dictionaries
-                    remove_key(data[key], key)
-            elif isinstance(data, list):
-                # iterating over all the items of the list
-                for item in data:
-                    # calling function recursively for all elements of the list
-                    remove_key(item, key)
-
-        plt.rcParams['figure.figsize'] = [20.48, 10.8]
-
-        node_labels = {
-            node["id"]: node["name"]
-            for node in self.nodes
-        }
-        leaf_labels = {
-            leaf["id"]: leaf["name"].translate(str.maketrans("", "", digits))
-            for leaf in self.leaves
-        }
-        edge_labels = {(edge["source"], edge["target"]): edge["label"] for edge in self.edges}
-
-        remove_key(self.nodes, "name")
-        remove_key(self.leaves, "name")
-
-        tree = json_graph.node_link_graph(
-            {
-                "nodes": self.nodes + self.leaves,
-                "links": self.edges
-            },
-            directed=True,
-            multigraph=False
-        )
-        pos = graphviz_layout(tree, prog="dot")
-
-        if as_tree:
-            draw(bfs_tree(tree.to_directed(), self.root["id"]), pos, labels=node_labels | leaf_labels, with_labels=True)
-        else:
-            draw(tree.to_directed(), pos, labels=node_labels | leaf_labels, with_labels=True)
-        draw_networkx_edge_labels(tree, pos, edge_labels=edge_labels)
         plt.show()
 
     @property
+    def has_root(self) -> bool:
+        return len(list(nx.topological_sort(self.tree))) != 0
+
+    @property
     def is_empty(self) -> bool:
-        return not self.edges and not self.nodes and not self.leaves and self.root is None
+        return self.tree.number_of_nodes() == 0
+
+    @property
+    def root(self) -> str:
+        if self.has_root:
+            roots = [node for node, in_degree in self.tree.in_degree if in_degree == 0]
+            return roots[0]
