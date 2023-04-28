@@ -22,7 +22,7 @@ class Tree:
             edge_label: Optional[str] = None
     ) -> None:
         label = node_label + "_" + str(self.anti_replace_idx)
-        self.tree.add_node(label)
+        self.tree.add_node(label, label=node_label)
 
         if self.has_root and len(self.tree.nodes()) != 1:
             self.tree.add_edge(parent_node_label, label, label=edge_label)
@@ -105,11 +105,11 @@ class Tree:
             return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
 
         pos = hierarchy_pos(self.tree, self.root)
-        nx.draw_networkx_nodes(self.tree, pos)
         nx.draw_networkx_edges(self.tree, pos)
+        nx.draw_networkx_labels(self.tree, pos, labels=nx.get_node_attributes(self.tree, "label"))
         nx.draw_networkx_edge_labels(self.tree, pos, nx.get_edge_attributes(self.tree, "label"))
-        nx.draw_networkx_labels(self.tree, pos)
 
+        plt.tight_layout()
         plt.show()
 
     @property
