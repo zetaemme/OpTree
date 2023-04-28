@@ -94,17 +94,19 @@ def build_decision_tree(
 
         if decision_tree.is_empty:
             # Set chosen_test as the root of the tree
+            logger.info("Setting %s as root", chosen_test)
             decision_tree.add_node(chosen_test)
             last_added_node = decision_tree.root
         else:
             # Set chosen_test as child of the test added in the last iteration
+            logger.info("Adding node %s", chosen_test)
             if chosen_label is not None:
                 backbone_label = chosen_label
                 chosen_label = None
             else:
                 backbone_label = get_backbone_label(universe, chosen_test)
             decision_tree.add_node(chosen_test, last_added_node, backbone_label)
-            last_added_node = chosen_test + "_" + str(decision_tree.anti_replace_idx - 1)
+            last_added_node = chosen_test
 
         # For each label in the possible outcomes of chosen_test
         for label in eligible_labels(universe, chosen_test):
@@ -127,10 +129,10 @@ def build_decision_tree(
             )
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
-            if is_split_base_case and subtree.root.split("_")[0] in universe.features:
-                budgeted_features.remove(subtree.root.split("_")[0])
+            if is_split_base_case and subtree.root in universe.features:
+                budgeted_features.remove(subtree.root)
 
-            decision_tree.add_subtree(chosen_test + "_" + str(decision_tree.anti_replace_idx - 1), subtree, str(label))
+            decision_tree.add_subtree(chosen_test, subtree, str(label))
 
         universe = universe.intersection(universe.S_star[chosen_test])
         spent += costs[chosen_test]
@@ -140,7 +142,7 @@ def build_decision_tree(
     logger.info("End of t_A part of the procedure!")
 
     # If there are still some tests with cost greater than budget
-    logger.info(f"Starting t_B part of the procedure? {len(budgeted_features) > 0}")
+    logger.info(f"Starting t_B part of the procedure? {len(budgeted_features) > 0 and len(universe) != 0}")
     if len(budgeted_features) != 0 and len(universe) != 0:
         while True:
             chosen_test = pairs_maximization(universe, budgeted_features, costs)
@@ -149,7 +151,7 @@ def build_decision_tree(
             # Set chosen_test as child of the test added in the last iteration
             backbone_label = get_backbone_label(universe, chosen_test)
             decision_tree.add_node(last_added_node, chosen_test, backbone_label)
-            last_added_node = chosen_test + "_" + str(decision_tree.anti_replace_idx - 1)
+            last_added_node = chosen_test
 
             # For each label in the possible outcomes of chosen_test
             for label in eligible_labels(universe, chosen_test):
@@ -171,8 +173,8 @@ def build_decision_tree(
                 )
 
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
-                if is_split_base_case and subtree.root.split("_")[0] in universe.features:
-                    budgeted_features.remove(subtree.root.split("_")[0])
+                if is_split_base_case and subtree.root in universe.features:
+                    budgeted_features.remove(subtree.root)
 
                 decision_tree.add_subtree(chosen_test, subtree, str(label))
 
@@ -190,7 +192,8 @@ def build_decision_tree(
     # Set the tree resulting from the recursive call as child of the test added in the last iteration
     logger.info("Final recursive call")
     subtree, _ = build_decision_tree(universe, src.TESTS, src.COSTS, decision_tree, last_added_node)
-    backbone_label = get_backbone_label(dataset, last_added_node.split("_")[0])
-    decision_tree.add_subtree(last_added_node, subtree, backbone_label)
+    if not subtree.is_empty:
+        backbone_label = get_backbone_label(dataset, last_added_node)
+        decision_tree.add_subtree(last_added_node, subtree, backbone_label)
 
     return decision_tree, False

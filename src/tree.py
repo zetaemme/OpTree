@@ -1,16 +1,17 @@
+import string
 from collections.abc import Iterable
 from dataclasses import dataclass
-from random import choice
+from random import choices
 from typing import Optional, Self
 
 import matplotlib.pyplot as plt
 import networkx as nx
+from networkx.drawing.nx_pydot import graphviz_layout
 
 
 @dataclass(init=False, repr=False)
 class Tree:
     tree: nx.DiGraph
-    anti_replace_idx: int = 1
 
     def __init__(self):
         self.tree = nx.DiGraph()
@@ -21,15 +22,16 @@ class Tree:
             parent_node_label: Optional[str] = None,
             edge_label: Optional[str] = None
     ) -> None:
-        label = node_label + "_" + str(self.anti_replace_idx)
-        self.tree.add_node(label, label=node_label)
+        self.tree.add_node(node_label, label=node_label)
 
-        if self.has_root and len(self.tree.nodes()) != 1:
-            self.tree.add_edge(parent_node_label, label, label=edge_label)
-
-        self.anti_replace_idx += 1
+        if not self.is_empty and len(self.tree.nodes()) != 1:
+            self.tree.add_edge(parent_node_label, node_label, label=edge_label)
 
     def add_subtree(self, last_added_node: str, subtree: Self, label: str) -> None:
+        # NOTE: Accrocchio fatto per evitare la casistica in cui si ofrmano autoanelli
+        if last_added_node == subtree.root:
+            return
+
         self.tree.add_nodes_from(subtree.nodes(data=True))
         self.tree.add_edges_from(subtree.tree.edges(data=True))
 
@@ -39,72 +41,11 @@ class Tree:
         return self.tree.nodes(data)
 
     def print(self) -> None:
-        # NOTE: This function is used in order to plot the graph as a tree
-        def hierarchy_pos(G, root=None, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5):
+        plt.rcParams["figure.figsize"] = (19.20, 10.80)
 
-            '''
-            From Joel's answer at https://stackoverflow.com/a/29597209/2966723
-            Licensed under Creative Commons Attribution-Share Alike
+        self.separate_nodes_with_multiple_inputs()
 
-            If the graph is a tree this will return the positions to plot this in a
-            hierarchical layout.
-
-            G: the graph (must be a tree)
-
-            root: the root node of current branch
-            - if the tree is directed and this is not given,
-              the root will be found and used
-            - if the tree is directed and this is given, then
-              the positions will be just for the descendants of this node.
-            - if the tree is undirected and not given,
-              then a random choice will be used.
-
-            width: horizontal space allocated for this branch - avoids overlap with other branches
-
-            vert_gap: gap between levels of hierarchy
-
-            vert_loc: vertical location of root
-
-            xcenter: horizontal location of root
-            '''
-            if not nx.is_tree(G):
-                raise TypeError('cannot use hierarchy_pos on a graph that is not a tree')
-
-            if root is None:
-                if isinstance(G, nx.DiGraph):
-                    root = next(iter(nx.topological_sort(G)))  # allows back compatibility with nx version 1.11
-                else:
-                    root = choice(list(G.nodes))
-
-            def _hierarchy_pos(G, root, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5, pos=None, parent=None):
-                '''
-                see hierarchy_pos docstring for most arguments
-
-                pos: a dict saying where all nodes go if they have been assigned
-                parent: parent of this branch. - only affects it if non-directed
-
-                '''
-
-                if pos is None:
-                    pos = {root: (xcenter, vert_loc)}
-                else:
-                    pos[root] = (xcenter, vert_loc)
-                children = list(G.neighbors(root))
-                if not isinstance(G, nx.DiGraph) and parent is not None:
-                    children.remove(parent)
-                if len(children) != 0:
-                    dx = width / len(children)
-                    nextx = xcenter - width / 2 - dx / 2
-                    for child in children:
-                        nextx += dx
-                        pos = _hierarchy_pos(G, child, width=dx, vert_gap=vert_gap,
-                                             vert_loc=vert_loc - vert_gap, xcenter=nextx,
-                                             pos=pos, parent=root)
-                return pos
-
-            return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
-
-        pos = hierarchy_pos(self.tree, self.root)
+        pos = graphviz_layout(self.tree, prog="dot")
         nx.draw_networkx_edges(self.tree, pos)
         nx.draw_networkx_labels(self.tree, pos, labels=nx.get_node_attributes(self.tree, "label"))
         nx.draw_networkx_edge_labels(self.tree, pos, nx.get_edge_attributes(self.tree, "label"))
@@ -112,9 +53,35 @@ class Tree:
         plt.tight_layout()
         plt.show()
 
-    @property
-    def has_root(self) -> bool:
-        return len(list(nx.topological_sort(self.tree))) != 0
+    def separate_nodes_with_multiple_inputs(self):
+        nodes = list(self.tree.nodes())
+
+        for node in nodes:
+            in_degree = self.tree.in_degree(node)
+            if in_degree > 1:
+                # Otteniamo i predecessori del nodo
+                predecessors = list(self.tree.predecessors(node))
+                # Creiamo i due nuovi nodi
+                new_node1 = node + "_".join(choices(string.ascii_lowercase + string.digits, k=5))
+                new_node2 = node + "_".join(choices(string.ascii_lowercase + string.digits, k=5))
+                # Aggiungiamo i nuovi nodi al grafo
+                self.tree.add_node(new_node1, label=node)
+                self.tree.add_node(new_node2, label=node)
+                # Aggiungiamo gli archi in uscita del nodo originale ai due nuovi nodi
+                for neighbor in self.tree.successors(node):
+                    if neighbor != node:
+                        label = self.tree.get_edge_data(node, neighbor)['label']
+                        self.tree.add_edge(new_node1, neighbor, label=label)
+                        self.tree.add_edge(new_node2, neighbor, label=label)
+                # Aggiungiamo gli archi entranti dei predecessori al primo nuovo nodo
+                for predecessor in predecessors[:-1]:
+                    label = self.tree.get_edge_data(predecessor, node)['label']
+                    self.tree.add_edge(predecessor, new_node1, label=label)
+                # Aggiungiamo gli archi entranti dell'ultimo predecessore al secondo nuovo nodo
+                label = self.tree.get_edge_data(predecessors[-1], node)['label']
+                self.tree.add_edge(predecessors[-1], new_node2, label=label)
+                # Rimuoviamo il nodo originale dal grafo
+                self.tree.remove_node(node)
 
     @property
     def is_empty(self) -> bool:
@@ -122,6 +89,9 @@ class Tree:
 
     @property
     def root(self) -> str:
-        if self.has_root:
-            roots = [node for node, in_degree in self.tree.in_degree if in_degree == 0]
-            return roots[0]
+        if not self.is_empty:
+            root = [node for node, in_degree in self.tree.in_degree if in_degree == 0]
+
+            if len(root) == 0:
+                return list(self.nodes())[0]
+            return root[0]
