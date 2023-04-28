@@ -16,7 +16,8 @@ def build_decision_tree(
         tests: list[str],
         costs: dict[str, float],
         decision_tree=Tree(),
-        last_added_node: str = None
+        last_added_node: str = None,
+        chosen_label: str = None
 ) -> tuple[Tree, bool]:
     """Recursively builds a (log)-optimal decision tree.
 
@@ -26,6 +27,7 @@ def build_decision_tree(
         costs (doct[str, float]): The costs for the tests
         decision_tree (Tree): The tree to build
         last_added_node (str): Last node added to the tree. Defaults to None
+        chosen_label (str): Label for the subtree attach in recursive calls. Defaults to None
 
     Returns:
         Tree: The (log)-optimal decision tree
@@ -81,10 +83,13 @@ def build_decision_tree(
     logger.info(f"{len(budgeted_features)} features within budget: {budgeted_features}")
 
     # While exists at least a test with cost equal or less than (budget - spent)
-    while any(cost <= budget - spent for test, cost in costs.items() if test in budgeted_features) and len(
-            universe) != 0:
+    while any(cost <= budget - spent for test, cost in costs.items() if test in budgeted_features) and \
+            len(universe) != 0:
         chosen_test = probability_maximization(universe, budgeted_features, costs, budget, spent)
         logger.debug("Chosen test: %s", chosen_test)
+
+        if chosen_test == "petal-w=[1.64-2.07]":
+            print("Break")
 
         if decision_tree.is_empty:
             # Set chosen_test as the root of the tree
@@ -92,7 +97,11 @@ def build_decision_tree(
             last_added_node = decision_tree.root["id"]
         else:
             # Set chosen_test as child of the test added in the last iteration
-            backbone_label = get_backbone_label(universe, chosen_test)
+            if chosen_label is not None:
+                backbone_label = chosen_label
+                chosen_label = None
+            else:
+                backbone_label = get_backbone_label(universe, chosen_test)
             decision_tree.add_node(last_added_node, chosen_test, backbone_label)
             last_added_node = chosen_test
 
@@ -112,7 +121,8 @@ def build_decision_tree(
                 [test for test in budgeted_features if test != chosen_test],
                 src.COSTS,
                 decision_tree,
-                last_added_node
+                last_added_node,
+                str(label)
             )
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
