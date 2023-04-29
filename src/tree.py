@@ -67,7 +67,7 @@ class Tree:
     @property
     def root(self) -> UUID:
         if not self.is_empty:
-            root = [node for node, in_degree in self.structure.in_degree if in_degree == 0]
+            root = [node for node, in_degree in self.structure.in_degree if in_degree == 0]  # type: ignore
 
             if len(root) == 0:
                 return list(self.structure.nodes)[0]

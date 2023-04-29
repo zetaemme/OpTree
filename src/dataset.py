@@ -8,7 +8,7 @@ from itertools import chain, combinations
 from math import fsum
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
-from typing import Any, Literal, Self
+from typing import Any, Literal, Optional, Self
 
 import numpy as np
 import pandas as pd
@@ -26,7 +26,7 @@ class Dataset:
 
         pairs_list: list[tuple[int, int]]
 
-        def __init__(self, dataset: np.ndarray, name: str = None) -> None:
+        def __init__(self, dataset: np.ndarray, name: Optional[str] = None) -> None:
             logger.debug("Computing dataset pairs")
             if dataset.shape[0] == 1:
                 self.pairs_list = []
@@ -42,7 +42,7 @@ class Dataset:
             # Saves the pairs, so we don't need to recompute them in future executions
             if name is not None and not Path(f"./data/pairs/{name}_pairs.pkl").is_file():
                 with open(f"./data/pairs/{name}_pairs.pkl", "w") as f:
-                    dump({"pairs": self.pairs_list}, f, HIGHEST_PROTOCOL)
+                    dump({"pairs": self.pairs_list}, f, HIGHEST_PROTOCOL)  # type: ignore
 
         @classmethod
         def from_precomputed(cls, pairs: list[tuple[int]]) -> Self:
@@ -81,7 +81,7 @@ class Dataset:
         kept: dict[str, list[tuple[int]]] = field(default_factory=dict)
         separated: dict[str, list[tuple[int]]] = field(default_factory=dict)
 
-        def __init__(self, dataset: 'Dataset', name: str = None) -> None:
+        def __init__(self, dataset: 'Dataset', name: Optional[str] = None) -> None:
             if not dataset._path:
                 return
 
@@ -128,7 +128,7 @@ class Dataset:
             # Saves the pairs, so we don't need to recompute them in future executions
             if name is not None and not Path(f"./data/separation/{name}_separation.pkl").is_file():
                 with open(f"./data/separation/{name}_separation.pkl", "w") as f:
-                    dump(
+                    dump(  # type: ignore
                         {
                             "S_label": self.S_label,
                             "S_star": self.S_star,
@@ -206,11 +206,11 @@ class Dataset:
     def __init__(
             self,
             dataset_path: Path,
-            pairs: dict[Literal["pairs"], list[list[int]]] | None = None,
-            separation: dict[
+            pairs: Optional[dict[Literal["pairs"], list[list[int]]]] = None,
+            separation: Optional[dict[
                 Literal["S_label", "S_star", "sigma", "separated", "kept"],
                 dict[str, list[Any | tuple]]
-            ] | None = None
+            ]] = None
     ) -> None:
         self._path = dataset_path.name
         if dataset_path.name == "":

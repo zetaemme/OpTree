@@ -28,7 +28,6 @@ def build_decision_tree(
         costs (doct[str, float]): The costs for the tests
         decision_tree (Tree): The tree to build
         last_added_node (str): Last node added to the tree. Defaults to None
-        chosen_label (str): Label for the subtree attach in recursive calls. Defaults to None
 
     Returns:
         Tree: The (log)-optimal decision tree
