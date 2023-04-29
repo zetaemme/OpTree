@@ -1,4 +1,5 @@
 import logging
+import numbers
 from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -250,15 +251,10 @@ class Dataset:
         #        To avoid the problem, we multiply by 10 the variance.
         #        Other cost metrics should be considered!
         for idx, column_name in enumerate(self.features):
-            # if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
-            # self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) + (
-            #     ceil(self._data[:, idx + 1].var() * 10)
-            # )
-            self.costs[column_name] = 1
-            # else:
-            # self.costs[column_name] = len(
-            #     np.unique(self._data[:, idx + 1]))
-            # self.costs[column_name] = 1
+            if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
+                self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) + (self._data[:, idx + 1].var())
+            else:
+                self.costs[column_name] = len(np.unique(self._data[:, idx + 1]))
 
         del dataset_df, dataset_np
 
