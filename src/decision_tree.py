@@ -1,4 +1,6 @@
 import logging
+from typing import Optional
+from uuid import UUID
 
 import src
 from src.budget import find_budget
@@ -15,9 +17,8 @@ def build_decision_tree(
         dataset: Dataset,
         tests: list[str],
         costs: dict[str, float],
-        decision_tree=Tree(),
-        last_added_node: str = None,
-        chosen_label: str = None
+        decision_tree: Tree,
+        last_added_node: Optional[UUID] = None
 ) -> tuple[Tree, bool]:
     """Recursively builds a (log)-optimal decision tree.
 
@@ -51,11 +52,11 @@ def build_decision_tree(
         logger.info(f"Just one pair in dataset: {dataset.pairs_list[0]}")
 
         # Create a tree rooted by the cheapest test that separates the two items
-        terminal_tree = Tree()
+        tree = Tree()
         split = cheapest_separation(dataset, costs, dataset.pairs_list[0])
 
         logger.info("Setting node \"%s\" as root of subtree", split)
-        terminal_tree.add_node(split)
+        root_id = tree.add_node(split)
 
         # Add the two items as leafs labelled with the respective class
         class_1 = dataset.classes[dataset.pairs_list[0][0]]
@@ -63,13 +64,12 @@ def build_decision_tree(
         class_2 = dataset.classes[dataset.pairs_list[0][1]]
         label_2 = str(dataset[1, dataset.features.index(split) + 1])
 
-        parent_node_label = terminal_tree.root
         logger.info("Adding leaf \"%s\"", class_1)
-        terminal_tree.add_node(class_1, parent_node_label, label_1)
+        tree.add_node(class_1, root_id, label_1)
         logger.info("Adding leaf \"%s\"", class_2)
-        terminal_tree.add_node(class_2, parent_node_label, label_2)
+        tree.add_node(class_2, root_id, label_2)
 
-        return terminal_tree, True
+        return tree, True
 
     budget = find_budget(dataset, tests, src.COSTS)
     logger.info("Using budget %f", budget)
@@ -84,29 +84,22 @@ def build_decision_tree(
     logger.info(f"{len(budgeted_features)} features within budget: {budgeted_features}")
 
     # While exists at least a test with cost equal or less than (budget - spent)
-    while any(cost <= budget - spent for test, cost in costs.items() if test in budgeted_features) and \
-            len(universe) != 0:
+    logger.info("Starting t_A part of the procedure")
+    while any(cost <= budget - spent for test, cost in costs.items() if test in budgeted_features) and len(
+            universe) != 0:
         chosen_test = probability_maximization(universe, budgeted_features, costs, budget, spent)
         logger.debug("Chosen test: %s", chosen_test)
-
-        # if chosen_test == "petal-w=[1.64-2.07]":
-        #     print("Break")
 
         if decision_tree.is_empty:
             # Set chosen_test as the root of the tree
             logger.info("Setting %s as root", chosen_test)
-            decision_tree.add_node(chosen_test)
-            last_added_node = decision_tree.root
+            last_added_node = decision_tree.add_node(chosen_test)
         else:
             # Set chosen_test as child of the test added in the last iteration
+            backbone_label = get_backbone_label(universe, chosen_test)
+
             logger.info("Adding node %s", chosen_test)
-            if chosen_label is not None:
-                backbone_label = chosen_label
-                chosen_label = None
-            else:
-                backbone_label = get_backbone_label(universe, chosen_test)
-            decision_tree.add_node(chosen_test, last_added_node, backbone_label)
-            last_added_node = chosen_test
+            last_added_node = decision_tree.add_node(chosen_test, last_added_node, backbone_label)
 
         # For each label in the possible outcomes of chosen_test
         for label in eligible_labels(universe, chosen_test):
@@ -124,13 +117,12 @@ def build_decision_tree(
                 [test for test in budgeted_features if test != chosen_test],
                 src.COSTS,
                 decision_tree,
-                last_added_node,
-                str(label)
+                last_added_node
             )
 
             # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
-            if is_split_base_case and subtree.root in universe.features:
-                budgeted_features.remove(subtree.root)
+            if is_split_base_case and subtree.get_root_label() in universe.features:
+                budgeted_features.remove(subtree.get_root_label())
 
             decision_tree.add_subtree(chosen_test, subtree, str(label))
 
@@ -142,7 +134,7 @@ def build_decision_tree(
     logger.info("End of t_A part of the procedure!")
 
     # If there are still some tests with cost greater than budget
-    logger.info(f"Starting t_B part of the procedure? {len(budgeted_features) > 0 and len(universe) != 0}")
+    logger.info(f"Starting t_B part of the procedure")
     if len(budgeted_features) != 0 and len(universe) != 0:
         while True:
             chosen_test = pairs_maximization(universe, budgeted_features, costs)
@@ -150,8 +142,7 @@ def build_decision_tree(
 
             # Set chosen_test as child of the test added in the last iteration
             backbone_label = get_backbone_label(universe, chosen_test)
-            decision_tree.add_node(last_added_node, chosen_test, backbone_label)
-            last_added_node = chosen_test
+            last_added_node = decision_tree.add_node(chosen_test, last_added_node, backbone_label)
 
             # For each label in the possible outcomes of chosen_test
             for label in eligible_labels(universe, chosen_test):
@@ -173,8 +164,8 @@ def build_decision_tree(
                 )
 
                 # NOTE: This if assures that the feature used as root in the P(S)=1 base case is expanded only once
-                if is_split_base_case and subtree.root in universe.features:
-                    budgeted_features.remove(subtree.root)
+                if is_split_base_case and subtree.get_root_label() in universe.features:
+                    budgeted_features.remove(subtree.get_root_label())
 
                 decision_tree.add_subtree(chosen_test, subtree, str(label))
 
@@ -189,11 +180,14 @@ def build_decision_tree(
 
     logger.info("End of t_B part of the procedure!")
 
-    # Set the tree resulting from the recursive call as child of the test added in the last iteration
-    logger.info("Final recursive call")
-    subtree, _ = build_decision_tree(universe, src.TESTS, src.COSTS, decision_tree, last_added_node)
-    if not subtree.is_empty:
-        backbone_label = get_backbone_label(dataset, last_added_node)
+    # NOTE: As stated in Section 3.1 of the paper (page 15) the final recursive call is responsible for the construction
+    #       of a decision tree for the objects not covered by the tests in the backbone.
+    #       It's correct to say that if U is empty, this part of the procedure is skippable.
+    if len(universe) != 0:
+        # Set the tree resulting from the recursive call as child of the test added in the last iteration
+        logger.info("Final recursive call")
+        subtree, _ = build_decision_tree(universe, src.TESTS, src.COSTS, decision_tree, last_added_node)
+        backbone_label = get_backbone_label(dataset, decision_tree.get_label_of_node(last_added_node))
         decision_tree.add_subtree(last_added_node, subtree, backbone_label)
 
     return decision_tree, False
