@@ -21,12 +21,12 @@ def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
         logger.debug(f"No features. Result = {dataset.pairs_number}")
         return dataset.pairs_number
 
-    submodular_separation = dataset.separation_for_features_subset(features)
+    submodular_separation = dataset.S_star_intersection_for_features(features)
 
-    if len(submodular_separation.S_star_intersection) < 2:
+    if len(submodular_separation) < 2:
         return dataset.pairs_number
 
-    return dataset.pairs_number - dataset.pairs_number_for(submodular_separation.S_star_intersection)
+    return dataset.pairs_number - dataset.pairs_number_for(submodular_separation)
 
 
 def binary_search_budget(
