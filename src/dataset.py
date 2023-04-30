@@ -1,5 +1,4 @@
 import logging
-import numbers
 from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -396,11 +395,7 @@ class Dataset:
             Dataset: The resulting intersection
         """
         dataset_copy = self.copy()
-
-        # NOTE: The "flatten()" is mandatory since np.ndarray is unhashable
-        data_as_set = set(self.indexes)  # type: ignore
-
-        difference = data_as_set - set(other)
+        difference = set(self.indexes) - set(other)
 
         for row in difference:
             dataset_copy.drop_row(row)
@@ -421,15 +416,19 @@ class Dataset:
         Returns:
             int: Number of pairs
         """
+        if len(objects) == 1:
+            return 0
+
         return len({
             pair
             for obj in objects
             for pair in self.pairs_list
-            if int(obj) in pair and pair[0] in objects and pair[1] in objects
+            if obj in pair and pair[0] in objects and pair[1] in objects
         })
 
-    def separation_for_features_subset(self, features: list[str]) -> Separation:
-        return self._separation.for_features_subset(features)
+    def S_star_intersection_for_features(self, features: list[str]) -> list[int]:
+        S_stars = [self.S_star[feature] for feature in features]
+        return list(set(S_stars[0]).intersection(*S_stars[1:]))
 
     def without_feature(self, feature: str) -> Self:
         dataset_copy = self.copy()
