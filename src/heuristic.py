@@ -1,10 +1,11 @@
 import logging
+from pprint import pformat
 
 from src.dataset import Dataset
 from src.maximization import submodular_maximization
 from src.types import SubmodularFunction
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("decision_tree")
 
 
 def wolsey_greedy_heuristic(
@@ -48,11 +49,15 @@ def wolsey_greedy_heuristic(
                 auxiliary_array,
                 submodular_function,
             )
+            logger.debug("Test that maximizes the submodular function: %s", chosen_test)
 
-            # Remove t_k from T and add it to A
+            logger.debug("Removing t_k from T and adding it to A")
             auxiliary_array.append(heuristic_features.pop(heuristic_features.index(chosen_test)))
+            logger.debug(f"New A list: {pformat(auxiliary_array)}")
+
             # Update spent
             spent += costs[chosen_test]
+            logger.debug("Adding cost of \"%s\" to spent. Total spent: %d", chosen_test, spent)
 
             if spent > budget or len(heuristic_features) == 0:
                 break
@@ -61,13 +66,18 @@ def wolsey_greedy_heuristic(
 
     # Compute f({t_k})
     single_result = submodular_function(dataset, [auxiliary_array[k]])
+    logger.debug("f({t_k}): %i", single_result)
+
     # Compute f(A \ {t_k})
     # NOTE: We can use [:-1] since t_K is the last element of the list
     difference_result = submodular_function(dataset, auxiliary_array[:-1])
+    logger.debug("f(A \\ {t_k}): %i", difference_result)
 
     if single_result >= difference_result:
         # Return {t_k}
+        logger.debug("Returning \"%s\"", auxiliary_array[k])
         return [auxiliary_array[k]]
 
     # Return {t_1, ..., t_(k - 1)}
+    logger.debug(f"Returning {pformat(auxiliary_array[:k])}")
     return auxiliary_array[:k]

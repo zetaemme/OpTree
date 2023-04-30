@@ -5,7 +5,7 @@ from src.heuristic import wolsey_greedy_heuristic
 from src.types import Bounds
 from src.utils import binary_search_budget
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("decision_tree")
 
 
 def find_budget(

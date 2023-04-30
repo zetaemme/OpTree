@@ -4,7 +4,7 @@ from itertools import chain
 from src.dataset import Dataset
 from src.types import Bounds, HeuristicFunction
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("decision_tree")
 
 
 def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
@@ -18,6 +18,7 @@ def submodular_function_1(dataset: Dataset, features: list[str]) -> int:
         int: The difference between the dataset "Pairs" and the number of pairs in the S_star[feature] intersection
     """
     if not features:
+        logger.debug(f"No features. Result = {dataset.pairs_number}")
         return dataset.pairs_number
 
     submodular_separation = dataset.separation_for_features_subset(features)
@@ -58,7 +59,6 @@ def binary_search_budget(
         budgets.append((search_range.lower + search_range.upper) / 2)
 
         heuristic_result = heuristic(budgets[i], dataset, tests, costs, submodular_function_1)
-
         logger.debug(f"Heuristic result: {heuristic_result}")
 
         covered_pairs = [set(dataset.kept[test] + dataset.separated[test]) for test in heuristic_result]
@@ -67,8 +67,10 @@ def binary_search_budget(
         logger.debug(f"Pairs covered by the heuristic: {covered_pairs}")
 
         if len(covered_pairs) < (alpha * dataset.pairs_number):
+            logger.debug("Updating upper-bound as %d", budgets[i])
             search_range.upper = budgets[i]
         else:
+            logger.debug("Updating lower-bound as %d", budgets[i])
             search_range.lower = budgets[i]
 
         i += 1

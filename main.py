@@ -17,13 +17,14 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] - OpSion @ {%(module)s.py -> %(funcName)s} - %(message)s",
     datefmt="%H:%M:%S",
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("decision_tree")
 
 
 def benchmark_main() -> None:
     path = Path("data/test.csv")
     dataset = Dataset(path)
-    build_decision_tree(dataset, src.TESTS, src.COSTS)
+    tree = Tree()
+    build_decision_tree(dataset, src.TESTS, src.COSTS, tree)
 
 
 def main(

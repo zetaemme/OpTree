@@ -3,7 +3,7 @@ import logging
 from src.dataset import Dataset
 from src.types import SubmodularFunction
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("decision_tree")
 
 
 def probability_maximization(
@@ -63,11 +63,13 @@ def submodular_maximization(
         union_result = submodular_function(dataset, auxiliary_features + [feature])
         logger.debug("f(A U {t}): %i", union_result)
 
-        # NOTE: 22/03/2023 - We discovered a type in the original paper.
+        # NOTE: 22/03/2023 - We discovered a typo in the original paper.
         #       To avoid issues with the budget the following was changed:
         #           (f(A U {t}) - f(A))  ->  (f(A) - f(A U {t}))
         #       Doing so, we avoid negative numbers in maximum_eligible
         submodular_result = (feature_result - union_result) / costs[feature]
+        logger.debug("(f(A) - f(A U {t})) / %f = %f", costs[feature], submodular_result)
         maximum_eligible[feature] = submodular_result
 
-    return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
+    logger.debug(f"\n{pformat(maximum_eligible)}")
+    return max(maximum_eligible, key=maximum_eligible.get)

@@ -51,6 +51,7 @@ class Tree:
 
     def print(self) -> None:
         plt.rcParams["figure.figsize"] = (19.20, 10.80)
+        plt.set_loglevel("info")
 
         pos = graphviz_layout(self.structure, prog="dot")
         nx.draw_networkx_edges(self.structure, pos)

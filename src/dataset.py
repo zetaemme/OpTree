@@ -13,7 +13,7 @@ from typing import Any, Literal, Optional, Self
 import numpy as np
 import pandas as pd
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("decision_tree")
 
 
 @dataclass(init=False, repr=False)
@@ -251,10 +251,11 @@ class Dataset:
         #        To avoid the problem, we multiply by 10 the variance.
         #        Other cost metrics should be considered!
         for idx, column_name in enumerate(self.features):
-            if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
-                self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) + (self._data[:, idx + 1].var())
-            else:
-                self.costs[column_name] = len(np.unique(self._data[:, idx + 1]))
+            # if isinstance(dataset_np[:, idx + 1][0], numbers.Number):
+            #     self.costs[column_name] = self._data[:, idx + 1].var()
+            # else:
+            #     self.costs[column_name] = len(np.unique(self._data[:, idx + 1])) / len(self._data[:, idx + 1])
+            self.costs[column_name] = 1
 
         del dataset_df, dataset_np
 
@@ -394,7 +395,6 @@ class Dataset:
         Returns:
             Dataset: The resulting intersection
         """
-        logger.debug("Computing datasets intersection")
         dataset_copy = self.copy()
 
         # NOTE: The "flatten()" is mandatory since np.ndarray is unhashable
@@ -495,4 +495,4 @@ class Dataset:
         Returns:
             float: Sum of all the probabilities
         """
-        return fsum(probability for probability in self._probabilities)
+        return fsum(self._probabilities)
