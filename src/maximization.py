@@ -1,4 +1,5 @@
 import logging
+from pprint import pformat
 
 from src.dataset import Dataset
 from src.types import SubmodularFunction
@@ -6,40 +7,39 @@ from src.types import SubmodularFunction
 logger = logging.getLogger("decision_tree")
 
 
-def probability_maximization(
-        universe: Dataset,
-        tests: list[str],
-        costs: dict[str, float],
-        budget: float,
-        spent: float
-) -> str:
-    def calculate_probability_maximization_for(feature: str) -> float:
-        intersection = universe.intersection(universe.S_star[feature])
-        return (universe.total_probability - intersection.total_probability) / costs[feature]
+def probability_maximization(universe: Dataset, tests: list[str], costs: dict[str, float]) -> str:
+    def submodular_probabilities() -> dict[str, float]:
+        logger.debug("Computing U ∩ S[*][feature] for each feature:")
+        per_feature_intersection_probability = {
+            feature: universe.intersection(universe.S_star[feature]).total_probability
+            for feature in tests
+        }
+        logger.debug(pformat(per_feature_intersection_probability))
 
-    maximum_eligible = {
-        feature: calculate_probability_maximization_for(feature)
-        for feature in tests
-        # NOTE: Not sure if second condition works or even if it's something that can happen
-        if costs[feature] <= budget - spent and feature in universe.S_star.keys()
-    }
+        return {
+            feature: (universe.total_probability - per_feature_intersection_probability[feature]) / costs[feature]
+            for feature in tests
+            if feature in universe.S_star.keys()
+        }
 
-    return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
+    return max(submodular_probabilities(), key=submodular_probabilities().get)
 
 
 def pairs_maximization(universe: Dataset, tests: list[str], costs: dict[str, float]) -> str:
-    def calculate_pairs_maximization_for(feature: str) -> float:
-        intersection = universe.intersection(universe.S_star[feature])
-        return (universe.pairs_number - intersection.pairs_number) / costs[feature]
+    def submodular_pairs() -> dict[str, float]:
+        logger.debug("Computing U ∩ S[*][feature] for each feature:")
+        per_feature_intersection_pairs = {
+            feature: universe.intersection(universe.S_star[feature]).pairs_number
+            for feature in tests
+        }
 
-    maximum_eligible = {
-        feature: calculate_pairs_maximization_for(feature)
-        for feature in tests
-        # NOTE: Not sure if second condition works or even if it's something that can happen
-        if feature in universe.S_star.keys()
-    }
+        return {
+            feature: (universe.pairs_number - per_feature_intersection_pairs[feature]) / costs[feature]
+            for feature in tests
+            if feature in universe.S_star.keys()
+        }
 
-    return max(maximum_eligible, key=maximum_eligible.get)  # type: ignore
+    return max(submodular_pairs(), key=submodular_pairs().get)
 
 
 def submodular_maximization(
