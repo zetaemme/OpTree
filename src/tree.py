@@ -49,6 +49,8 @@ class Tree:
         plt.rcParams["figure.figsize"] = (19.20, 10.80)
         plt.set_loglevel("info")
 
+        self.remove_duplicates(self.structure, self.root)
+
         pos = graphviz_layout(self.structure, prog="dot")
         nx.draw_networkx_edges(self.structure, pos)
         nx.draw_networkx_labels(self.structure, pos, labels=nx.get_node_attributes(self.structure, "label"))
@@ -56,6 +58,28 @@ class Tree:
 
         plt.tight_layout()
         plt.show()
+
+    def remove_duplicates(self, tree: nx.DiGraph, node) -> None:
+        children = list(tree.successors(node)).copy()
+        labels = {}
+        duplicates = []
+        for child in children:
+            child_label = tree.nodes[child]['label']
+            edge_label = tree.edges[node, child]['label']
+            if child_label in labels and edge_label in labels[child_label]:
+                duplicates.append(child)
+            else:
+                if child_label not in labels:
+                    labels[child_label] = set()
+                labels[child_label].add(edge_label)
+
+        for duplicate in duplicates:
+            if tree.has_node(duplicate):
+                tree.remove_node(duplicate)
+
+        for child in children:
+            if tree.has_node(child):
+                self.remove_duplicates(tree, child)
 
     @property
     def is_empty(self) -> bool:
