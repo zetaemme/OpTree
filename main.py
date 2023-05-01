@@ -9,7 +9,6 @@ from typing import Optional
 import src
 from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
-from src.tree import Tree
 from src.types import PicklePairs, PickleSeparation
 
 logging.basicConfig(
@@ -23,8 +22,7 @@ logger = logging.getLogger("decision_tree")
 def benchmark_main() -> None:
     path = Path("data/test.csv")
     dataset = Dataset(path)
-    tree = Tree()
-    build_decision_tree(dataset, src.TESTS, src.COSTS, tree)
+    build_decision_tree(dataset, src.TESTS, src.COSTS)
 
 
 def main(
@@ -50,8 +48,7 @@ def main(
 
     src.TESTS = dataset.features
     src.COSTS = dataset.costs
-    decision_tree = Tree()
-    decision_tree, _ = build_decision_tree(dataset, src.TESTS, src.COSTS, decision_tree)
+    decision_tree, _ = build_decision_tree(dataset, src.TESTS, src.COSTS)
 
     logger.info("Done!")
     decision_tree.print()

@@ -34,10 +34,6 @@ class Tree:
             last_added_id = next((n for n, d in self.structure.nodes(data=True) if d.get('label') == last_added_node),
                                  None)
 
-        # NOTE: Avoids the insertion of self-loops
-        if last_added_id == subtree.root:
-            return
-
         self.structure.add_nodes_from(subtree.structure.nodes(data=True))
         self.structure.add_edges_from(subtree.structure.edges(data=True))
 
