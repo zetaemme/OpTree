@@ -42,7 +42,8 @@ class Separation:
             }
 
             feature_pairs = {
-                label: number_of_pairs_for(pairs, objects) for label, objects in self.S_label[feature].items()
+                label: number_of_pairs_for(pairs, objects)
+                for label, objects in self.S_label[feature].items()
             }
             max_pairs = max(feature_pairs, key=feature_pairs.get)  # type: ignore
             self.S_star[feature] = self.S_label[feature][max_pairs]
@@ -69,7 +70,7 @@ def number_of_pairs_for(pairs: list[tuple[int, int]], objects: list[int]) -> int
         pair
         for obj in objects
         for pair in pairs
-        if int(obj) in pair and pair[0] in objects and pair[1] in objects
+        if obj in pair and pair[0] in objects and pair[1] in objects
     })
 
 

@@ -81,7 +81,7 @@ def build_decision_tree(
 
     # Removes from T all tests with cost greater than budget
     budgeted_features = [test for test in tests if costs[test] <= budget]
-    logger.info(f"{len(budgeted_features)} features within budget: {pformat(budgeted_features)}")
+    logger.info(f"{len(budgeted_features)} features within budget:\n{pformat(budgeted_features)}")
 
     # While exists at least a test with cost equal or less than (budget - spent)
     logger.info("Starting t_A backbone construction")
