@@ -14,11 +14,7 @@ from src.utils import get_backbone_label
 logger = logging.getLogger("decision_tree")
 
 
-def build_decision_tree(
-        dataset: Dataset,
-        tests: list[str],
-        costs: dict[str, float]
-) -> tuple[Tree, bool]:
+def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, float]) -> tuple[Tree, bool]:
     """Recursively builds a (log)-optimal decision tree.
 
     Args:
@@ -29,7 +25,7 @@ def build_decision_tree(
     Returns:
         Tree: The (log)-optimal decision tree
     """
-    # BASE CASE: If no pairs, return a leaf labelled by a class
+    # BASE CASE: If no pairs, return a leaf labelled by the only class in dataset
     if dataset.pairs_number == 0:
         tree = Tree()
 
@@ -185,7 +181,7 @@ def build_decision_tree(
             logger.debug(f"\n{pformat(universe)}")
 
             spent_2 += costs[chosen_test]
-            logger.debug("Adding cost of \"%s\" to spent. Total spent: %d", chosen_test, spent)
+            logger.debug("Adding cost of \"%s\" to spent2. Total spent2: %d", chosen_test, spent)
 
             universe.drop_feature(chosen_test)
             budgeted_features.remove(chosen_test)
