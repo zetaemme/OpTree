@@ -17,4 +17,4 @@ Simply run the `main.py` script. It accepts various arguments:
 
 1. _-f_ (filename, **required**): The path to the CSV containing the dataset.
 2. _-p_ (pairs): The pairs set for the given dataset can be pre-computed using the `compute_pairs.py` script. It
-   generates a JSON file accepted by the main script.
+   generates a Pickle file accepted by the main script.
