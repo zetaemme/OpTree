@@ -46,14 +46,13 @@ class Tree:
         return self.structure.nodes[self.root]["label"]
 
     def print(self) -> None:
-        plt.rcParams["figure.figsize"] = (19.20, 10.80)
+        plt.rcParams["figure.figsize"] = (20.48, 11.52)
         plt.set_loglevel("info")
-
-        self.remove_duplicates(self.structure, self.root)
 
         pos = graphviz_layout(self.structure, prog="dot")
         nx.draw_networkx_edges(self.structure, pos)
-        nx.draw_networkx_labels(self.structure, pos, labels=nx.get_node_attributes(self.structure, "label"))
+        nx.draw_networkx_labels(self.structure, pos, labels=nx.get_node_attributes(self.structure, "label"),
+                                font_size=8)
         nx.draw_networkx_edge_labels(self.structure, pos, nx.get_edge_attributes(self.structure, "label"))
 
         plt.tight_layout()
