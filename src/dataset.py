@@ -7,6 +7,7 @@ from itertools import chain, combinations
 from math import fsum
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
+from random import randint
 from typing import Any, Literal, Optional, Self
 
 import numpy as np
@@ -281,45 +282,62 @@ class Dataset:
         """Returns a deep copy of the dataset"""
         return deepcopy(self)
 
-    def data(self) -> np.ndarray:
+    def data(self, with_classes: bool = False) -> np.ndarray:
         """Removes useless infos from dataset and returns it
 
         Returns:
             ndarray: The content of the dataset.
         """
+        if with_classes:
+            return np.hstack((self._data, np.array(list(self.classes.values()))[:, np.newaxis]))
+
         return self._data
 
     def drop_equal_objects_with_different_class(self) -> None:
-        # Checks if there's any row having the same structure along all features
-        unique, count = np.unique(self._data[:, 1:].astype('int16'), axis=0, return_counts=True)
-        repeated_rows = unique[count > 1]
+        duplicated_rows = []
+        for idx, row in enumerate(self.data(True)):
+            # Estraggo i successori aventi classe diversa da row
+            successors = self.data(True)[idx + 1:]
+            different_class_mask = np.ma.masked_not_equal(self.data(True)[idx + 1:, -1], row[-1])
+            successors = successors[different_class_mask.mask]
 
-        if len(repeated_rows) != 0:
-            # If so, extracts the index number of those rows
-            impure_objs = [np.argwhere(np.all(self._data[:, 1:] == row, axis=1)).ravel() for row in repeated_rows]
+            # Ogni riga successiva a row che abbia la stessa struttura viene aggiunta a 'duplicated_rows'
+            for successor in successors:
+                if np.array_equal(row[1:-1], successor[1:-1]):
+                    duplicated_rows.append((row[0], successor[0]))
 
-            impure_indexes = []
-            for obj in impure_objs:
-                if len(obj) > 2:
-                    combinations_list = [np.array(cmb) for cmb in list(combinations(obj.tolist(), 2))]
-                    impure_indexes.extend(combinations_list)
+        # Computes the class frequencies
+        class_counter = Counter(self._classes.values())
+        rows_to_drop = set()
+        for obj1, obj2 in duplicated_rows:
+            # Extracts the classes of the two objects
+            class1_freq = class_counter[self.classes[obj1]]
+            class2_freq = class_counter[self.classes[obj2]]
+
+            # If obj1's class is the most frequent
+            if class1_freq > class2_freq:
+                # obj1 needs to be removed, updating the counter
+                rows_to_drop.add(obj1)
+                class_counter[self.classes[obj1]] -= 1
+            # If obj2's class is the most frequent
+            elif class1_freq < class2_freq:
+                # obj2 needs to be removed, updating the counter
+                rows_to_drop.add(obj2)
+                class_counter[self.classes[obj2]] -= 1
+            else:
+                # Randomly drops one of the two
+                rand = randint(0, 1)
+
+                if rand == 0:
+                    rows_to_drop.add(obj1)
+                    class_counter[self.classes[obj1]] -= 1
                 else:
-                    impure_indexes.append(obj)
+                    rows_to_drop.add(obj2)
+                    class_counter[self.classes[obj2]] -= 1
 
-            for obj in impure_indexes:
-                counter = Counter(self._classes.values())
-
-                # FIXME: Rimuovi i duplicati tra le coppie di "impure_indexes" prima di questo passaggio
-                if obj[0] in self.indexes and obj[1] in self.indexes and self._classes[obj[0]] != self._classes[obj[1]]:
-                    obj_idx_1 = self._data[obj[0], 0]
-                    obj_idx_2 = self._data[obj[1], 0]
-
-                    # For each of those, if their class label is different, removes the one with the most common class
-                    self.drop_row(
-                        obj_idx_1
-                        if counter.most_common(1)[0][0] == self._classes[obj_idx_1]
-                        else obj_idx_2
-                    )
+        # Drops the rows in rows_to_drop
+        for row in rows_to_drop:
+            self.drop_row(row)
 
     def drop_feature(self, feature: str) -> None:
         if len(self.features) == 1 and self.features[0] == feature:
@@ -350,8 +368,8 @@ class Dataset:
         drop_index = np.where(self.indexes == index)
         self._data = np.delete(self._data, drop_index[0][0], axis=0)
         self._pairs.pairs_list = [pair for pair in self._pairs.pairs_list if index not in pair]
-        del self._classes[index]
         del self._probabilities[drop_index[0][0]]
+        del self._classes[index]
 
         for feature in self.features:
             for label in self.S_label[feature]:
