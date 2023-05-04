@@ -2,7 +2,6 @@ import logging
 from pprint import pformat
 
 from src.dataset import Dataset
-from src.types import SubmodularFunction
 
 logger = logging.getLogger("decision_tree")
 
@@ -46,8 +45,7 @@ def submodular_maximization(
         dataset: Dataset,
         costs: dict[str, float],
         heuristic_features: list[str],
-        auxiliary_features: list[str],
-        submodular_function: SubmodularFunction,
+        auxiliary_features: list[str]
 ) -> str:
     logger.debug(f"Maximizing submodular function in {heuristic_features}")
 
@@ -55,20 +53,21 @@ def submodular_maximization(
     for feature in heuristic_features:
         logger.debug("Feature: %s", feature)
 
-        # Computes f(A)
-        feature_result = submodular_function(dataset, auxiliary_features)
-        logger.debug("f(A): %i", feature_result)
+        # Computes P(∩ S[*][t for t in A])
+        # NOTE: 03/05/2023 - We chose to consider P(∩ S[*][t for t in A]) instead of f(A) since we can algebraically
+        #       reduce f(A U {t}) - f(A) to P(∩ S[*][t for t in A]) - P(∩ S[*][t for t in A U {t}])
+        non_union_result = dataset.pairs_number_for(dataset.S_star_intersection_for_features(auxiliary_features))
+        logger.debug("P(∩ S[*][t for t in A]): %i", non_union_result)
 
-        # Computes f(A U {t})
-        union_result = submodular_function(dataset, auxiliary_features + [feature])
-        logger.debug("f(A U {t}): %i", union_result)
+        # Computes P(∩ S[*][t for t in A U {t}])
+        # NOTE: 03/05/2023 - We chose to consider P(∩ S[*][t for t in A U {t}]) instead of f(A U {t}) since we can
+        #       algebraically reduce f(A U {t}) - f(A) to P(∩ S[*][t for t in A]) - P(∩ S[*][t for t in A U {t}])
+        union_result = dataset.pairs_number_for(
+            dataset.S_star_intersection_for_features(auxiliary_features + [feature]))
+        logger.debug("P(∩ S[*][t for t in A U {t}]): %i", union_result)
 
-        # NOTE: 22/03/2023 - We discovered a typo in the original paper.
-        #       To avoid issues with the budget the following was changed:
-        #           (f(A U {t}) - f(A))  ->  (f(A) - f(A U {t}))
-        #       Doing so, we avoid negative numbers in maximum_eligible
-        submodular_result = (feature_result - union_result) / costs[feature]
-        logger.debug("(f(A) - f(A U {t})) / %f = %f", costs[feature], submodular_result)
+        submodular_result = (non_union_result - union_result) / costs[feature]
+        logger.debug("(f(A U {t}) - f(A)) / %f = %f", costs[feature], submodular_result)
         maximum_eligible[feature] = submodular_result
 
     logger.debug(f"\n{pformat(maximum_eligible)}")

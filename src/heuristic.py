@@ -46,8 +46,7 @@ def wolsey_greedy_heuristic(
                 dataset,
                 costs,
                 heuristic_features,
-                auxiliary_array,
-                submodular_function,
+                auxiliary_array
             )
             logger.debug("Test that maximizes the submodular function: %s", chosen_test)
 

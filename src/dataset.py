@@ -434,7 +434,7 @@ class Dataset:
         Returns:
             int: Number of pairs
         """
-        if len(objects) == 1:
+        if len(objects) <= 1:
             return 0
 
         return len({
@@ -445,6 +445,14 @@ class Dataset:
         })
 
     def S_star_intersection_for_features(self, features: list[str]) -> list[int]:
+        if len(features) == 0:
+            # NOTE: 04/05/2023 - According to what the paper says, we use S[*][feature] to represent the set of objects
+            #       not covered by all the already extracted tests.
+            #       So, avoiding the usual set intersection rule, while computing ∩ S[*][feature] among all features
+            #       in a given set, if the given set is empty we should return the whole set of objects in the dataset.
+            #       This holds, since all objects in our dataset are not covered by the tests in an empty set.
+            return self.indexes.tolist()  # type: ignore
+
         S_stars = [self.S_star[feature] for feature in features]
         return list(set(S_stars[0]).intersection(*S_stars[1:]))
 

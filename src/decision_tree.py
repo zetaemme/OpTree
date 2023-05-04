@@ -103,6 +103,9 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
             )
             last_added_node = tree.add_node(chosen_test, last_added_node, backbone_label)
 
+        # if chosen_test == "sepal-l=[5.24-5.89]":
+        #     print()
+
         # For each label in the possible outcomes of chosen_test
         for label in eligible_labels(universe, chosen_test):
             logger.info("Expanding test \"%s\" with label %s", chosen_test, label)
