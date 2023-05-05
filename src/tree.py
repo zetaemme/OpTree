@@ -1,4 +1,7 @@
+import string
 from dataclasses import dataclass
+from pprint import pprint
+from random import choice
 from typing import Iterable, Optional, Self
 from uuid import UUID, uuid4
 
@@ -17,12 +20,13 @@ class Tree:
     def add_node(
             self,
             objects: list[int],
+            pairs_covered: Optional[int],
             node_label: str,
             parent_node: Optional[UUID] = None,
             edge_label: Optional[str] = None
     ) -> UUID:
         node_unique_id = uuid4()
-        self.structure.add_node(node_unique_id, label=node_label, objects=objects)
+        self.structure.add_node(node_unique_id, label=node_label, objects=objects, pairs=pairs_covered)
 
         if not self.is_empty and len(self.structure.nodes()) != 1:
             self.structure.add_edge(parent_node, node_unique_id, label=edge_label)
@@ -34,6 +38,14 @@ class Tree:
         self.structure.add_edges_from(subtree.structure.edges(data=True))
 
         self.structure.add_edge(last_added_node, subtree.root, label=label)
+
+    def check_leaves_objects_and_pairs(self) -> None:
+        leaves = {
+            self.get_label_of_node(leaf) + choice(string.ascii_lowercase): sorted(self.structure.nodes[leaf]["objects"])
+            for leaf in self.leaves
+        }
+
+        pprint(leaves)
 
     def get_label_of_node(self, node: UUID) -> str:
         return self.structure.nodes[node]["label"]

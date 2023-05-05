@@ -35,7 +35,7 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
             objects = dataset.indexes.tolist()
 
             logger.info("No pairs in dataset, setting node \"%s\" as root of the tree", leaf)
-            tree.add_node(objects, leaf)  # type: ignore
+            tree.add_node(objects, None, leaf)  # type: ignore
         else:
             logger.info("No more objects in dataset")
 
@@ -50,7 +50,8 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
         split = cheapest_separation(dataset, costs, dataset.pairs_list[0])
 
         logger.info("Setting node \"%s\" as root of the subtree", split)
-        root_id = tree.add_node(dataset.S_label_union_for(split), split)
+        indexes_covered = dataset.S_label_union_for(split)
+        root_id = tree.add_node(indexes_covered, dataset.pairs_number_for(indexes_covered), split)
 
         # Add the two items as leafs labelled with the respective class
         class_1 = dataset.classes[dataset.pairs_list[0][0]]
@@ -61,9 +62,9 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
 
         logger.info(f"Adding leaf \"{class_1}\" as child of {tree.get_label_of_node(root_id)}")
         # FIXME: Potrebbe essere problematica la gestione dei tipi delle etichette
-        tree.add_node(dataset.S_label[split][int(label_1)], class_1, root_id, label_1)
+        tree.add_node(dataset.S_label[split][int(label_1)], None, class_1, root_id, label_1)
         logger.info(f"Adding leaf \"{class_2}\" as child of {tree.get_label_of_node(root_id)}")
-        tree.add_node(dataset.S_label[split][int(label_2)], class_2, root_id, label_2)
+        tree.add_node(dataset.S_label[split][int(label_2)], None, class_2, root_id, label_2)
 
         return tree, True
 
@@ -97,7 +98,7 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
         if tree.is_empty:
             # Set chosen_test as the root of the tree
             logger.info("Setting %s as root of the tree", chosen_test)
-            last_added_node = tree.add_node(dataset.indexes.tolist(), chosen_test)  # type: ignore
+            last_added_node = tree.add_node(dataset.indexes.tolist(), dataset.pairs_number, chosen_test)  # type: ignore
         else:
             # Set chosen_test as child of the test added in the last iteration
             backbone_label = get_backbone_label(universe, chosen_test)
@@ -105,15 +106,15 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
                 f"Adding node {chosen_test} as child of {tree.get_label_of_node(last_added_node)} " +
                 f"with label {backbone_label}"
             )
+
+            indexes_covered = universe.S_label_union_for(chosen_test)
             last_added_node = tree.add_node(
-                dataset.S_label_union_for(chosen_test),
+                indexes_covered,
+                universe.pairs_number_for(indexes_covered),
                 chosen_test,
                 last_added_node,
                 backbone_label
             )
-
-        if chosen_test == "sepal-l=[7.12-7.90]":
-            print()
 
         # For each label in the possible outcomes of chosen_test
         for label in eligible_labels(universe, chosen_test):
@@ -163,15 +164,15 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
                 f"Adding node {chosen_test} as child of {tree.get_label_of_node(last_added_node)} " +
                 f"with label {backbone_label}"
             )
+
+            indexes_covered = universe.S_label_union_for(chosen_test)
             last_added_node = tree.add_node(
-                dataset.S_label_union_for(chosen_test),
+                indexes_covered,
+                universe.pairs_number_for(indexes_covered),
                 chosen_test,
                 last_added_node,
                 backbone_label
             )
-
-            if chosen_test == "sepal-l=[7.12-7.90]":
-                print()
 
             # For each label in the possible outcomes of chosen_test
             for label in eligible_labels(universe, chosen_test):
