@@ -127,7 +127,7 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
             if is_split_base_case and subtree.get_root_label() in universe.features:
                 budgeted_features.remove(subtree.get_root_label())
 
-            tree.add_subtree(chosen_test, subtree, str(label))
+            tree.add_subtree(last_added_node, subtree, str(label))
 
         logger.debug(f"Computing U ∩ S[*][{chosen_test}]")
         universe = universe.intersection(universe.S_star[chosen_test])
@@ -177,7 +177,7 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
                 if is_split_base_case and subtree.get_root_label() in universe.features:
                     budgeted_features.remove(subtree.get_root_label())
 
-                tree.add_subtree(chosen_test, subtree, str(label))
+                tree.add_subtree(last_added_node, subtree, str(label))
 
             logger.debug(f"Computing U ∩ S[*][{chosen_test}]")
             universe = universe.intersection(universe.S_star[chosen_test])

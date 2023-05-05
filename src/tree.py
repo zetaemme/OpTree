@@ -28,16 +28,15 @@ class Tree:
 
         return node_unique_id
 
-    def add_subtree(self, last_added_node: str | UUID, subtree: Self, label: str) -> None:
-        last_added_id = last_added_node
-        if isinstance(last_added_id, str):
-            last_added_id = next((n for n, d in self.structure.nodes(data=True) if d.get('label') == last_added_node),
-                                 None)
+    def add_subtree(self, last_added_node: UUID, subtree: Self, label: str) -> None:
+        if last_added_node is not None and label is not None:
+            if any(data["label"] == label for _, _, data in self.structure.edges(last_added_node, data=True)):
+                return
 
         self.structure.add_nodes_from(subtree.structure.nodes(data=True))
         self.structure.add_edges_from(subtree.structure.edges(data=True))
 
-        self.structure.add_edge(last_added_id, subtree.root, label=label)
+        self.structure.add_edge(last_added_node, subtree.root, label=label)
 
     def get_label_of_node(self, node: UUID) -> str:
         return self.structure.nodes[node]["label"]
