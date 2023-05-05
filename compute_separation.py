@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
 from pickle import HIGHEST_PROTOCOL, dump, load
-from typing import Any
 
 import pandas as pd
 
@@ -12,7 +11,7 @@ from src.types import PicklePairs
 class Separation:
     _all_features: list[str]
 
-    S_label: dict[str, dict[Any, list[int]]] = field(default_factory=dict)
+    S_label: dict[str, dict[str, list[int]]] = field(default_factory=dict)
     S_star: dict[str, list[int]] = field(default_factory=dict)
     sigma: dict[str, list[int]] = field(default_factory=dict)
 
@@ -33,7 +32,7 @@ class Separation:
 
         for feature_idx, feature in enumerate(self._all_features):
             self.S_label[feature] = {
-                value: [
+                str(value): [
                     int(idx)
                     for idx, item in dataset.iterrows()
                     if item[feature] == value

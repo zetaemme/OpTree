@@ -74,7 +74,7 @@ class Dataset:
     class Separation:
         _all_features: list[str]
 
-        S_label: dict[str, dict[Any, list[int]]] = field(default_factory=dict)
+        S_label: dict[str, dict[str, list[int]]] = field(default_factory=dict)
         S_star: dict[str, list[int]] = field(default_factory=dict)
         sigma: dict[str, list[int]] = field(default_factory=dict)
 
@@ -96,7 +96,7 @@ class Dataset:
 
             for feature_idx, feature in enumerate(self._all_features):
                 self.S_label[feature] = {
-                    value: [item[0] for item in dataset.data() if item[feature_idx + 1] == value]
+                    str(value): [item[0] for item in dataset.data() if item[feature_idx + 1] == value]
                     for value in set(dataset.data()[:, feature_idx + 1])
                 }
 

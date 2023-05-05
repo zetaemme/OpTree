@@ -15,15 +15,15 @@ def cheapest_separation(dataset: Dataset, costs: dict[str, float], pair: tuple[i
     return min(separating_dict, key=separating_dict.get)  # type: ignore
 
 
-def eligible_labels(dataset: Dataset, test: str) -> list[int]:
+def eligible_labels(dataset: Dataset, test: str) -> list[str]:
     eligible = []
 
     for label in dataset.labels_for(test):
-        inter = dataset.intersection(dataset.S_label[test][label])
+        inter = dataset.intersection(dataset.S_label[test][str(label)])
         if len(inter) != 0:
-            eligible.append(label)
+            eligible.append(str(label))
 
     if len(eligible) == 0:
         return []
 
-    return [label for label in eligible if dataset.S_label[test][label] != dataset.S_star[test]]
+    return [str(label) for label in eligible if dataset.S_label[test][label] != dataset.S_star[test]]
