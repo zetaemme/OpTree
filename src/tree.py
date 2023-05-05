@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Self
+from typing import Iterable, Optional, Self
 from uuid import UUID, uuid4
 
 import matplotlib.pyplot as plt
@@ -16,12 +16,13 @@ class Tree:
 
     def add_node(
             self,
+            objects: list[int],
             node_label: str,
             parent_node: Optional[UUID] = None,
             edge_label: Optional[str] = None
     ) -> UUID:
         node_unique_id = uuid4()
-        self.structure.add_node(node_unique_id, label=node_label)
+        self.structure.add_node(node_unique_id, label=node_label, objects=objects)
 
         if not self.is_empty and len(self.structure.nodes()) != 1:
             self.structure.add_edge(parent_node, node_unique_id, label=edge_label)
@@ -29,10 +30,6 @@ class Tree:
         return node_unique_id
 
     def add_subtree(self, last_added_node: UUID, subtree: Self, label: str) -> None:
-        if last_added_node is not None and label is not None:
-            if any(data["label"] == label for _, _, data in self.structure.edges(last_added_node, data=True)):
-                return
-
         self.structure.add_nodes_from(subtree.structure.nodes(data=True))
         self.structure.add_edges_from(subtree.structure.edges(data=True))
 
@@ -57,31 +54,17 @@ class Tree:
         plt.tight_layout()
         plt.show()
 
-    def remove_duplicates(self, tree: nx.DiGraph, node) -> None:
-        children = list(tree.successors(node)).copy()
-        labels = {}
-        duplicates = []
-        for child in children:
-            child_label = tree.nodes[child]['label']
-            edge_label = tree.edges[node, child]['label']
-            if child_label in labels and edge_label in labels[child_label]:
-                duplicates.append(child)
-            else:
-                if child_label not in labels:
-                    labels[child_label] = set()
-                labels[child_label].add(edge_label)
-
-        for duplicate in duplicates:
-            if tree.has_node(duplicate):
-                tree.remove_node(duplicate)
-
-        for child in children:
-            if tree.has_node(child):
-                self.remove_duplicates(tree, child)
-
     @property
     def is_empty(self) -> bool:
         return self.structure.number_of_nodes() == 0
+
+    @property
+    def leaves(self) -> Iterable:
+        return [
+            node
+            for node in self.structure.nodes()
+            if self.structure.out_degree(node) == 0
+        ]
 
     @property
     def root(self) -> UUID:

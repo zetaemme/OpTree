@@ -444,6 +444,9 @@ class Dataset:
             if obj in pair and pair[0] in objects and pair[1] in objects
         })
 
+    def S_label_union_for(self, feature) -> list[int]:
+        return reduce(lambda x, y: x + y, self.S_label[feature].values())
+
     def S_star_intersection_for_features(self, features: list[str]) -> list[int]:
         if len(features) == 0:
             # NOTE: 04/05/2023 - According to what the paper says, we use S[*][feature] to represent the set of objects
