@@ -1,7 +1,8 @@
 import string
+from copy import deepcopy
 from dataclasses import dataclass
 from random import choice
-from typing import Iterable, Optional, Self
+from typing import Optional, Self
 from uuid import UUID, uuid4
 
 import matplotlib.pyplot as plt
@@ -25,7 +26,12 @@ class Tree:
             edge_label: Optional[str] = None
     ) -> UUID:
         node_unique_id = uuid4()
-        self.structure.add_node(node_unique_id, label=node_label, objects=objects, pairs=pairs_covered)
+        self.structure.add_node(
+            node_unique_id,
+            label=node_label,
+            objects=objects,
+            pairs=pairs_covered
+        )
 
         if not self.is_empty and len(self.structure.nodes()) != 1:
             self.structure.add_edge(parent_node, node_unique_id, label=edge_label)
@@ -51,6 +57,9 @@ class Tree:
 
         return True
 
+    def copy(self) -> Self:
+        return deepcopy(self)
+
     def get_label_of_node(self, node: UUID) -> str:
         return self.structure.nodes[node]["label"]
 
@@ -75,7 +84,7 @@ class Tree:
         return self.structure.number_of_nodes() == 0
 
     @property
-    def leaves(self) -> Iterable:
+    def leaves(self) -> list[UUID]:
         return [
             node
             for node in self.structure.nodes()

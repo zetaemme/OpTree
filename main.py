@@ -9,6 +9,7 @@ import src
 from src.dataset import Dataset
 from src.decision_tree import build_decision_tree
 from src.types import PicklePairs, PickleSeparation
+from src.utils import prune
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,6 +45,9 @@ def main(
     decision_tree, _ = build_decision_tree(dataset, src.TESTS, src.COSTS)
 
     assert decision_tree.check_leaves_objects(dataset.classes), "The decision tree is not correct!"
+
+    logger.info("Pruning resulting tree")
+    decision_tree = prune(decision_tree, dataset)
 
     logger.info("End of procedure!")
     decision_tree.print()

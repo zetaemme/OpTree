@@ -1,7 +1,12 @@
 import logging
-from itertools import chain
+from collections import Counter
+from itertools import chain, groupby
+from math import fsum
+
+import networkx as nx
 
 from src.dataset import Dataset
+from src.tree import Tree
 from src.types import Bounds, HeuristicFunction
 
 logger = logging.getLogger("decision_tree")
@@ -82,3 +87,55 @@ def get_backbone_label(dataset: Dataset, feature: str) -> str:
     for key, value in dataset.S_label[feature].items():
         if value == dataset.S_star[feature]:
             return key
+
+
+def set_depths(tree: nx.DiGraph, node, depth: int = 0) -> None:
+    tree.nodes[node]['depth'] = depth
+    for child in tree.successors(node):
+        set_depths(tree, child, depth + 1)
+
+
+def compute_cutoff_metrics(tree: nx.DiGraph, node, objects_number: int) -> None:
+    pairs_number = tree.nodes[node]["pairs"]
+    objects_in_node = len(tree.nodes[node]["objects"])
+
+    # NOTE: Change this variable assignment to change the cutoff metric
+    tree.nodes[node]["cutoff_metric"] = pairs_number * objects_in_node / objects_number
+
+    for child in tree.successors(node):
+        compute_cutoff_metrics(tree, child, objects_number)
+
+
+def prune(tree: Tree, dataset: Dataset) -> Tree:
+    set_depths(tree.structure, tree.root)
+    compute_cutoff_metrics(tree.structure, tree.root, len(dataset))
+
+    tree_copy = tree.copy()
+    tree_copy.structure.remove_nodes_from(tree_copy.leaves)
+
+    def compute_score_by_depth() -> dict[int, float]:
+        sorted_nodes = sorted(tree_copy.structure.nodes, key=lambda node: tree_copy.structure.nodes[node]["depth"])
+        groups = groupby(sorted_nodes, key=lambda node: tree_copy.structure.nodes[node]["depth"])
+
+        return {
+            depth: fsum(tree_copy.structure.nodes[node]["cutoff_metric"] for node in nodes)
+            for depth, nodes in groups
+        }
+
+    cutoff_depth = min(compute_score_by_depth(), key=compute_score_by_depth().get)
+
+    nodes_to_remove = [node for node in tree_copy.structure.nodes if
+                       tree_copy.structure.nodes[node]['depth'] > cutoff_depth]
+    tree_copy.structure.remove_nodes_from(nodes_to_remove)
+
+    for leaf in tree_copy.leaves:
+        leaf_classes = [
+            class_
+            for index, class_ in dataset.classes.items()
+            if index in tree_copy.structure.nodes[leaf]["objects"]
+        ]
+
+        class_counter = Counter(leaf_classes)
+        tree_copy.structure.nodes[leaf]["label"] = class_counter.most_common(1)[0][0]
+
+    return tree_copy
