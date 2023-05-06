@@ -43,6 +43,8 @@ def main(
     src.COSTS = dataset.costs
     decision_tree, _ = build_decision_tree(dataset, src.TESTS, src.COSTS)
 
+    assert decision_tree.check_leaves_objects(dataset.classes), "The decision tree is not correct!"
+
     logger.info("End of procedure!")
     decision_tree.print()
 

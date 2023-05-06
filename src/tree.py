@@ -1,6 +1,5 @@
 import string
 from dataclasses import dataclass
-from pprint import pprint
 from random import choice
 from typing import Iterable, Optional, Self
 from uuid import UUID, uuid4
@@ -39,13 +38,18 @@ class Tree:
 
         self.structure.add_edge(last_added_node, subtree.root, label=label)
 
-    def check_leaves_objects_and_pairs(self) -> None:
+    def check_leaves_objects(self, classes: dict[int, str]) -> bool:
         leaves = {
             self.get_label_of_node(leaf) + choice(string.ascii_lowercase): sorted(self.structure.nodes[leaf]["objects"])
             for leaf in self.leaves
         }
 
-        pprint(leaves)
+        for class_, objects in leaves.items():
+            for obj in objects:
+                if class_[:-1] != classes[obj]:
+                    return False
+
+        return True
 
     def get_label_of_node(self, node: UUID) -> str:
         return self.structure.nodes[node]["label"]
