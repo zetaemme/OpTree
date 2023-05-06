@@ -2,14 +2,13 @@ import logging
 from argparse import ArgumentParser
 from os.path import dirname
 from pathlib import Path
-from pickle import HIGHEST_PROTOCOL, Unpickler, dump
+from pickle import Unpickler
 from typing import Optional
 
 import src
 from src.dataset import Dataset
-from src.decision_tree import build_decision_tree
+from src.decision_tree import DecisionTree
 from src.types import PicklePairs, PickleSeparation
-from src.utils import prune
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,18 +41,11 @@ def main(
 
     src.TESTS = dataset.features
     src.COSTS = dataset.costs
-    decision_tree, _ = build_decision_tree(dataset, src.TESTS, src.COSTS)
 
-    assert decision_tree.check_leaves_objects(dataset.classes), "The decision tree is not correct!"
+    decision_tree = DecisionTree()
+    model = decision_tree.fit(dataset, src.TESTS, src.COSTS, name)
 
-    logger.info("Pruning resulting tree")
-    decision_tree = prune(decision_tree, dataset)
-
-    logger.info("End of procedure!")
-    decision_tree.print()
-
-    with open(f"model/decision_tree_{name}.pkl", "wb") as obj_file:
-        dump(decision_tree, obj_file, HIGHEST_PROTOCOL)
+    model.print()
 
 
 if __name__ == "__main__":
