@@ -35,7 +35,7 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
             objects = dataset.indexes.tolist()
 
             logger.info("No pairs in dataset, setting node \"%s\" as root of the tree", leaf)
-            tree.add_node(objects, None, leaf)  # type: ignore
+            tree.add_node(objects, 0, leaf)  # type: ignore
         else:
             logger.info("No more objects in dataset")
 
@@ -62,9 +62,9 @@ def build_decision_tree(dataset: Dataset, tests: list[str], costs: dict[str, flo
 
         logger.info(f"Adding leaf \"{class_1}\" as child of {tree.get_label_of_node(root_id)}")
         # FIXME: Potrebbe essere problematica la gestione dei tipi delle etichette
-        tree.add_node(dataset.S_label[split][label_1], None, class_1, root_id, label_1)
+        tree.add_node(dataset.S_label[split][label_1], 0, class_1, root_id, label_1)
         logger.info(f"Adding leaf \"{class_2}\" as child of {tree.get_label_of_node(root_id)}")
-        tree.add_node(dataset.S_label[split][label_2], None, class_2, root_id, label_2)
+        tree.add_node(dataset.S_label[split][label_2], 0, class_2, root_id, label_2)
 
         return tree, True
 
