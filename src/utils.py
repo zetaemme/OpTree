@@ -117,15 +117,20 @@ def prune(tree: Tree, dataset: Dataset) -> Tree:
         sorted_nodes = sorted(tree_copy.structure.nodes, key=lambda node: tree_copy.structure.nodes[node]["depth"])
         groups = groupby(sorted_nodes, key=lambda node: tree_copy.structure.nodes[node]["depth"])
 
-        return {
+        scores = {
             depth: fsum(tree_copy.structure.nodes[node]["cutoff_metric"] for node in nodes)
             for depth, nodes in groups
         }
 
+        return dict(sorted(scores.items(), key=lambda x: x[0]))
+
     cutoff_depth = min(compute_score_by_depth(), key=compute_score_by_depth().get)
 
-    nodes_to_remove = [node for node in tree_copy.structure.nodes if
-                       tree_copy.structure.nodes[node]['depth'] > cutoff_depth]
+    nodes_to_remove = [
+        node
+        for node in tree_copy.structure.nodes
+        if tree_copy.structure.nodes[node]['depth'] > cutoff_depth
+    ]
     tree_copy.structure.remove_nodes_from(nodes_to_remove)
 
     for leaf in tree_copy.leaves:
