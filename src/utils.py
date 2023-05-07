@@ -110,37 +110,47 @@ def prune(tree: Tree, dataset: Dataset) -> Tree:
     set_depths(tree.structure, tree.root)
     compute_cutoff_metrics(tree.structure, tree.root, len(dataset))
 
-    tree_copy = tree.copy()
-    tree_copy.structure.remove_nodes_from(tree_copy.leaves)
+    sorted_nodes = sorted(tree.structure.nodes, key=lambda node: tree.structure.nodes[node]["depth"])
+    groups = groupby(sorted_nodes, key=lambda node: tree.structure.nodes[node]["depth"])
 
-    def compute_score_by_depth() -> dict[int, float]:
-        sorted_nodes = sorted(tree_copy.structure.nodes, key=lambda node: tree_copy.structure.nodes[node]["depth"])
-        groups = groupby(sorted_nodes, key=lambda node: tree_copy.structure.nodes[node]["depth"])
+    scores = {
+        depth: fsum(tree.structure.nodes[node]["cutoff_metric"] for node in nodes)
+        for depth, nodes in groups
+    }
 
-        scores = {
-            depth: fsum(tree_copy.structure.nodes[node]["cutoff_metric"] for node in nodes)
-            for depth, nodes in groups
-        }
+    cutoff_depth = 0
+    scores_per_depth = dict(sorted(scores.items(), key=lambda x: x[0]))
+    for current_depth, current_score in scores_per_depth.items():
+        successors = {key: value for key, value in scores_per_depth.items() if key > current_depth}
 
-        return dict(sorted(scores.items(), key=lambda x: x[0]))
+        if len(successors) == 1 and list(successors.values())[0] < current_score:
+            cutoff_depth = list(successors.keys())[0]
+            break
 
-    cutoff_depth = min(compute_score_by_depth(), key=compute_score_by_depth().get)
+        for successor_score in successors.values():
+            if successor_score > current_score:
+                cutoff_depth = current_depth
+                break
 
     nodes_to_remove = [
         node
-        for node in tree_copy.structure.nodes
-        if tree_copy.structure.nodes[node]['depth'] > cutoff_depth
+        for node in tree.structure.nodes
+        if tree.structure.nodes[node]["depth"] > cutoff_depth
     ]
-    tree_copy.structure.remove_nodes_from(nodes_to_remove)
 
-    for leaf in tree_copy.leaves:
+    if len(nodes_to_remove) == 0:
+        return tree
+
+    tree.structure.remove_nodes_from(nodes_to_remove)
+
+    for leaf in tree.leaves:
         leaf_classes = [
             class_
             for index, class_ in dataset.classes.items()
-            if index in tree_copy.structure.nodes[leaf]["objects"]
+            if index in tree.structure.nodes[leaf]["objects"]
         ]
 
         class_counter = Counter(leaf_classes)
-        tree_copy.structure.nodes[leaf]["label"] = class_counter.most_common(1)[0][0]
+        tree.structure.nodes[leaf]["label"] = class_counter.most_common(1)[0][0]
 
-    return tree_copy
+    return tree
