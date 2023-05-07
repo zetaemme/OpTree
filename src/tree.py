@@ -79,6 +79,19 @@ class Tree:
         plt.tight_layout()
         plt.show()
 
+    def print_depths(self) -> None:
+        plt.rcParams["figure.figsize"] = (20.48, 11.52)
+        plt.set_loglevel("info")
+
+        pos = graphviz_layout(self.structure, prog="dot")
+        nx.draw_networkx_edges(self.structure, pos)
+        nx.draw_networkx_labels(self.structure, pos, labels=nx.get_node_attributes(self.structure, "depth"),
+                                font_size=8)
+        nx.draw_networkx_edge_labels(self.structure, pos, nx.get_edge_attributes(self.structure, "label"))
+
+        plt.tight_layout()
+        plt.show()
+
     @property
     def is_empty(self) -> bool:
         return self.structure.number_of_nodes() == 0
