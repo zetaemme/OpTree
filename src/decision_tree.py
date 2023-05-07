@@ -1,8 +1,11 @@
 import logging
-from pickle import HIGHEST_PROTOCOL, dump
+from pathlib import Path
+from pickle import HIGHEST_PROTOCOL, Unpickler, dump
 from pprint import pformat
-from typing import Optional
+from typing import Optional, Self
 from uuid import UUID
+
+import numpy as np
 
 import src
 from src.budget import find_budget
@@ -16,6 +19,9 @@ logger = logging.getLogger("decision_tree")
 
 
 class DecisionTree:
+    dataset: Optional[Dataset] = None
+    decision_tree: Optional[Tree] = None
+
     def _build_decision_tree(self, dataset: Dataset, tests: list[str], costs: dict[str, float]) -> tuple[Tree, bool]:
         """Recursively builds a (log)-optimal decision tree.
 
@@ -100,8 +106,11 @@ class DecisionTree:
             if tree.is_empty:
                 # Set chosen_test as the root of the tree
                 logger.info("Setting %s as root of the tree", chosen_test)
-                last_added_node = tree.add_node(dataset.indexes.tolist(), dataset.pairs_number,
-                                                chosen_test)  # type: ignore
+                last_added_node = tree.add_node(
+                    dataset.indexes.tolist(),  # type: ignore
+                    dataset.pairs_number,
+                    chosen_test
+                )
             else:
                 # Set chosen_test as child of the test added in the last iteration
                 backbone_label = get_backbone_label(universe, chosen_test)
@@ -136,7 +145,8 @@ class DecisionTree:
                     src.COSTS
                 )
 
-                # NOTE: This if assures that the feature used as root in the P(S)=1 base case is not immediately re-expanded
+                # NOTE: This if assures that the feature used as root in the P(S)=1 base case is not immediately
+                #       re-expanded
                 if is_split_base_case and subtree.get_root_label() in universe.features:
                     budgeted_features.remove(subtree.get_root_label())
 
@@ -187,14 +197,15 @@ class DecisionTree:
                     logger.info("Constructing non-backbone (t_B) subtree of \"%s\"", chosen_test)
                     subtree, is_split_base_case = self._build_decision_tree(
                         # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
-                        #       Instead of removing it from the dataset just to add it back after the return an updated copy
-                        #       of the dataset is passed as parameter.
+                        #       Instead of removing it from the dataset just to add it back after the return an updated
+                        #       copy of the dataset is passed as parameter.
                         universe_intersection.without_feature(chosen_test),
                         [test for test in budgeted_features if test != chosen_test],
                         src.COSTS
                     )
 
-                    # NOTE: This if assures that the feature used as root in the P(S)=1 base case is not immediately re-expanded
+                    # NOTE: This if assures that the feature used as root in the P(S)=1 base case is not immediately
+                    #       re-expanded
                     if is_split_base_case and subtree.get_root_label() in universe.features:
                         budgeted_features.remove(subtree.get_root_label())
 
@@ -216,8 +227,8 @@ class DecisionTree:
 
         logger.info("End of t_B backbone construction!")
 
-        # NOTE: As stated in Section 3.1 of the paper (page 15) the final recursive call is responsible for the construction
-        #       of a decision tree for the objects not covered by the tests in the backbone.
+        # NOTE: As stated in Section 3.1 of the paper (page 15) the final recursive call is responsible for the
+        #       construction of a decision tree for the objects not covered by the tests in the backbone.
         #       It's correct to say that if U is empty, this part of the procedure is skippable.
         if len(universe) != 0:
             # Set the tree resulting from the recursive call as child of the test added in the last iteration
@@ -228,7 +239,8 @@ class DecisionTree:
 
         return tree, False
 
-    def fit(self, dataset: Dataset, tests: list[str], costs: dict[str, float], dataset_name: str) -> Tree:
+    def fit(self, dataset: Dataset, tests: list[str], costs: dict[str, float], dataset_name: str) -> None:
+        self.dataset = dataset
         decision_tree, _ = self._build_decision_tree(dataset, tests, costs)
 
         assert decision_tree.check_leaves_objects(dataset.classes), "The decision tree is not correct!"
@@ -238,7 +250,50 @@ class DecisionTree:
 
         logger.info("End of procedure!")
 
-        with open(f"model/decision_tree_{dataset_name}.pkl", "wb") as obj_file:
-            dump(decision_tree, obj_file, HIGHEST_PROTOCOL)
+        with open(f"model/decision_tree_{dataset_name}.pkl", "wb") as pickle_file:
+            dump(decision_tree, pickle_file, HIGHEST_PROTOCOL)
 
-        return decision_tree
+        self.decision_tree = decision_tree
+
+    @classmethod
+    def from_pickle(cls, path: str, dataset: Dataset) -> Self:
+        if Path(path).is_file():
+            with open(path, "rb") as model_file:
+                logger.info("Loading model from Pickle file")
+                unpickler = Unpickler(model_file)
+                decision_tree = unpickler.load()
+
+                model = cls()
+                model.decision_tree = decision_tree
+                model.dataset = dataset
+
+                return model
+
+    def predict(self, obj: np.ndarray) -> str:
+        if self.decision_tree is None:
+            raise RuntimeError("It is mandatory to call the \"fit\" method before \"predict\"!")
+
+        def predict_for_node(current_node) -> str:
+            current_node_label = self.decision_tree.get_label_of_node(current_node)
+
+            successors = list(self.decision_tree.structure.successors(current_node))
+            if len(successors) == 0:
+                return current_node_label
+
+            obj_value_for_feature = str(obj[self.dataset.features.index(current_node_label)])
+
+            if len(successors) == 1:
+                if self.decision_tree.get_label_of_node(successors[0]) != obj_value_for_feature:
+                    raise ValueError(f"The object had a mismatch during tree-walk for feature {current_node_label}")
+
+                current_node = successors[0]
+
+            for successor in self.decision_tree.structure.successors(current_node):
+                edge_label = self.decision_tree.structure.get_edge_data(current_node, successor).get("label")
+                if obj_value_for_feature == edge_label:
+                    return predict_for_node(successor)
+
+        return predict_for_node(self.decision_tree.root)
+
+    def print(self) -> None:
+        self.decision_tree.print()

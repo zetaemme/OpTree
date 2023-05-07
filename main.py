@@ -1,9 +1,11 @@
 import logging
-from argparse import ArgumentParser
+from argparse import ArgumentParser, BooleanOptionalAction
 from os.path import dirname
 from pathlib import Path
 from pickle import Unpickler
 from typing import Optional
+
+import numpy as np
 
 import src
 from src.dataset import Dataset
@@ -34,23 +36,28 @@ def main(
     else:
         dataset = Dataset(path)
 
-    # NOTE: 31/03/2023 - Since it happens to have structurally equal objects with different class label, we remove the
-    #                    most represented one. Doing so, we assure the purity of the leaves while keeping intact the
-    #                    variance of data.
+    # NOTE: 31/03/2023 - Since it happens to have structurally equal objects with different class label, we remove
+    #                    the most represented one. Doing so, we assure the purity of the leaves while keeping intact
+    #                    the variance of data
     dataset.drop_equal_objects_with_different_class()
 
-    src.TESTS = dataset.features
-    src.COSTS = dataset.costs
+    if not Path(dirname(__file__) + f"/model/decision_tree_{name}.pkl").is_file():
+        src.TESTS = dataset.features
+        src.COSTS = dataset.costs
 
-    decision_tree = DecisionTree()
-    model = decision_tree.fit(dataset, src.TESTS, src.COSTS, name)
+        decision_tree = DecisionTree()
+        decision_tree.fit(dataset, src.TESTS, src.COSTS, name)
+    else:
+        decision_tree = DecisionTree.from_pickle(dirname(__file__) + f"/model/decision_tree_{name}.pkl", dataset)
 
-    model.print()
+    decision_tree.print()
+    print(decision_tree.predict(np.array([0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0])))
 
 
 if __name__ == "__main__":
     parser = ArgumentParser(prog="main.py", description="Builds (log-)optimal decision trees")
     parser.add_argument("-f", "--filename", type=str, help="The CSV file containing the dataset")
+    parser.add_argument("-p", "--pruned", action=BooleanOptionalAction)
 
     args = parser.parse_args()
 
