@@ -29,7 +29,7 @@ def compute_pairs(dataset_path: str) -> None:
 
     data = {"pairs": pairs.pairs_list}
 
-    dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
+    dataset_name = dataset_path.replace("data/datasets/csv/", "").replace(".csv", "")
     with open(dirname(__file__) + f"/data/pairs/{dataset_name}_pairs.pkl", "wb") as f:
         dump(data, f, HIGHEST_PROTOCOL)
 

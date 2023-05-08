@@ -134,7 +134,7 @@ dmypy.json
 .fleet
 
 # Dataset
-data/*.csv
+data/**/*.csv
 data/**/*.pkl
 
 # Model

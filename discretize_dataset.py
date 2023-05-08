@@ -16,6 +16,7 @@ def concat_onehot_cols(columns, bin_edges_):
 
 def discretize(dataset_path: str, bins: int) -> None:
     dataset = pd.read_csv(dataset_path)
+    dataset = dataset.dropna()
     discretizer = KBinsDiscretizer(n_bins=bins, strategy="kmeans", encode="onehot-dense")
 
     # Compute discrete columns
@@ -28,8 +29,8 @@ def discretize(dataset_path: str, bins: int) -> None:
     discrete = pd.concat([discrete_dataset_df, dataset.select_dtypes(exclude="float")], axis=1)
 
     # Saves the discrete dataset to csv
-    dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
-    filepath = Path(dirname(__file__) + f"/data/{dataset_name}_discrete.csv")
+    dataset_name = dataset_path.replace("data/datasets/csv/", "").replace(".csv", "")
+    filepath = Path(dirname(__file__) + f"/data/datasets/csv/{dataset_name}_discrete.csv")
     discrete.to_csv(filepath, index=False)
 
 

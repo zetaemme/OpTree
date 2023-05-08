@@ -1,16 +1,15 @@
 import logging
-from argparse import ArgumentParser, BooleanOptionalAction
+from argparse import ArgumentParser
 from os.path import dirname
 from pathlib import Path
 from pickle import Unpickler
 from typing import Optional
 
-import numpy as np
-
 import src
 from src.dataset import Dataset
 from src.decision_tree import DecisionTree
 from src.types import PicklePairs, PickleSeparation
+from src.utils import train_test_split
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,27 +40,37 @@ def main(
     #                    the variance of data
     dataset.drop_equal_objects_with_different_class()
 
+    train_dataset, test_dataset = train_test_split(dataset, name)
+
     if not Path(dirname(__file__) + f"/model/decision_tree_{name}.pkl").is_file():
-        src.TESTS = dataset.features
-        src.COSTS = dataset.costs
+        src.TESTS = train_dataset.features
+        src.COSTS = train_dataset.costs
 
         decision_tree = DecisionTree()
-        decision_tree.fit(dataset, src.TESTS, src.COSTS, name)
+        decision_tree.fit(train_dataset, src.TESTS, src.COSTS, name)
     else:
-        decision_tree = DecisionTree.from_pickle(dirname(__file__) + f"/model/decision_tree_{name}.pkl", dataset)
+        decision_tree = DecisionTree.from_pickle(dirname(__file__) + f"/model/decision_tree_{name}.pkl", train_dataset)
 
     decision_tree.print()
-    print(decision_tree.predict(np.array([0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0])))
+
+    # results = []
+    # for row in test_dataset.data(True):
+    #     correct = row[-1]
+    #     prediction = decision_tree.predict(row[1:-1])
+    #
+    #     results.append(prediction == correct)
+    #
+    # counter = Counter(results)
+    # print(f"Accuracy: {counter[True] / len(results)}")
 
 
 if __name__ == "__main__":
     parser = ArgumentParser(prog="main.py", description="Builds (log-)optimal decision trees")
     parser.add_argument("-f", "--filename", type=str, help="The CSV file containing the dataset")
-    parser.add_argument("-p", "--pruned", action=BooleanOptionalAction)
 
     args = parser.parse_args()
 
-    dataset_name = args.filename.replace('data/', '').replace('.csv', '')
+    dataset_name = args.filename.replace('data/datasets/csv/', '').replace('.csv', '')
     pairs = None
     separation = None
 

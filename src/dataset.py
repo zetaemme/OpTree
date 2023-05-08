@@ -7,7 +7,7 @@ from itertools import chain, combinations
 from math import fsum
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
-from random import randint
+from random import randint, sample
 from typing import Any, Literal, Optional, Self
 
 import numpy as np
@@ -443,6 +443,23 @@ class Dataset:
             for pair in self.pairs_list
             if obj in pair and pair[0] in objects and pair[1] in objects
         })
+
+    def train_test_split(self, train_percentage: float) -> tuple[Self, Self]:
+        train_length = int(len(self) * train_percentage / 100)
+
+        train_dataset_indexes = sample(self.indexes.tolist(), train_length)  # type: ignore
+        test_dataset_indexes = set(self.indexes.tolist()) - set(train_dataset_indexes)  # type: ignore
+
+        train_dataset = self.copy()
+        test_dataset = self.copy()
+
+        for row in train_dataset_indexes:
+            test_dataset.drop_row(row)
+
+        for row in test_dataset_indexes:
+            train_dataset.drop_row(row)
+
+        return train_dataset, test_dataset
 
     def S_label_union_for(self, feature) -> list[int]:
         return reduce(lambda x, y: x + y, self.S_label[feature].values())

@@ -85,7 +85,7 @@ def compute_separation(dataset_path: str, pairs_path: str) -> None:
 
     separation = Separation(dataset, pairs)  # type: ignore
 
-    dataset_name = dataset_path.replace("data/", "").replace(".csv", "")
+    dataset_name = dataset_path.replace("data/datasets/csv/", "").replace(".csv", "")
     with open(f"./data/separation/{dataset_name}_separation.pkl", "wb") as f:
         dump(
             {
