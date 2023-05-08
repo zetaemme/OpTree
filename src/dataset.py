@@ -127,7 +127,7 @@ class Dataset:
 
             # Saves the pairs, so we don't need to recompute them in future executions
             if name is not None and not Path(f"./data/separation/{name}_separation.pkl").is_file():
-                with open(f"./data/separation/{name}_separation.pkl", "w") as f:
+                with open(f"./data/separation/{name}_separation.pkl", "wb") as f:
                     dump(  # type: ignore
                         {
                             "S_label": self.S_label,
