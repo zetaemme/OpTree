@@ -60,7 +60,7 @@ def main(
         results.append(prediction == correct)
 
     counter = Counter(results)
-    print(f"Accuracy: {counter[True] / len(results):.4f}%")
+    print(f"Accuracy: {(counter[True] / len(results)) * 100:.2f}%")
 
 
 if __name__ == "__main__":
