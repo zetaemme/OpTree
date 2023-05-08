@@ -41,7 +41,7 @@ class Dataset:
 
             # Saves the pairs, so we don't need to recompute them in future executions
             if name is not None and not Path(f"./data/pairs/{name}_pairs.pkl").is_file():
-                with open(f"./data/pairs/{name}_pairs.pkl", "w") as f:
+                with open(f"./data/pairs/{name}_pairs.pkl", "wb") as f:
                     dump({"pairs": self.pairs_list}, f, HIGHEST_PROTOCOL)  # type: ignore
 
         @classmethod
@@ -234,7 +234,7 @@ class Dataset:
         self._header = dataset_df.columns.to_list()
         self.features = self._header[1:-2]
 
-        dataset_np = dataset_df.to_numpy()
+        dataset_np = dataset_df.to_numpy(dtype="object")
 
         if pairs is None:
             logger.info("No pairs file found")
@@ -423,6 +423,7 @@ class Dataset:
     def labels_for(self, feature: str) -> np.ndarray:
         if not np.any(self._data):
             return np.array([])
+
         return np.unique(self._data[:, self.features.index(feature) + 1])
 
     def pairs_number_for(self, objects: list[int]) -> int:

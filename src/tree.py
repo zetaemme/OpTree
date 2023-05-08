@@ -52,7 +52,7 @@ class Tree:
 
         for class_, objects in leaves.items():
             for obj in objects:
-                if class_[:-1] != classes[obj]:
+                if class_[:-1] != str(classes[obj]):
                     return False
 
         return True

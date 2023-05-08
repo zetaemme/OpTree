@@ -1,6 +1,6 @@
 import logging
 from collections import Counter
-from itertools import chain, groupby
+from itertools import chain
 from math import fsum
 from os.path import dirname
 from pathlib import Path
@@ -8,6 +8,7 @@ from pickle import HIGHEST_PROTOCOL, Unpickler, dump
 
 import networkx as nx
 
+from src import MAX_DEPTH
 from src.dataset import Dataset
 from src.tree import Tree
 from src.types import Bounds, HeuristicFunction
@@ -109,52 +110,62 @@ def compute_cutoff_metrics(tree: nx.DiGraph, node, objects_number: int) -> None:
         compute_cutoff_metrics(tree, child, objects_number)
 
 
-def prune(tree: Tree, dataset: Dataset) -> Tree:
-    set_depths(tree.structure, tree.root)
-    compute_cutoff_metrics(tree.structure, tree.root, len(dataset))
-
-    sorted_nodes = sorted(tree.structure.nodes, key=lambda node: tree.structure.nodes[node]["depth"])
-    groups = groupby(sorted_nodes, key=lambda node: tree.structure.nodes[node]["depth"])
-
-    scores = {
-        depth: fsum(tree.structure.nodes[node]["cutoff_metric"] for node in nodes)
-        for depth, nodes in groups
-    }
-
-    cutoff_depth = 0
-    scores_per_depth = dict(sorted(scores.items(), key=lambda x: x[0]))
-    for current_depth, current_score in scores_per_depth.items():
-        successors = {key: value for key, value in scores_per_depth.items() if key > current_depth}
-
-        if len(successors) == 1 and list(successors.values())[0] < current_score:
-            cutoff_depth = list(successors.keys())[0]
-            break
-
-        for successor_score in successors.values():
-            if successor_score > current_score:
-                cutoff_depth = current_depth
-                break
-
-    nodes_to_remove = [
+def remove_exceeding_nodes(tree: Tree, dataset: Dataset) -> None:
+    exceeding_nodes = [
         node
         for node in tree.structure.nodes
-        if tree.structure.nodes[node]["depth"] > cutoff_depth
+        if tree.structure.nodes[node]["depth"] > MAX_DEPTH
     ]
 
-    if len(nodes_to_remove) == 0:
-        return tree
+    if len(exceeding_nodes) > 0:
+        tree.structure.remove_nodes_from(exceeding_nodes)
 
-    tree.structure.remove_nodes_from(nodes_to_remove)
+        for leaf in tree.leaves:
+            leaf_classes = [
+                class_
+                for index, class_ in dataset.classes.items()
+                if index in tree.structure.nodes[leaf]["objects"]
+            ]
 
-    for leaf in tree.leaves:
-        leaf_classes = [
+            class_counter = Counter(leaf_classes)
+            tree.structure.nodes[leaf]["label"] = class_counter.most_common(1)[0][0]
+
+
+def cutoff(tree: Tree, dataset: Dataset, node) -> None:
+    def remove_successors(node):
+        successors = list(tree.structure.successors(node))
+        for successor in successors:
+            remove_successors(successor)
+            tree.structure.remove_node(successor)
+
+    current_score = tree.structure.nodes[node]["cutoff_metric"]
+    successors_score = fsum(tree.structure.nodes[node]["cutoff_metric"] for node in tree.structure.successors(node))
+
+    if successors_score > current_score:
+        for node_successor in tree.structure.successors(node):
+            remove_successors(node_successor)
+
+        node_classes = [
             class_
             for index, class_ in dataset.classes.items()
-            if index in tree.structure.nodes[leaf]["objects"]
+            if index in tree.structure.nodes[node]["objects"]
         ]
 
-        class_counter = Counter(leaf_classes)
-        tree.structure.nodes[leaf]["label"] = class_counter.most_common(1)[0][0]
+        class_counter = Counter(node_classes)
+        tree.structure.nodes[node]["label"] = class_counter.most_common(1)[0][0]
+
+        return
+
+    for node_successor in tree.structure.successors(node):
+        cutoff(tree, dataset, node_successor)
+
+
+def prune(tree: Tree, dataset: Dataset) -> Tree:
+    set_depths(tree.structure, tree.root)
+    remove_exceeding_nodes(tree, dataset)
+
+    compute_cutoff_metrics(tree.structure, tree.root, len(dataset))
+    cutoff(tree, dataset, tree.root)
 
     return tree
 

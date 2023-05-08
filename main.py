@@ -54,7 +54,7 @@ def main(
 
     results = []
     for row in test_dataset.data(True):
-        correct = row[-1]
+        correct = str(row[-1])
         prediction = decision_tree.predict(row[1:-1])
 
         results.append(prediction == correct)

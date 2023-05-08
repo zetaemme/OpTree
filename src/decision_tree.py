@@ -39,7 +39,7 @@ class DecisionTree:
 
             # NOTE: Avoids insertion needless leaf
             if dataset.features and len(dataset) != 0:
-                leaf = list(dataset.classes.values())[0]
+                leaf = str(list(dataset.classes.values())[0])
                 objects = dataset.indexes.tolist()
 
                 logger.info("No pairs in dataset, setting node \"%s\" as root of the tree", leaf)
@@ -62,10 +62,10 @@ class DecisionTree:
             root_id = tree.add_node(indexes_covered, dataset.pairs_number_for(indexes_covered), split)
 
             # Add the two items as leafs labelled with the respective class
-            class_1 = dataset.classes[dataset.pairs_list[0][0]]
+            class_1 = str(dataset.classes[dataset.pairs_list[0][0]])
             label_1 = str(dataset[0, dataset.features.index(split) + 1])
 
-            class_2 = dataset.classes[dataset.pairs_list[0][1]]
+            class_2 = str(dataset.classes[dataset.pairs_list[0][1]])
             label_2 = str(dataset[1, dataset.features.index(split) + 1])
 
             logger.info(f"Adding leaf \"{class_1}\" as child of {tree.get_label_of_node(root_id)}")
