@@ -1,5 +1,6 @@
 import logging
 from argparse import ArgumentParser
+from collections import Counter
 from os.path import dirname
 from pathlib import Path
 from pickle import Unpickler
@@ -51,17 +52,15 @@ def main(
     else:
         decision_tree = DecisionTree.from_pickle(dirname(__file__) + f"/model/decision_tree_{name}.pkl", train_dataset)
 
-    decision_tree.print()
+    results = []
+    for row in test_dataset.data(True):
+        correct = row[-1]
+        prediction = decision_tree.predict(row[1:-1])
 
-    # results = []
-    # for row in test_dataset.data(True):
-    #     correct = row[-1]
-    #     prediction = decision_tree.predict(row[1:-1])
-    #
-    #     results.append(prediction == correct)
-    #
-    # counter = Counter(results)
-    # print(f"Accuracy: {counter[True] / len(results)}")
+        results.append(prediction == correct)
+
+    counter = Counter(results)
+    print(f"Accuracy: {counter[True] / len(results):.4f}%")
 
 
 if __name__ == "__main__":

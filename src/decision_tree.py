@@ -282,12 +282,6 @@ class DecisionTree:
 
             obj_value_for_feature = str(obj[self.dataset.features.index(current_node_label)])
 
-            if len(successors) == 1:
-                if self.decision_tree.get_label_of_node(successors[0]) != obj_value_for_feature:
-                    raise ValueError(f"The object had a mismatch during tree-walk for feature {current_node_label}")
-
-                current_node = successors[0]
-
             for successor in self.decision_tree.structure.successors(current_node):
                 edge_label = self.decision_tree.structure.get_edge_data(current_node, successor).get("label")
                 if obj_value_for_feature == edge_label:
