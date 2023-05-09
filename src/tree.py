@@ -46,7 +46,8 @@ class Tree:
 
     def check_leaves_objects(self, classes: dict[int, str]) -> bool:
         leaves = {
-            self.get_label_of_node(leaf) + choice(string.ascii_lowercase): sorted(self.structure.nodes[leaf]["objects"])
+            str(self.get_label_of_node(leaf)) + choice(string.ascii_lowercase): sorted(
+                self.structure.nodes[leaf]["objects"])
             for leaf in self.leaves
         }
 

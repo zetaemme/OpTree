@@ -69,7 +69,6 @@ class DecisionTree:
             label_2 = str(dataset[1, dataset.features.index(split) + 1])
 
             logger.info(f"Adding leaf \"{class_1}\" as child of {tree.get_label_of_node(root_id)}")
-            # FIXME: Potrebbe essere problematica la gestione dei tipi delle etichette
             tree.add_node(dataset.S_label[split][label_1], 0, class_1, root_id, label_1)
             logger.info(f"Adding leaf \"{class_2}\" as child of {tree.get_label_of_node(root_id)}")
             tree.add_node(dataset.S_label[split][label_2], 0, class_2, root_id, label_2)
@@ -278,7 +277,7 @@ class DecisionTree:
 
             successors = list(self.decision_tree.structure.successors(current_node))
             if len(successors) == 0:
-                return current_node_label
+                return str(current_node_label)
 
             obj_value_for_feature = str(obj[self.dataset.features.index(current_node_label)])
 
