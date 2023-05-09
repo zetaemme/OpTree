@@ -90,9 +90,10 @@ class DecisionTree:
         # Inits the structure
         tree = Tree()
         last_added_node: Optional[UUID] = None
+        backbone_label = ""
 
         # While exists at least a test with cost equal or less than (budget - spent)
-        logger.info("Starting t_A backbone construction")
+        logger.info("Starting t_A construction")
         while any(cost <= budget - spent for test, cost in costs.items() if test in budgeted_features) and len(
                 universe) != 0:
             chosen_test = probability_maximization(
@@ -112,7 +113,6 @@ class DecisionTree:
                 )
             else:
                 # Set chosen_test as child of the test added in the last iteration
-                backbone_label = get_backbone_label(universe, chosen_test)
                 logger.info(
                     f"Adding node {chosen_test} as child of {tree.get_label_of_node(last_added_node)} " +
                     f"with label {backbone_label}"
@@ -139,7 +139,7 @@ class DecisionTree:
                     # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
                     #       Instead of removing it from the dataset just to add it back after the return an updated copy
                     #       of the dataset is passed as parameter.
-                    universe_intersection.without_feature(chosen_test),
+                    universe_intersection,
                     [test for test in budgeted_features if test != chosen_test],
                     src.COSTS
                 )
@@ -151,6 +151,23 @@ class DecisionTree:
 
                 tree.add_subtree(last_added_node, subtree, str(label))
 
+            # NOTE: 09/05/2023 - Given any node in the tree, this is how it's children are created
+            #                                            t_{k - 1}
+            #                                            /   |    \
+            #                                          A     B ... Z
+            #                                        /       |      \
+            #                                      C1       C2      C3
+            #                    where:
+            #                        * A = S^1_{t_{k - 1}} -> Non-backbone
+            #                        * B = S^2_{t_{k - 1}} -> Non-backbone
+            #                        * Z = S^*_{t_{k - 1}} -> Backbone
+            #                   In the previous versions of the code we wrongly chose Z = S^*_{t_k} instead, resulting
+            #                   in a poor labeling of the backbone.
+            #                   The error was never discovered since we worked with binary features only.
+            #                   By choosing the backbone edge label here we avoid the update of chosen_test, resulting
+            #                   in the previous error.
+            backbone_label = get_backbone_label(universe, chosen_test)
+
             logger.debug(f"Computing U ∩ S[*][{chosen_test}]")
             universe = universe.intersection(universe.S_star[chosen_test])
             logger.debug(f"\n{pformat(universe)}")
@@ -161,22 +178,20 @@ class DecisionTree:
             universe.drop_feature(chosen_test)
             budgeted_features.remove(chosen_test)
 
-        logger.info("End of t_A backbone construction!")
+        logger.info("End of t_A construction!")
 
         # If there are still some tests with cost greater than budget
-        logger.info(f"Starting t_B backbone construction")
+        logger.info(f"Starting t_B construction")
         if len(budgeted_features) != 0 and len(universe) != 0:
             while True:
                 chosen_test = pairs_maximization(universe, budgeted_features, costs)
                 logger.debug("Test that maximizes the pairs number: %s", chosen_test)
 
                 # Set chosen_test as child of the test added in the last iteration
-                backbone_label = get_backbone_label(universe, chosen_test)
                 logger.info(
                     f"Adding node {chosen_test} as child of {tree.get_label_of_node(last_added_node)} " +
                     f"with label {backbone_label}"
                 )
-
                 indexes_covered = universe.S_label_union_for(chosen_test)
                 last_added_node = tree.add_node(
                     indexes_covered,
@@ -198,7 +213,7 @@ class DecisionTree:
                         # NOTE: 27/02/2023 - Remove the chosen feature before the recursive call
                         #       Instead of removing it from the dataset just to add it back after the return an updated
                         #       copy of the dataset is passed as parameter.
-                        universe_intersection.without_feature(chosen_test),
+                        universe_intersection,
                         [test for test in budgeted_features if test != chosen_test],
                         src.COSTS
                     )
@@ -209,6 +224,23 @@ class DecisionTree:
                         budgeted_features.remove(subtree.get_root_label())
 
                     tree.add_subtree(last_added_node, subtree, str(label))
+
+                # NOTE: 09/05/2023 - Given any node in the tree, this is how it's children are created
+                #                                            t_{k - 1}
+                #                                            /   |    \
+                #                                          A     B ... Z
+                #                                        /       |      \
+                #                                      C1       C2      C3
+                #                    where:
+                #                        * A = S^1_{t_{k - 1}} -> Non-backbone
+                #                        * B = S^2_{t_{k - 1}} -> Non-backbone
+                #                        * Z = S^*_{t_{k - 1}} -> Backbone
+                #                   In the previous versions of the code we wrongly chose Z = S^*_{t_k} instead,
+                #                   resulting in a poor labeling of the backbone.
+                #                   The error was never discovered since we worked with binary features only.
+                #                   By choosing the backbone edge label here we avoid the update of chosen_test,
+                #                   resulting in the previous error.
+                backbone_label = get_backbone_label(universe, chosen_test)
 
                 logger.debug(f"Computing U ∩ S[*][{chosen_test}]")
                 universe = universe.intersection(universe.S_star[chosen_test])
@@ -224,7 +256,7 @@ class DecisionTree:
                 if budget - spent_2 < 0 or len(budgeted_features) == 0:
                     break
 
-        logger.info("End of t_B backbone construction!")
+        logger.info("End of t_B construction!")
 
         # NOTE: As stated in Section 3.1 of the paper (page 15) the final recursive call is responsible for the
         #       construction of a decision tree for the objects not covered by the tests in the backbone.
