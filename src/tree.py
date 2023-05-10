@@ -75,7 +75,7 @@ class Tree:
         nx.draw_networkx_edges(self.structure, pos)
         nx.draw_networkx_labels(self.structure, pos, labels=nx.get_node_attributes(self.structure, "label"),
                                 font_size=8)
-        nx.draw_networkx_edge_labels(self.structure, pos, nx.get_edge_attributes(self.structure, "label"))
+        nx.draw_networkx_edge_labels(self.structure, pos, nx.get_edge_attributes(self.structure, "label"), font_size=8)
 
         plt.tight_layout()
         plt.show()
