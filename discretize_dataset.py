@@ -27,6 +27,10 @@ def discretize(dataset_path: str, bins: int) -> None:
 
     # Merge new discrete columns with original discrete columns
     discrete = pd.concat([discrete_dataset_df, dataset.select_dtypes(exclude="float")], axis=1)
+    discrete = discrete.dropna()
+
+    for column in discrete.select_dtypes(include=["float", "int"]).columns:
+        discrete[column] = discrete[column].astype("int")
 
     # Saves the discrete dataset to csv
     dataset_name = dataset_path.replace("data/datasets/csv/", "").replace(".csv", "")
