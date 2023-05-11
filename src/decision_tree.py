@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from pickle import HIGHEST_PROTOCOL, Unpickler, dump
+from pickle import Unpickler
 from pprint import pformat
 from typing import Optional, Self
 from uuid import UUID
@@ -268,10 +268,6 @@ class DecisionTree:
         decision_tree = prune(decision_tree, dataset)
 
         logger.info("End of procedure!")
-
-        with open(f"model/decision_tree_{dataset_name}.pkl", "wb") as pickle_file:
-            dump(decision_tree, pickle_file, HIGHEST_PROTOCOL)
-
         self.decision_tree = decision_tree
 
     @classmethod
@@ -287,6 +283,12 @@ class DecisionTree:
                 model.dataset = dataset
 
                 return model
+
+    def number_of_nodes(self) -> int:
+        return self.decision_tree.structure.number_of_nodes()
+
+    def height(self) -> int:
+        return max([self.decision_tree.structure.nodes[leaf]["depth"] for leaf in self.decision_tree.leaves]) + 1
 
     def predict(self, obj: np.ndarray) -> str:
         if self.decision_tree is None:

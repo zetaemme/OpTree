@@ -7,11 +7,12 @@ from itertools import chain, combinations
 from math import fsum
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
-from random import randint, sample
+from random import randint
 from typing import Any, Literal, Optional, Self
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import KFold
 
 logger = logging.getLogger("decision_tree")
 
@@ -358,6 +359,12 @@ class Dataset:
         del self.S_star[feature]
         del self.sigma[feature]
 
+    def drop_indexes(self, indexes: list[int]) -> None:
+        dataset_indexes = [self._data[index, 0] for index in indexes]
+
+        for index in dataset_indexes:
+            self.drop_row(index)
+
     def drop_row(self, index: int) -> None:
         """Removes the row at given index
 
@@ -420,6 +427,23 @@ class Dataset:
 
         return dataset_copy
 
+    def k_fold_split(self, k: int) -> list[dict[str, Self]]:
+        k_fold = KFold(k, shuffle=True)
+
+        folds = k_fold.split(self._data)
+
+        k_folded_datasets = []
+        for train, test in folds:
+            train_dataset = self.copy()
+            test_dataset = self.copy()
+
+            train_dataset.drop_indexes(test.tolist())
+            test_dataset.drop_indexes(train.tolist())
+
+            k_folded_datasets.append({"train": train_dataset, "test": test_dataset})
+
+        return k_folded_datasets
+
     def labels_for(self, feature: str) -> np.ndarray:
         if not np.any(self._data):
             return np.array([])
@@ -444,23 +468,6 @@ class Dataset:
             for pair in self.pairs_list
             if obj in pair and pair[0] in objects and pair[1] in objects
         })
-
-    def train_test_split(self, train_percentage: float) -> tuple[Self, Self]:
-        train_length = int(len(self) * train_percentage / 100)
-
-        train_dataset_indexes = sample(self.indexes.tolist(), train_length)  # type: ignore
-        test_dataset_indexes = set(self.indexes.tolist()) - set(train_dataset_indexes)  # type: ignore
-
-        train_dataset = self.copy()
-        test_dataset = self.copy()
-
-        for row in train_dataset_indexes:
-            test_dataset.drop_row(row)
-
-        for row in test_dataset_indexes:
-            train_dataset.drop_row(row)
-
-        return train_dataset, test_dataset
 
     def S_label_union_for(self, feature) -> list[int]:
         return reduce(lambda x, y: x + y, self.S_label[feature].values())

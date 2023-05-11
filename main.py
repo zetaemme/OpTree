@@ -1,16 +1,17 @@
 import logging
 from argparse import ArgumentParser
 from collections import Counter
+from math import ceil
 from os.path import dirname
 from pathlib import Path
 from pickle import Unpickler
+from statistics import mean
 from typing import Optional
 
 import src
 from src.dataset import Dataset
 from src.decision_tree import DecisionTree
 from src.types import PicklePairs, PickleSeparation
-from src.utils import train_test_split
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,26 +42,37 @@ def main(
     #                    the variance of data
     dataset.drop_equal_objects_with_different_class()
 
-    train_dataset, test_dataset = train_test_split(dataset, name)
+    folds_accuracies = {}
+    folds_nodes = {}
+    folds_heights = {}
 
-    if not Path(dirname(__file__) + f"/model/decision_tree_{name}.pkl").is_file():
-        src.TESTS = train_dataset.features
-        src.COSTS = train_dataset.costs
+    k_folded_dataset = dataset.k_fold_split(5)
+
+    for fold_number, fold in enumerate(k_folded_dataset, 1):
+        logger.info("Training on fold: %i", fold_number)
+        src.TESTS = fold["train"].features
+        src.COSTS = fold["train"].costs
 
         decision_tree = DecisionTree()
-        decision_tree.fit(train_dataset, src.TESTS, src.COSTS, name)
-    else:
-        decision_tree = DecisionTree.from_pickle(dirname(__file__) + f"/model/decision_tree_{name}.pkl", train_dataset)
+        decision_tree.fit(fold["train"], src.TESTS, src.COSTS, name)
 
-    results = []
-    for row in test_dataset.data(True):
-        correct = str(row[-1])
-        prediction = decision_tree.predict(row[1:-1])
+        results = []
+        predictions = []
+        for row in fold["test"].data(True):
+            correct = str(row[-1])
+            prediction = decision_tree.predict(row[1:-1])
 
-        results.append(prediction == correct)
+            predictions.append(prediction)
+            results.append(prediction == correct)
 
-    counter = Counter(results)
-    print(f"Accuracy: {(counter[True] / len(results)) * 100:.2f}%")
+        counter = Counter(results)
+        folds_accuracies[fold_number] = (counter[True] / len(results)) * 100
+        folds_nodes[fold_number] = decision_tree.number_of_nodes()
+        folds_heights[fold_number] = decision_tree.height()
+
+    logger.info("Mean accuracy over 5 folds: %.2f", mean(folds_accuracies.values()))
+    logger.info("Mean number of nodes over 5 folds: %i", ceil(mean(folds_nodes.values())))
+    logger.info("Mean height over 5 folds: %i", ceil(mean(folds_heights.values())))
 
 
 if __name__ == "__main__":
