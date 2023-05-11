@@ -2,9 +2,6 @@ import logging
 from collections import Counter
 from itertools import chain
 from math import fsum
-from os.path import dirname
-from pathlib import Path
-from pickle import HIGHEST_PROTOCOL, Unpickler, dump
 
 import networkx as nx
 
@@ -168,24 +165,3 @@ def prune(tree: Tree, dataset: Dataset) -> Tree:
     cutoff(tree, dataset, tree.root)
 
     return tree
-
-
-def train_test_split(dataset: Dataset, dataset_name: str) -> tuple[Dataset, Dataset]:
-    if not Path(dirname(__file__) + f"/../data/datasets/pickle/{dataset_name}_train.pkl").is_file():
-        train_dataset, test_dataset = dataset.train_test_split(80.0)
-
-        with open(dirname(__file__) + f"/../data/datasets/pickle/{dataset_name}_train.pkl", "wb") as train_file:
-            dump(train_dataset, train_file, HIGHEST_PROTOCOL)
-
-        with open(dirname(__file__) + f"/../data/datasets/pickle/{dataset_name}_test.pkl", "wb") as test_file:
-            dump(test_dataset, test_file, HIGHEST_PROTOCOL)
-    else:
-        with open(dirname(__file__) + f"/../data/datasets/pickle/{dataset_name}_train.pkl", "rb") as train_file:
-            unpickler = Unpickler(train_file)
-            train_dataset = unpickler.load()
-
-        with open(dirname(__file__) + f"/../data/datasets/pickle/{dataset_name}_test.pkl", "rb") as test_file:
-            unpickler = Unpickler(test_file)
-            test_dataset = unpickler.load()
-
-    return train_dataset, test_dataset
