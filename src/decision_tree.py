@@ -144,11 +144,6 @@ class DecisionTree:
                     src.COSTS
                 )
 
-                # NOTE: This if assures that the feature used as root in the P(S)=1 base case is not immediately
-                #       re-expanded
-                if is_split_base_case and subtree.get_root_label() in universe.features:
-                    budgeted_features.remove(subtree.get_root_label())
-
                 tree.add_subtree(last_added_node, subtree, str(label))
 
             # NOTE: 09/05/2023 - Given any node in the tree, this is how it's children are created
@@ -175,7 +170,6 @@ class DecisionTree:
             spent += costs[chosen_test]
             logger.debug("Adding cost of \"%s\" to spent. Total spent: %d", chosen_test, spent)
 
-            universe.drop_feature(chosen_test)
             budgeted_features.remove(chosen_test)
 
         logger.info("End of t_A construction!")
@@ -218,11 +212,6 @@ class DecisionTree:
                         src.COSTS
                     )
 
-                    # NOTE: This if assures that the feature used as root in the P(S)=1 base case is not immediately
-                    #       re-expanded
-                    if is_split_base_case and subtree.get_root_label() in universe.features:
-                        budgeted_features.remove(subtree.get_root_label())
-
                     tree.add_subtree(last_added_node, subtree, str(label))
 
                 # NOTE: 09/05/2023 - Given any node in the tree, this is how it's children are created
@@ -249,7 +238,6 @@ class DecisionTree:
                 spent_2 += costs[chosen_test]
                 logger.debug("Adding cost of \"%s\" to spent2. Total spent2: %d", chosen_test, spent)
 
-                universe.drop_feature(chosen_test)
                 budgeted_features.remove(chosen_test)
 
                 # If there are no tests left, or we're running out of budget, break the loop
