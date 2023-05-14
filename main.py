@@ -4,7 +4,7 @@ from collections import Counter
 from math import ceil
 from os.path import dirname
 from pathlib import Path
-from pickle import Unpickler
+from pickle import HIGHEST_PROTOCOL, Unpickler, dump
 from statistics import mean
 from typing import Optional
 
@@ -46,6 +46,7 @@ def main(
     folds_nodes = {}
     folds_heights = {}
 
+    # Computes the indexes for each of the K folds
     k_folded_dataset = dataset.k_fold_split(5)
 
     for fold_number, fold in enumerate(k_folded_dataset, 1):
@@ -53,11 +54,22 @@ def main(
         src.TESTS = fold["train"].features
         src.COSTS = fold["train"].costs
 
+        with open(dirname(__file__) + f"/model/{name}/{fold_number}/train_set.pkl", "wb") as test_file:
+            dump(fold["train"], test_file, HIGHEST_PROTOCOL)
+
+        # Fits the decision tree on the i-th training fold
         decision_tree = DecisionTree()
-        decision_tree.fit(fold["train"], src.TESTS, src.COSTS, name)
+        decision_tree.fit(fold["train"], src.TESTS, src.COSTS, name, fold_number)
+
+        with open(dirname(__file__) + f"/model/{name}/{fold_number}/pruned.pkl", "wb") as tree_file:
+            dump(decision_tree, tree_file, HIGHEST_PROTOCOL)
+
+        with open(dirname(__file__) + f"/model/{name}/{fold_number}/test_set.pkl", "wb") as test_file:
+            dump(fold["test"], test_file, HIGHEST_PROTOCOL)
 
         results = []
         predictions = []
+        # Tests the previously fitted tree on the i-th test fold
         for row in fold["test"].data(True):
             correct = str(row[-1])
             prediction = decision_tree.predict(row[1:-1])
@@ -65,6 +77,7 @@ def main(
             predictions.append(prediction)
             results.append(prediction == correct)
 
+        # Computes the metrics for the i-th fold
         counter = Counter(results)
         folds_accuracies[fold_number] = (counter[True] / len(results)) * 100
         folds_nodes[fold_number] = decision_tree.number_of_nodes()
@@ -73,6 +86,7 @@ def main(
     logger.info("Mean accuracy over 5 folds: %.2f", mean(folds_accuracies.values()))
     logger.info("Mean number of nodes over 5 folds: %i", ceil(mean(folds_nodes.values())))
     logger.info("Mean height over 5 folds: %i", ceil(mean(folds_heights.values())))
+    logger.info("Best fold: %i", max(folds_accuracies, key=folds_accuracies.get))
 
 
 if __name__ == "__main__":

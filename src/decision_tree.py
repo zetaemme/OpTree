@@ -1,6 +1,7 @@
 import logging
+from os.path import dirname
 from pathlib import Path
-from pickle import Unpickler
+from pickle import HIGHEST_PROTOCOL, Unpickler, dump
 from pprint import pformat
 from typing import Optional, Self
 from uuid import UUID
@@ -246,9 +247,6 @@ class DecisionTree:
 
         logger.info("End of t_B construction!")
 
-        # NOTE: As stated in Section 3.1 of the paper (page 15) the final recursive call is responsible for the
-        #       construction of a decision tree for the objects not covered by the tests in the backbone.
-        #       It's correct to say that if U is empty, this part of the procedure is skippable.
         if len(universe) != 0:
             # Set the tree resulting from the recursive call as child of the test added in the last iteration
             logger.info("Final recursive call with all the objects not in the backbone")
@@ -258,11 +256,14 @@ class DecisionTree:
 
         return tree, False
 
-    def fit(self, dataset: Dataset, tests: list[str], costs: dict[str, float], dataset_name: str) -> None:
+    def fit(self, dataset: Dataset, tests: list[str], costs: dict[str, float], dataset_name: str, num: int) -> None:
         self.dataset = dataset
         decision_tree, _ = self._build_decision_tree(dataset, tests, costs)
 
         assert decision_tree.check_leaves_objects(dataset.classes), "The decision tree is not correct!"
+
+        with open(dirname(__file__) + f"/../model/{dataset_name}/{num}/not_pruned.pkl", "wb") as tree_file:
+            dump(decision_tree, tree_file, HIGHEST_PROTOCOL)
 
         logger.info("Pruning resulting tree")
         decision_tree = prune(decision_tree, dataset)

@@ -135,10 +135,9 @@ def cutoff(tree: Tree, dataset: Dataset, node) -> None:
             remove_successors(successor)
             tree.structure.remove_node(successor)
 
-    current_score = tree.structure.nodes[node]["cutoff_metric"]
     successors_score = fsum(tree.structure.nodes[node]["cutoff_metric"] for node in tree.structure.successors(node))
 
-    if successors_score > current_score:
+    if successors_score < tree.structure.nodes[node]["pairs"]:
         for node_successor in tree.structure.successors(node):
             remove_successors(node_successor)
 
