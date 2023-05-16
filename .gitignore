@@ -138,7 +138,8 @@ data/**/*.csv
 data/**/*.pkl
 
 # Model
-model/*.pkl
+model/**/*.pkl
+model/**/*.txt
 model/pictures/**/*.png
 
 # Tests

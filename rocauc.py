@@ -69,43 +69,66 @@ if __name__ == "__main__":
     y_pred = predictions
 
     class_mapping = {
-        class_: i for i, class_ in enumerate(set(test_dataset.classes.values()))
+        str(class_): i for i, class_ in enumerate(set(test_dataset.classes.values()))
     }
 
     y_true_int = list(map(lambda x: class_mapping[x], y_true))
     y_pred_int = list(map(lambda x: -1 if x is None else class_mapping[x], y_pred))
 
+    for i in range(len(y_true_int)):
+        if y_pred_int[i] == -1:
+            y_pred_int[i] = 0 if y_true_int == 1 else 1
+
     n_classes = len(set(test_dataset.classes.values()))
     y_true_bin = label_binarize(np.array(y_true_int), classes=np.arange(n_classes))
     y_pred_bin = np.array(y_pred_int)
 
-    # Calcola la curva ROC e l'AUC per ogni classe
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-    for i in range(n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_true_bin[:, i], (y_pred_bin == i).astype(int))  # type: ignore
-        roc_auc[i] = auc(fpr[i], tpr[i])
+    if n_classes == 2:
+        # Calcola la curva ROC
+        fpr, tpr, _ = roc_curve(y_true_bin, y_pred_bin)
 
-    plt.figure()
+        # Calcola l'area sotto la curva ROC (AUC)
+        roc_auc = auc(fpr, tpr)
 
-    colors = ["red", "green", "blue"]  # Puoi personalizzare i colori delle curve
+        # Plot della curva ROC
+        plt.figure()
+        plt.plot(fpr, tpr, color="red", label='ROC curve (area = %0.2f)' % roc_auc)
+        plt.plot([0, 1], [0, 1], '--', color="gray")  # Diagonale
+        plt.xlim([-0.1, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC curve (tic-tac-toe)')
+        plt.legend(loc="lower right")
+        plt.show()
+    else:
+        # Calcola la curva ROC e l'AUC per ogni classe
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+        for i in range(n_classes):
+            fpr[i], tpr[i], _ = roc_curve(y_true_bin[:, i], (y_pred_bin == i).astype(int))  # type: ignore
+            roc_auc[i] = auc(fpr[i], tpr[i])
 
-    for i in range(n_classes):
-        plt.plot(
-            fpr[i],
-            tpr[i],
-            color=colors[i],
-            lw=2,
-            label='ROC curve "%s" (AUC = %.2f)'
-            % (get_key_from_value(class_mapping, i), roc_auc[i]),
-        )
+        plt.figure()
 
-    plt.plot([0, 1], [0, 1], color="gray", lw=2, linestyle="--")
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.title("Receiver Operating Characteristic")
-    plt.legend(loc="lower right")
-    plt.show()
+        colors = ["red", "green", "blue"]  # Puoi personalizzare i colori delle curve
+
+        for i in range(n_classes):
+            plt.plot(
+                fpr[i],
+                tpr[i],
+                color=colors[i],
+                lw=2,
+                label='ROC curve "%s" (AUC = %.2f)'
+                      % (get_key_from_value(class_mapping, i), roc_auc[i]),
+            )
+
+        plt.plot([0, 1], [0, 1], color="gray", lw=2, linestyle="--")
+        plt.xlim([-0.1, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title(f"ROC curve (iris)")
+        plt.legend(loc="lower right")
+        plt.show()
