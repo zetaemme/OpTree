@@ -14,4 +14,4 @@ Functions:
 TESTS = []
 COSTS = {}
 
-MAX_DEPTH = 6
+MAX_DEPTH = 7
