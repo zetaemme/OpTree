@@ -9,46 +9,45 @@ from src.decision_tree import DecisionTree
 
 if __name__ == "__main__":
     parser = ArgumentParser(
-        prog="rocauc.py",
-        description="Plots the ROC AUC curve for a given decision tree model",
+        prog="print_accuracy.py",
+        description="Print statistics for the given dataset",
     )
     parser.add_argument(
-        "-t",
-        "--tree",
+        "-dn",
+        "--dataset_name",
         type=str,
-        help="The Pickle file containing the model's best fit",
-    )
-    parser.add_argument(
-        "-td",
-        "--test_dataset",
-        type=str,
-        help="The Pickle file containing the test dataset",
+        help="The dataset name",
     )
 
     args = parser.parse_args()
 
-    tree_path = args.tree
-    if Path(dirname(__file__) + f"/{tree_path}").is_file():
-        with open(dirname(__file__) + f"/{tree_path}", "rb") as bf_file:
-            unpickler = Unpickler(bf_file)
-            decision_tree: DecisionTree = unpickler.load()
+    accuracies: dict = {}
+    for i in range(1, 6):
+        if Path(dirname(__file__) + f"/model/{args.dataset_name}/{i}/pruned.pkl").is_file():
+            with open(dirname(__file__) + f"/model/{args.dataset_name}/{i}/pruned.pkl", "rb") as tree_file:
+                unpickler = Unpickler(tree_file)
+                decision_tree: DecisionTree = unpickler.load()
 
-    td_path = args.test_dataset
-    if Path(dirname(__file__) + f"/{td_path}").is_file():
-        with open(dirname(__file__) + f"/{td_path}", "rb") as td_file:
-            unpickler = Unpickler(td_file)
-            test_dataset: Dataset = unpickler.load()
+        if Path(dirname(__file__) + f"/model/{args.dataset_name}/{i}/test_set.pkl").is_file():
+            with open(dirname(__file__) + f"/model/{args.dataset_name}/{i}/test_set.pkl", "rb") as td_file:
+                unpickler = Unpickler(td_file)
+                test_dataset: Dataset = unpickler.load()
 
-    results = []
-    predictions = []
-    for row in test_dataset.data(True):
-        correct = str(row[-1])
-        prediction = decision_tree.predict(row[1:-1])
+        results = []
+        predictions = []
+        for row in test_dataset.data(True):
+            correct = str(row[-1])
+            prediction = decision_tree.predict(row[1:-1])
 
-        predictions.append(prediction)
-        results.append(prediction == correct)
+            predictions.append(prediction)
+            results.append(prediction == correct)
 
-    counter = Counter(results)
-    print(f"Accuracy: {(counter[True] / len(results)) * 100:.2f}%")
-    print(f"Number of nodes: {decision_tree.number_of_nodes()}")
-    print(f"Height: {decision_tree.height()}")
+        counter = Counter(results)
+
+        accuracy = (counter[True] / len(results)) * 100
+        accuracies[i] = round(accuracy, 2)
+        print(f"Accuracy: {accuracy:.2f}%")
+        print(f"Number of nodes: {decision_tree.number_of_nodes()}")
+        print(f"Height: {decision_tree.height()}")
+
+    print(accuracies)

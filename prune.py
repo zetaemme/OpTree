@@ -24,6 +24,12 @@ if __name__ == "__main__":
         type=str,
         help="The Pickle file containing the train dataset",
     )
+    parser.add_argument(
+        "-e",
+        "--epsilon",
+        type=float,
+        help="The cutoff parameter",
+    )
 
     args = parser.parse_args()
 
@@ -41,7 +47,7 @@ if __name__ == "__main__":
 
     dataset_name, fold_number = dataset_path.split("/")[1:3]
 
-    pruned = prune(tree, dataset)
+    pruned = prune(tree, dataset, args.epsilon)
     pruned_tree = DecisionTree()
     pruned_tree.decision_tree = pruned
     pruned_tree.dataset = dataset
