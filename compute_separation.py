@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
+from functools import partial
+from multiprocessing import Pool, cpu_count
 from pickle import HIGHEST_PROTOCOL, dump, load
 
 import pandas as pd
@@ -30,38 +32,50 @@ class Separation:
         else:
             self._all_features = dataset.columns.values[:-1]
 
-        for feature_idx, feature in enumerate(self._all_features):
-            self.S_label[feature] = {
-                str(value): [
-                    int(idx)
-                    for idx, item in dataset.iterrows()
-                    if item[feature] == value
-                ]
-                for value in dataset[feature].unique()
-            }
+        with Pool(cpu_count()) as pool:
+            results = pool.map(partial(self.parallel_compute_feature, dataset=dataset, pairs=pairs), self._all_features)
 
-            feature_pairs = {
-                label: number_of_pairs_for(pairs, objects)
-                for label, objects in self.S_label[feature].items()
-            }
-            max_pairs = max(feature_pairs, key=feature_pairs.get)  # type: ignore
-            self.S_star[feature] = self.S_label[feature][max_pairs]
+        for feature, S_label, S_star, sigma, kept, separated in results:
+            self.S_label[feature] = S_label
+            self.S_star[feature] = S_star
+            self.sigma[feature] = sigma
+            self.kept[feature] = kept
+            self.separated[feature] = separated
 
-            self.sigma[feature] = [int(idx) for idx in set(dataset.index.values) - set(self.S_star[feature])]
+    def parallel_compute_feature(self, feature, dataset, pairs):
+        S_label = {
+            str(value): [
+                int(idx)
+                for idx, item in dataset.iterrows()
+                if item[feature] == value
+            ]
+            for value in dataset[feature].unique()
+        }
 
-            self.kept[feature] = list(  # type: ignore
-                filter(lambda pair: all(idx in self.sigma[feature] for idx in pair), pairs)
+        feature_pairs = {
+            label: number_of_pairs_for(pairs, objects)
+            for label, objects in S_label.items()
+        }
+        max_pairs = max(feature_pairs, key=feature_pairs.get)
+        S_star = S_label[max_pairs]
+
+        sigma = [int(idx) for idx in set(dataset.index.values) - set(S_star)]
+
+        kept = list(
+            filter(lambda pair: all(idx in sigma for idx in pair), pairs)
+        )
+
+        separated = list(
+            filter(
+                lambda pair: pair[0] in sigma
+                             and pair[1] in S_star
+                             or pair[1] in sigma
+                             and pair[0] in S_star,
+                pairs,
             )
+        )
 
-            self.separated[feature] = list(  # type: ignore
-                filter(
-                    lambda pair: pair[0] in self.sigma[feature]
-                                 and pair[1] in self.S_star[feature]
-                                 or pair[1] in self.sigma[feature]
-                                 and pair[0] in self.S_star[feature],
-                    pairs,
-                )
-            )
+        return feature, S_label, S_star, sigma, kept, separated
 
 
 def number_of_pairs_for(pairs: list[tuple[int, int]], objects: list[int]) -> int:
