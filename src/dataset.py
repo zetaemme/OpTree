@@ -2,9 +2,10 @@ import logging
 from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
-from functools import cached_property, reduce
+from functools import cached_property, partial, reduce
 from itertools import chain, combinations
 from math import fsum
+from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from pickle import HIGHEST_PROTOCOL, dump
 from random import randint
@@ -29,21 +30,27 @@ class Dataset:
 
         def __init__(self, dataset: np.ndarray, name: Optional[str] = None) -> None:
             logger.debug("Computing dataset pairs")
-            if dataset.shape[0] == 1:
-                self.pairs_list = []
-                return
 
-            self.pairs_list = list(
-                filter(
-                    lambda pair: dataset[pair[0], -2] != dataset[pair[1], -2],
-                    combinations(dataset[:, 0], 2)
-                )
-            )
+            chunks = np.array_split(np.arange(dataset.shape[0]), cpu_count())
+
+            with Pool() as pool:
+                pairs_sets = pool.map(partial(self.parallel_compute_pairs, dataset=dataset), chunks)
+
+            self.pairs_list = list(sorted(set().union(*pairs_sets)))
 
             # Saves the pairs, so we don't need to recompute them in future executions
             if name is not None and not Path(f"./data/pairs/{name}_pairs.pkl").is_file():
                 with open(f"./data/pairs/{name}_pairs.pkl", "wb") as f:
                     dump({"pairs": self.pairs_list}, f, HIGHEST_PROTOCOL)  # type: ignore
+
+        def parallel_compute_pairs(self, chunk, dataset):
+            pairs = set()
+            for i in chunk:
+                for j in range(i + 1, len(dataset.index)):
+                    if dataset["Class"][i] != dataset["Class"][j]:
+                        pairs.add((i, j))
+
+            return pairs
 
         @classmethod
         def from_precomputed(cls, pairs: list[tuple[int]]) -> Self:

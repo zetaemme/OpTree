@@ -256,7 +256,7 @@ class DecisionTree:
 
         return tree, False
 
-    def fit(self, dataset: Dataset, tests: list[str], costs: dict[str, float], dataset_name: str, num: int) -> None:
+    def fit(self, dataset: Dataset, tests: list[str], costs: dict[str, float], dataset_name: str, num: int, perform_pruning=True) -> None:
         self.dataset = dataset
         decision_tree, _ = self._build_decision_tree(dataset, tests, costs)
 
@@ -265,8 +265,9 @@ class DecisionTree:
         with open(dirname(__file__) + f"/../model/{dataset_name}/{num}/not_pruned.pkl", "wb") as tree_file:
             dump(decision_tree, tree_file, HIGHEST_PROTOCOL)
 
-        logger.info("Pruning resulting tree")
-        decision_tree = prune(decision_tree, dataset)
+        if perform_pruning:
+            logger.info("Pruning resulting tree")
+            decision_tree = prune(decision_tree, dataset)
 
         logger.info("End of procedure!")
         self.decision_tree = decision_tree

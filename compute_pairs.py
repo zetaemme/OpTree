@@ -1,10 +1,12 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass
-from itertools import combinations
+from functools import partial
+from multiprocessing import Pool, cpu_count
 from os.path import dirname
 from pickle import HIGHEST_PROTOCOL, dump
 
 import pandas as pd
+import numpy as np
 
 
 @dataclass(init=False)
@@ -15,12 +17,24 @@ class Pairs:
 
     def __init__(self, dataset: pd.DataFrame) -> None:
         if dataset.shape[0] == 1:
-            self.pairs_list = []
+            self.pairs_list = set()
             return
 
-        self.pairs_list = list(
-            filter(lambda pair: dataset["Class"][pair[0]] != dataset["Class"][pair[1]], combinations(dataset.index, 2))
-        )
+        chunks = np.array_split(np.sort(dataset.index), cpu_count())
+
+        with Pool() as pool:
+            pairs_sets = pool.map(partial(self.parallel_compute_pairs, dataset=dataset), chunks)
+
+        self.pairs_list = list(sorted(set().union(*pairs_sets)))
+
+    def parallel_compute_pairs(self, chunk, dataset: pd.DataFrame):
+        pairs = set()
+        for i in chunk:
+            for j in range(i + 1, len(dataset.index)):
+                if dataset["Class"][i] != dataset["Class"][j]:
+                    pairs.add((i, j))
+
+        return pairs
 
 
 def compute_pairs(dataset_path: str) -> None:
